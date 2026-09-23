@@ -51,6 +51,43 @@ _LEGACY_LAST_SESSION_PATH = LAST_SESSION_PATH
 _LEGACY_FINGER_CAPTURE_DIR = FINGER_CAPTURE_DIR
 _LEGACY_LAST_FINGER_CAPTURE_PATH = LAST_FINGER_CAPTURE_PATH
 DEFAULT_DISPLAY_MODE = 'dbm'
+MANUAL_SELECTION_POINT_COUNT = 45
+
+
+def equal_interval_indices_for_range(table, start_nm, stop_nm, spacing_nm):
+    """Return calibrated-table indices inside one inclusive wavelength range."""
+
+    table = tuple(table)
+    target_axis = np.asarray([point.target_nm for point in table], dtype=float)
+    if (len(table) != 2001 or target_axis.shape != (2001,)
+            or not np.all(np.isfinite(target_axis))
+            or np.any(np.diff(target_axis) <= 0)):
+        raise ValueError('等间隔采谱需要完整且递增的2001点标定表')
+    start_nm, stop_nm, spacing_nm = map(float, (start_nm, stop_nm, spacing_nm))
+    if not all(map(np.isfinite, (start_nm, stop_nm, spacing_nm))):
+        raise ValueError('扫描波长范围和间隔必须是有限数值')
+    if start_nm >= stop_nm:
+        raise ValueError('扫描起点必须小于扫描终点')
+    if start_nm < target_axis[0] or stop_nm > target_axis[-1]:
+        raise ValueError(
+            f'扫描范围必须位于{target_axis[0]:.2f}～{target_axis[-1]:.2f} nm标定范围内'
+        )
+    table_step = float(np.median(np.diff(target_axis)))
+    stride = max(1, min(5, int(round(spacing_nm / table_step))))
+    actual_spacing_nm = stride * table_step
+    eligible = np.flatnonzero(
+        (target_axis >= start_nm - 1e-9) & (target_axis <= stop_nm + 1e-9)
+    )
+    if not len(eligible):
+        raise ValueError('设定范围内没有标定波长点')
+    indices = eligible[::stride].astype(int).tolist()
+    if indices[-1] != int(eligible[-1]):
+        indices.append(int(eligible[-1]))
+    if len(indices) < MANUAL_SELECTION_POINT_COUNT:
+        raise ValueError(
+            f'该范围和间隔只能采{len(indices)}点，手动放置45点至少需要45个密集谱采样点'
+        )
+    return indices, actual_spacing_nm
 
 
 def temporary_transport_supported(device):
@@ -297,7 +334,12 @@ class ReferenceLineWorker(ReferenceWorker):
             report = acquire_reference(self.device, self.output, selected_rows=self.plan['rows'],
                 feedback_selector=self.options['feedback_selector'],
                 signal_channel=self.adc_channel, should_stop=self.cancel.is_set,
-                on_progress=lambda n,total: self.message.emit(f'采集慢速参考线 {n}/{total}；每点等待并检查多次读数，完成后停光'))
+                continue_on_unstable=True, allow_partial_stop=True,
+                on_row=lambda row, n, total: self.reference_point.emit({
+                    'row': row, 'completed': n, 'total': total,
+                }),
+                on_progress=lambda n,total: self.message.emit(
+                    f'采集慢速参考线 {n}/{total}；未通过点标红后继续，完成后停光'))
             self.reference.emit(report)
         except Exception as exc:
             self.message.emit(f'参考线采集失败：{exc}；记录：{self.output}')
@@ -418,6 +460,13 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.dense_failed_points = []
         self._live_dense_rows = []
         self._dense_capture_active = False
+        self.manual_selection_indices = []
+        self.manual_selection_history = []
+        self.manual_selection_active = False
+        self.dense_scan_range_nm = (1525.0, 1565.0)
+        self.reference_failed_points = []
+        self._live_reference_line_rows = []
+        self._reference_line_capture_active = False
         self.finger_record_name = None
         self.display_mode = DEFAULT_DISPLAY_MODE
         # Convert every data set with the feedback selector that produced it.
@@ -473,8 +522,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                                "两个ADC读数接近不代表波长已稳定；等待时间需实测验证。修改模拟放大后需重新做幅值对照。")
         self.note_label.setWordWrap(True)
         self.note_label.setToolTip(self.note_label.text())
-        self.note_label.setText('固定45点扫描：原始圆点/实线、参考虚线、拟合点线分开显示；等待自行调节，允许低于15 Hz。\n'
-                     '拟合波长基于旧标定坐标，仅为五点估计；双ADC接近不证明波长稳定，原始幅值不作修正。')
+        self.note_label.setText('先在设定波长范围内等间隔采集密集光谱，再在谱线上手动点击45点；软件按波长排序并每5点分为一峰。\n'
+                     '原始圆点/实线、参考虚线、拟合点线分开显示；参考采集未通过点标红但不中断。')
         layout.addWidget(self.note_label)
         controls = QtWidgets.QHBoxLayout()
         self.channel_combo = QtWidgets.QComboBox()
@@ -482,13 +531,28 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.channel_combo.addItem(f'通道 CH{channel}', channel)
         self.channel_combo.setCurrentIndex(1)
         self.channel_combo.setToolTip(
-            '选择密集光谱、自动选点、参考线、实时扫描与拟合所使用的ADC通道。'
+            '选择密集光谱、手动选点、参考线、实时扫描与拟合所使用的ADC通道。'
             'CH0/CH1可调模拟跨阻；CH2/CH3固定2 kΩ。'
         )
-        self.reference_button = QtWidgets.QPushButton("重采密集光谱并选点")
         self.equal_interval_reference_button = QtWidgets.QPushButton(
-            '按等间隔重采光谱并选点'
+            '按等间隔重采密集光谱'
         )
+        self.scan_start_nm = QtWidgets.QDoubleSpinBox()
+        self.scan_start_nm.setDecimals(2)
+        self.scan_start_nm.setRange(1525.00, 1564.98)
+        self.scan_start_nm.setSingleStep(.02)
+        self.scan_start_nm.setValue(1525.00)
+        self.scan_start_nm.setSuffix(' nm')
+        self.scan_stop_nm = QtWidgets.QDoubleSpinBox()
+        self.scan_stop_nm.setDecimals(2)
+        self.scan_stop_nm.setRange(1525.02, 1565.00)
+        self.scan_stop_nm.setSingleStep(.02)
+        self.scan_stop_nm.setValue(1565.00)
+        self.scan_stop_nm.setSuffix(' nm')
+        for editor in (self.scan_start_nm, self.scan_stop_nm):
+            editor.setToolTip(
+                '只采集起点到终点（含边界）范围内的标定点；不会扫描范围外波长。'
+            )
         self.equal_interval_nm = QtWidgets.QDoubleSpinBox()
         self.equal_interval_nm.setDecimals(2)
         self.equal_interval_nm.setRange(.02, .10)
@@ -511,8 +575,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.stop_dense_button = QtWidgets.QPushButton("停止绘制")
         self.stop_dense_button.setEnabled(False)
         self.stop_dense_button.setToolTip(
-            '安全停止当前密集光谱采集并关光；如已显示足够的9个峰，'
-            '已采部分仍会自动选点并可继续参考线/开关测试。'
+            '安全停止当前密集光谱采集并关光；已采部分会保留，'
+            '随后可在已经绘出的谱线上手动点击45个点。'
         )
         self.save_finger_button = QtWidgets.QPushButton('保存本次手指记录')
         self.load_finger_button = QtWidgets.QPushButton('载入手指记录')
@@ -529,6 +593,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.spacing.setSpecialValueText("半高宽内等间隔5点")
         self.spacing.setToolTip('自动点全部位于峰的半高宽内；人工用左右方向键调整后可以不等间隔。')
         self.spacing.setEnabled(False)
+        self.spacing.hide()
         self.cycles = QtWidgets.QSpinBox()
         self.cycles.setRange(32, 512)
         self.cycles.setValue(256)
@@ -544,8 +609,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         acquisition_controls = QtWidgets.QHBoxLayout()
         for widget in (
                 self.channel_combo,
-                self.reference_button,
                 self.equal_interval_reference_button,
+                QtWidgets.QLabel('扫描起点'), self.scan_start_nm,
+                QtWidgets.QLabel('扫描终点'), self.scan_stop_nm,
                 QtWidgets.QLabel('采谱间隔'), self.equal_interval_nm,
                 QtWidgets.QLabel('等间隔逐点等待'), self.equal_interval_settle,
                 self.stop_dense_button):
@@ -553,7 +619,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         acquisition_controls.addStretch(1)
         layout.addLayout(acquisition_controls)
         for widget in (
-                self.save_finger_button, self.load_finger_button, self.spacing,
+                self.save_finger_button, self.load_finger_button,
                 self.continuous, self.cycles, self.start_button,
                 self.stop_button):
             controls.addWidget(widget)
@@ -638,13 +704,13 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.peak_view.addItem(f'放大查看第{group+1}峰（仅改变横轴范围）')
         self.peak_view.currentIndexChanged.connect(self.fit_peak_view)
         fit_controls.addWidget(self.peak_view)
-        self.show_dense_selection = QtWidgets.QPushButton('显示密集光谱和可调整45点')
+        self.show_dense_selection = QtWidgets.QPushButton('显示密集光谱和手动45点')
         self.show_dense_selection.setCheckable(True)
         self.show_dense_selection.setChecked(True)
         self.show_dense_selection.setEnabled(False)
         self.show_dense_selection.setToolTip(
-            '单击一个采样点将其选中，再按键盘左/右键逐格移动。'
-            '移动只修改45点路线；参考线仅在主动点击采集按钮时更新。'
+            '新采谱后直接在曲线上点击45次放置点；完成后可单击一个已放点，'
+            '再按键盘左/右键逐格移动。参考线只在主动点击采集按钮时更新。'
         )
         self.show_dense_selection.toggled.connect(self.redraw_dense_selection)
         fit_controls.addWidget(self.show_dense_selection)
@@ -657,6 +723,16 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         )
         self.show_dense_failures.toggled.connect(self.redraw_dense_selection)
         fit_controls.addWidget(self.show_dense_failures)
+        self.manual_selection_label = QtWidgets.QLabel('手动选点 0/45')
+        self.manual_undo_button = QtWidgets.QPushButton('撤销上一个点')
+        self.manual_clear_button = QtWidgets.QPushButton('清空手动点')
+        self.manual_undo_button.setEnabled(False)
+        self.manual_clear_button.setEnabled(False)
+        self.manual_undo_button.clicked.connect(self.undo_manual_selection)
+        self.manual_clear_button.clicked.connect(self.clear_manual_selection)
+        fit_controls.addWidget(self.manual_selection_label)
+        fit_controls.addWidget(self.manual_undo_button)
+        fit_controls.addWidget(self.manual_clear_button)
         layout.addLayout(fit_controls)
         self.status = QtWidgets.QLabel("等待当前密集光谱；尚未验证帧率或光学精度")
         self.status.setWordWrap(True)
@@ -700,6 +776,19 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             name='密集采集未通过点',
         )
         self.dense_failed_curve.setZValue(25)
+        self.manual_selection_curve = self.plot.plot(
+            pen=None, symbol='o', symbolSize=11,
+            symbolPen=pg.mkPen((255, 255, 255), width=2),
+            symbolBrush=pg.mkBrush((59, 130, 246, 150)),
+            name='待完成的手动45点',
+        )
+        self.manual_selection_curve.setZValue(31)
+        self.reference_failed_curve = self.plot.plot(
+            pen=None, symbol='x', symbolSize=13,
+            symbolPen=pg.mkPen((239, 68, 68), width=3),
+            name='45点参考未通过',
+        )
+        self.reference_failed_curve.setZValue(40)
         self.reference_curves = [self.plot.plot(pen=pg.mkPen(pg.intColor(i,9),width=2,style=QtCore.Qt.DashLine),
                                                 symbol='x',symbolSize=8) for i in range(9)]
         self.fitted_curves = [self.plot.plot(pen=pg.mkPen(pg.intColor(i,9), width=2,
@@ -711,6 +800,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             label.hide()
             self.fit_labels.append(label)
         self.show_peak_fits.toggled.connect(self.redraw_peak_fits)
+        self.plot.scene().sigMouseClicked.connect(self.handle_dense_plot_click)
         layout.addWidget(self.plot, 1)
         self.table = QtWidgets.QTableWidget(45, 6)
         self.table.setHorizontalHeaderLabels(['峰', '物理索引', '目标nm', '实测标定nm', 'CH1 ADC', '慢速参考ADC'])
@@ -724,7 +814,6 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.save_finger_button.clicked.connect(self.save_finger_capture)
         self.load_finger_button.clicked.connect(self.load_finger_capture)
         self.start_button.clicked.connect(self.start_scan)
-        self.reference_button.clicked.connect(lambda: self.start_scan(reference=True))
         self.equal_interval_reference_button.clicked.connect(
             self.start_equal_interval_reference
         )
@@ -751,6 +840,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.reference_gain.valueChanged,
             self.first_delay.valueChanged,
             self.boundary_delay.valueChanged,
+            self.scan_start_nm.valueChanged,
+            self.scan_stop_nm.valueChanged,
             self.equal_interval_nm.valueChanged,
             self.equal_interval_settle.valueChanged,
             self.use_point_waits.toggled,
@@ -811,6 +902,12 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.dense_values = None
         self.dense_failed_points = []
         self._live_dense_rows = []
+        self.manual_selection_indices = []
+        self.manual_selection_history = []
+        self.manual_selection_active = False
+        self.reference_failed_points = []
+        self._live_reference_line_rows = []
+        self._reference_line_capture_active = False
         self.latest_channel = channel
         self.reference_channel = channel
         self.dense_channel = channel
@@ -820,6 +917,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self._clear_selection_markers()
         self.dense_curve.clear()
         self.dense_failed_curve.clear()
+        self.manual_selection_curve.clear()
+        self.reference_failed_curve.clear()
+        self._sync_manual_selection_controls()
         for curve in (*self.curves, *self.reference_curves, *self.fitted_curves):
             curve.clear()
         self.start_button.setEnabled(False)
@@ -829,7 +929,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self._sync_channel_ui()
         self.status.setText(
             f'已切换到{self.channel_name(channel)}；通道的峰位和幅值记录相互独立，'
-            '请使用任一种方案重新采集光谱并选点。'
+            '请按设定范围等间隔重采光谱，再在谱线上手动放置45点。'
         )
 
     def cycle_display_mode(self, _checked=False):
@@ -950,7 +1050,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 )
                 return True
             self.status.setText(
-                f'{self.runtime_machine_label}尚无临时模式点表；请重采密集光谱并选点，或载入该机保存的手指记录。'
+                f'{self.runtime_machine_label}尚无临时模式点表；请按范围等间隔重采光谱并手动放置45点，'
+                '或载入该机保存的手指记录。'
             )
             return False
         except Exception as exc:
@@ -973,6 +1074,12 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.dense_failed_points = []
             self._live_dense_rows = []
             self._dense_capture_active = False
+            self.manual_selection_indices = []
+            self.manual_selection_history = []
+            self.manual_selection_active = False
+            self.reference_failed_points = []
+            self._live_reference_line_rows = []
+            self._reference_line_capture_active = False
             self.finger_record_name = None
             self._spectrum_dirty = False
             self.validated_route_indices = None
@@ -984,6 +1091,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self._clear_selection_markers()
             self.dense_curve.clear()
             self.dense_failed_curve.clear()
+            self.manual_selection_curve.clear()
+            self.reference_failed_curve.clear()
+            self._sync_manual_selection_controls()
             for curve in (*self.curves, *self.reference_curves, *self.fitted_curves):
                 curve.clear()
             for label in self.fit_labels:
@@ -1088,6 +1198,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         if not hasattr(self, 'table') or self.plan is None:
             return
         unit = {'adc': 'ADC码', 'voltage': 'V', 'dbm': 'dBm'}[self.display_mode]
+        failed_reference_by_order = {
+            int(item.get('order', -1)): item
+            for item in self.reference_failed_points
+        }
         for column, values, selector in (
                 (4, self.latest_values, self.latest_feedback_selector),
                 (5, self.reference_values, self.reference_feedback_selector)):
@@ -1104,6 +1218,16 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                     f'ADC={raw:g}码；当前显示单位={unit}；'
                     f'采集时模拟跨阻={transimpedance_ohm(selector) / 1000:g} kΩ。'
                 )
+                if column == 5 and index in failed_reference_by_order:
+                    failure = failed_reference_by_order[index].get('row', {})
+                    reason = failure.get(
+                        'failure_reason', '稳定性或饱和检查未通过'
+                    )
+                    item.setForeground(QtGui.QBrush(QtGui.QColor('#dc2626')))
+                    item.setBackground(QtGui.QBrush(QtGui.QColor('#fee2e2')))
+                    item.setToolTip(
+                        item.toolTip() + f' 未通过但已继续采集：{reason}'
+                    )
                 self.table.setItem(index, column, item)
 
     def _update_plot_unit_label(self):
@@ -1186,20 +1310,22 @@ class TemporaryTestWindow(QtWidgets.QWidget):
 
     def _capture_payload(self, finger_label):
         """Build a self-contained named record without touching the hardware."""
+        capture_plan = None if self.manual_selection_active else self.plan
         dense_x = np.asarray(
             self.dense_wavelengths if self.dense_wavelengths is not None
-            else self.plan.get('reference_wavelengths_nm', [])
-            if isinstance(self.plan, dict) else [], dtype=float
+            else capture_plan.get('reference_wavelengths_nm', [])
+            if isinstance(capture_plan, dict) else [], dtype=float
         )
         dense_y = np.asarray(
             self.dense_values if self.dense_values is not None
-            else self.plan.get('reference_values', [])
-            if isinstance(self.plan, dict) else [], dtype=float
+            else capture_plan.get('reference_values', [])
+            if isinstance(capture_plan, dict) else [], dtype=float
         )
         if not self._valid_dense_spectrum(dense_x, dense_y):
             raise ValueError('需要先完成一条步长不大于0.10 nm的有效密集谱线')
-        point_count = self.point_count()
-        if self.plan is not None and point_count not in range(5, 46, 5):
+        point_count = len(capture_plan.get('rows', [])) if capture_plan else 0
+        peak_count = point_count // 5
+        if capture_plan is not None and point_count not in range(5, 46, 5):
             raise ValueError('当前15/45点路线无效')
         references = self.reference_values
         has_reference = bool(
@@ -1211,12 +1337,12 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         if (has_reference and (not isinstance(reference_wavelengths, list)
                 or len(reference_wavelengths) != point_count
                 or not np.all(np.isfinite(np.asarray(reference_wavelengths, dtype=float))))):
-            reference_wavelengths = [float(row['measured_nm']) for row in self.plan['rows']]
+            reference_wavelengths = [float(row['measured_nm']) for row in capture_plan['rows']]
         plan = None
-        if self.plan is not None:
+        if capture_plan is not None:
             plan = stamp_machine_metadata(
-                validate_plan_payload(self.plan),
-                ('fullband_2001', f'{self.peak_count()}_peak_route'),
+                validate_plan_payload(capture_plan),
+                ('fullband_2001', f'{peak_count}_peak_route'),
             )
             plan['reference_wavelengths_nm'] = dense_x.tolist()
             plan['reference_values'] = dense_y.tolist()
@@ -1224,23 +1350,23 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             plan['signal_channel'] = self.selected_channel()
         categories = (
             'fullband_2001',
-            f'{self.peak_count()}_peak_route' if plan is not None
+            f'{peak_count}_peak_route' if plan is not None
             else 'dense_spectrum',
         )
         return stamp_machine_metadata({
             'schema': 'temporary_test_finger_capture_v1',
             'saved_s': time.time(),
             'finger_label': str(finger_label),
-            'ready': bool(self.plan_ready and has_reference),
+            'ready': bool(capture_plan is not None and self.plan_ready and has_reference),
             'point_count': point_count,
-            'peak_count': self.peak_count(),
+            'peak_count': peak_count,
             'plan': plan,
             'dense_wavelengths_nm': dense_x.tolist(),
             'dense_values': dense_y.tolist(),
             'dense_source': str(
                 self.dense_source
-                or (self.plan.get('reference_source', '')
-                    if isinstance(self.plan, dict) else '')
+                or (capture_plan.get('reference_source', '')
+                    if isinstance(capture_plan, dict) else '')
             ),
             'dense_point_count': int(len(dense_x)),
             'signal_channel': self.selected_channel(),
@@ -1256,6 +1382,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 [float(value) for value in reference_wavelengths]
                 if has_reference else None
             ),
+            'reference_failed_points': (
+                list(self.reference_failed_points) if has_reference else []
+            ),
             'feedback_selector': self.effective_feedback_selector(),
             'dense_feedback_selector': int(self.dense_feedback_selector),
             'reference_feedback_selector': int(self.reference_feedback_selector),
@@ -1264,6 +1393,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             'display_unit': self.display_mode,
             'first_delay_us': int(self.first_delay.value()),
             'boundary_extra_us': int(self.boundary_delay.value()),
+            'scan_start_nm': float(self.scan_start_nm.value()),
+            'scan_stop_nm': float(self.scan_stop_nm.value()),
             'equal_interval_nm': float(self.equal_interval_nm.value()),
             'equal_interval_settle_s': float(self.equal_interval_settle.value()),
             'show_dense_selection': bool(self.show_dense_selection.isChecked()),
@@ -1327,7 +1458,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self._spectrum_dirty = False
             self.finger_record_label.setText(
                 f'当前手指记录：{finger_label}（{self.runtime_machine_label}参数；已保存'
-                + ('，可直接使用）' if payload.get('ready') else '，尚需采集参考线）')
+                + ('，可直接使用）' if payload.get('ready') else
+                   '，尚需手动放置45点）' if not payload.get('point_count') else
+                   '，尚需采集参考线）')
             )
             if is_default_nine_peak:
                 suffix = '已设为下次启动的默认9峰/45点记录。'
@@ -1338,7 +1471,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             else:
                 suffix = '已保留为可手动载入的3峰/15点记录；下次仍默认载入9峰版本。'
             self.status.setText(
-                f'已保存“{finger_label}”：{self.peak_count()}峰、{self.point_count()}点、'
+                f'已保存“{finger_label}”：{payload.get("peak_count", 0)}峰、'
+                f'{payload.get("point_count", 0)}点、'
                 f'{len(payload["dense_values"])}点密集谱线'
                 + ('和参考线；' if payload.get('reference_values') else '（无参考线）；')
                 + suffix
@@ -1465,6 +1599,11 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self._set_display_mode(DEFAULT_DISPLAY_MODE, persist=False)
             self.first_delay.setValue(int(payload.get('first_delay_us', 350)))
             self.boundary_delay.setValue(int(payload.get('boundary_extra_us', 1800)))
+            self.scan_start_nm.setValue(float(payload.get('scan_start_nm', dense_x[0])))
+            self.scan_stop_nm.setValue(float(payload.get('scan_stop_nm', dense_x[-1])))
+            self.dense_scan_range_nm = (
+                float(self.scan_start_nm.value()), float(self.scan_stop_nm.value())
+            )
             self.equal_interval_nm.setValue(float(payload.get('equal_interval_nm', .02)))
             self.equal_interval_settle.setValue(float(
                 payload.get('equal_interval_settle_s', .2)
@@ -1482,33 +1621,24 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 self.plan = plan
                 self.render_plan(ready=False)
             else:
-                # A spectrum can be worth keeping even when automatic peak
-                # selection did not finish.  Re-attempt selection on load;
-                # if it still cannot identify 3/9 peaks, retain the raw curve.
+                # Raw spectra never trigger automatic peak recognition.  The
+                # operator resumes the same explicit 45-click workflow.
                 self.plan = None
-                try:
-                    self.prepare(
-                        dense_x, dense_y, self.dense_source or str(path),
-                        mark_dirty=False,
-                    )
-                    plan = self.plan
-                    point_count = self.point_count()
-                except Exception:
-                    self.plan = None
-                    self.plan_ready = False
-                    self.start_button.setEnabled(False)
-                    self.reference_line_button.setEnabled(False)
-                    self.save_finger_button.setEnabled(True)
-                    self.show_dense_selection.setEnabled(True)
-                    self.show_dense_selection.setChecked(True)
-                    self.redraw_dense_selection()
+                self.begin_manual_selection()
             if has_reference:
                 self.reference_values = [float(value) for value in references]
                 self.reference_wavelengths = [float(value) for value in reference_wavelengths]
+                self.reference_failed_points = list(
+                    payload.get('reference_failed_points', [])
+                )
             else:
                 self.reference_values = None
                 self.reference_wavelengths = None
-            self.show_dense_selection.setChecked(bool(payload.get('show_dense_selection', True)))
+                self.reference_failed_points = []
+            self.show_dense_selection.setChecked(
+                True if self.manual_selection_active
+                else bool(payload.get('show_dense_selection', True))
+            )
             self.show_dense_failures.setChecked(bool(payload.get('show_dense_failures', True)))
             self.show_reference.setChecked(
                 bool(payload.get('show_reference', True)) and has_reference
@@ -1554,7 +1684,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                     + (f'和{self.point_count()}个选点；' if self.plan is not None else '；')
                     + ('仍需采集参考线后才能开始临时测试。'
                        if self.plan is not None else
-                       '当前仍未自动识别出可用峰，可继续查看谱线或重新采集。')
+                       '请直接在谱线上手动点击45个点。')
                 )
             self._save_last_route_session(ready=self.plan_ready)
             return True
@@ -1606,10 +1736,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             f'对当前{point_count}点按小波长到大波长连续测试3轮；'
             '不做反向回绕审计。CH1主变化达到90%的板上时间会写入逐点等待表。'
         )
-        self.show_dense_selection.setText(f'显示密集光谱和可调整{point_count}点')
+        self.show_dense_selection.setText(f'显示密集光谱和手动{point_count}点')
         self.show_dense_selection.setToolTip(
-            '单击一个采样点将其选中，再按键盘左/右键逐格移动。'
-            f'移动只修改{point_count}点路线；参考线仅在主动点击采集按钮时更新。'
+            '新采谱后直接在曲线上点击45次放置点；路线完成后单击一个已放点，'
+            f'再按键盘左/右键移动。移动只修改{point_count}点路线。'
         )
         self.table.setRowCount(point_count)
         self.peak_fit_table.setColumnCount(peak_count)
@@ -1636,7 +1766,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
 
     def _save_last_route_session(self, ready=None):
         if (not self.persistence_enabled or self._restoring_session
-                or self.plan is None):
+                or self.plan is None or self.manual_selection_active):
             return
         point_count = self.point_count()
         ready = self.plan_ready if ready is None else bool(ready)
@@ -1665,6 +1795,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 and isinstance(self.reference_wavelengths, list)
                 and len(self.reference_wavelengths) == point_count
             ) else None,
+            'reference_failed_points': (
+                list(self.reference_failed_points)
+                if reference_values is not None else []
+            ),
             'signal_channel': self.selected_channel(),
             'latest_channel': int(self.latest_channel),
             'dense_channel': int(self.dense_channel),
@@ -1681,6 +1815,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             'display_unit': self.display_mode,
             'first_delay_us': int(self.first_delay.value()),
             'boundary_extra_us': int(self.boundary_delay.value()),
+            'scan_start_nm': float(self.scan_start_nm.value()),
+            'scan_stop_nm': float(self.scan_stop_nm.value()),
             'equal_interval_nm': float(self.equal_interval_nm.value()),
             'equal_interval_settle_s': float(self.equal_interval_settle.value()),
             'show_dense_selection': bool(self.show_dense_selection.isChecked()),
@@ -1787,6 +1923,17 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self._set_display_mode(DEFAULT_DISPLAY_MODE, persist=False)
             self.first_delay.setValue(int(payload.get('first_delay_us', 350)))
             self.boundary_delay.setValue(int(payload.get('boundary_extra_us', 1800)))
+            dense_default_start = float(dense_x[0]) if dense_x.size else 1525.0
+            dense_default_stop = float(dense_x[-1]) if dense_x.size else 1565.0
+            self.scan_start_nm.setValue(float(payload.get(
+                'scan_start_nm', dense_default_start
+            )))
+            self.scan_stop_nm.setValue(float(payload.get(
+                'scan_stop_nm', dense_default_stop
+            )))
+            self.dense_scan_range_nm = (
+                float(self.scan_start_nm.value()), float(self.scan_stop_nm.value())
+            )
             self.equal_interval_nm.setValue(float(payload.get('equal_interval_nm', .02)))
             self.equal_interval_settle.setValue(float(
                 payload.get('equal_interval_settle_s', .2)
@@ -1828,6 +1975,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 self.use_point_waits.setChecked(False)
             if has_reference:
                 self.reference_values = [float(value) for value in references]
+                self.reference_failed_points = list(
+                    payload.get('reference_failed_points', [])
+                )
                 if (isinstance(reference_wavelengths, list)
                         and len(reference_wavelengths) == point_count
                         and np.all(np.isfinite(np.asarray(reference_wavelengths, dtype=float)))):
@@ -2255,6 +2405,213 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             return 0.0
         return float(np.interp(wavelength_nm, self.dense_wavelengths, self.dense_values))
 
+    def _sync_manual_selection_controls(self):
+        count = len(self.manual_selection_indices)
+        self.manual_selection_label.setText(
+            f'手动选点 {count}/{MANUAL_SELECTION_POINT_COUNT}'
+        )
+        enabled = bool(self.manual_selection_active and self.worker is None)
+        self.manual_undo_button.setEnabled(enabled and count > 0)
+        self.manual_clear_button.setEnabled(enabled and count > 0)
+
+    def begin_manual_selection(self):
+        """Start a fresh operator-only 45-point placement on the retained curve."""
+
+        self.manual_selection_indices = []
+        self.manual_selection_history = []
+        self.manual_selection_active = True
+        self.plan_ready = False
+        self.start_button.setEnabled(False)
+        self.reference_line_button.setEnabled(False)
+        self.save_finger_button.setEnabled(True)
+        self.show_dense_selection.setChecked(True)
+        self._clear_selection_markers()
+        self._sync_manual_selection_controls()
+        self.redraw_dense_selection()
+        if self.dense_wavelengths is not None and len(self.dense_wavelengths):
+            left = float(self.dense_wavelengths[0])
+            right = float(self.dense_wavelengths[-1])
+            margin = max(.04, (right - left) * .02)
+            self.plot.setXRange(left - margin, right + margin, padding=0)
+            self.fit_values()
+
+    def add_manual_selection_at(self, wavelength_nm):
+        """Snap one spectrum click to the calibrated 0.02-nm route table."""
+
+        if (not self.manual_selection_active or self.worker is not None
+                or self.dense_wavelengths is None or self.dense_values is None):
+            return False
+        wavelength_nm = float(wavelength_nm)
+        dense_x = np.asarray(self.dense_wavelengths, dtype=float)
+        if not dense_x[0] - 1e-9 <= wavelength_nm <= dense_x[-1] + 1e-9:
+            self.status.setText('请在当前密集光谱覆盖的波长范围内点击。')
+            return False
+        import app_JDSU as app
+        table = tuple(app.load_fullband_accuracy_table())
+        measured_axis = np.asarray([point.measured_nm for point in table], dtype=float)
+        index = int(np.argmin(abs(measured_axis - wavelength_nm)))
+        if not dense_x[0] - 1e-9 <= measured_axis[index] <= dense_x[-1] + 1e-9:
+            self.status.setText('点击位置无法映射到当前扫描范围内的标定点。')
+            return False
+        if index in self.manual_selection_indices:
+            self.status.setText(
+                f'索引{index}（{measured_axis[index]:.6f} nm）已经放置，请点击其他位置。'
+            )
+            return False
+        self.manual_selection_indices.append(index)
+        self.manual_selection_history.append(index)
+        self.manual_selection_indices.sort()
+        self._sync_manual_selection_controls()
+        self.redraw_dense_selection()
+        count = len(self.manual_selection_indices)
+        if count == MANUAL_SELECTION_POINT_COUNT:
+            return self.finish_manual_selection()
+        self.status.setText(
+            f'已手动放置{count}/{MANUAL_SELECTION_POINT_COUNT}点；可按任意顺序点击，'
+            '软件按波长排序，每连续5点作为一峰。'
+        )
+        return True
+
+    def handle_dense_plot_click(self, event):
+        """Accept left clicks close to the visible dense curve."""
+
+        if (not self.manual_selection_active or self.worker is not None
+                or not self.show_dense_selection.isChecked()
+                or self.dense_wavelengths is None or self.dense_values is None
+                or event.button() != QtCore.Qt.LeftButton):
+            return
+        view_box = self.plot.getViewBox()
+        scene_position = event.scenePos()
+        if not view_box.sceneBoundingRect().contains(scene_position):
+            return
+        view_position = view_box.mapSceneToView(scene_position)
+        wavelength_nm = float(view_position.x())
+        raw_value = self._dense_value_at(wavelength_nm)
+        display_value = float(self._plot_display_values(
+            [raw_value], selector=self.dense_feedback_selector
+        )[0])
+        curve_position = view_box.mapViewToScene(
+            QtCore.QPointF(wavelength_nm, display_value)
+        )
+        if abs(float(curve_position.y()) - float(scene_position.y())) > 24.0:
+            self.status.setText('请靠近密集光谱曲线点击；点位会吸附到0.02 nm标定网格。')
+            return
+        if self.add_manual_selection_at(wavelength_nm):
+            event.accept()
+
+    def undo_manual_selection(self, _checked=False):
+        if not self.manual_selection_active or not self.manual_selection_indices:
+            return False
+        index = self.manual_selection_history.pop()
+        self.manual_selection_indices.remove(index)
+        self._sync_manual_selection_controls()
+        self.redraw_dense_selection()
+        self.status.setText(
+            f'已撤销，当前手动放置{len(self.manual_selection_indices)}/45点。'
+        )
+        return True
+
+    def clear_manual_selection(self, _checked=False):
+        if not self.manual_selection_active:
+            return False
+        self.manual_selection_indices = []
+        self.manual_selection_history = []
+        self._sync_manual_selection_controls()
+        self.redraw_dense_selection()
+        self.status.setText('已清空手动点；请在密集光谱线上重新点击45个点。')
+        return True
+
+    def finish_manual_selection(self):
+        if len(self.manual_selection_indices) != MANUAL_SELECTION_POINT_COUNT:
+            return False
+        import app_JDSU as app
+        groups = [
+            self.manual_selection_indices[start:start + 5]
+            for start in range(0, MANUAL_SELECTION_POINT_COUNT, 5)
+        ]
+        try:
+            plan = build_manual_dense_plan(
+                app.load_fullband_accuracy_table(), groups,
+                self.dense_wavelengths, self.dense_values,
+                source=self.dense_source or 'manual dense-spectrum selection',
+            )
+        except Exception as exc:
+            self.status.setText(f'45点手动路线未生成：{exc}；可撤销后重新选择。')
+            return False
+        plan['signal_channel'] = self.selected_channel()
+        plan['signal_channel_name'] = self.channel_name()
+        plan['dense_acquisition_method'] = self.dense_acquisition_method
+        plan['dense_point_count'] = int(len(self.dense_wavelengths))
+        plan['dense_failed_points'] = list(self.dense_failed_points)
+        plan['dense_scan_range_nm'] = list(self.dense_scan_range_nm)
+        plan['manual_selection_method'] = 'operator_plot_click_45_sorted_into_9x5'
+        self.plan = plan
+        self.finger_record_name = None
+        self.finger_record_label.setText(
+            '当前手指记录：未命名（手动45点，尚未保存）'
+        )
+        self.point_waits = None
+        self.point_wait_route = None
+        self.use_point_waits.setChecked(False)
+        self.manual_selection_active = False
+        self.manual_selection_indices = []
+        self.manual_selection_history = []
+        self._sync_manual_selection_controls()
+        self.render_plan(ready=False)
+        warning_groups = [
+            str(check['group']) for check in plan.get('selection_fit_checks', [])
+            if not check.get('passed')
+        ]
+        warning = (
+            '；密集谱预览中峰' + '/'.join(warning_groups)
+            + '形状可能有问题，但点位已保留'
+            if warning_groups else ''
+        )
+        self.status.setText(
+            '手动45点已完成：已按波长排序并每5点分为一峰'
+            + warning
+            + '。下一步可采集45点参考线；参考点未通过会标红但不会中断。'
+        )
+        self._save_last_route_session(ready=False)
+        return True
+
+    def _redraw_reference_failures(self):
+        rows = (self._live_reference_line_rows
+                if self._reference_line_capture_active
+                else self.reference_failed_points)
+        if not rows or not self.show_reference.isChecked():
+            self.reference_failed_curve.clear()
+            return
+        selector = (self.effective_feedback_selector()
+                    if self._reference_line_capture_active
+                    else self.reference_feedback_selector)
+        x_values, y_values = [], []
+        for item in rows:
+            row = item['row'] if 'row' in item else item
+            passed = bool(row.get('point_passed', row.get('stable', False)))
+            saturated = bool(row.get('signal_saturated'))
+            if passed and not saturated:
+                continue
+            order = int(item.get('order', len(x_values)))
+            if self.plan is None or not 0 <= order < self.point_count():
+                continue
+            x_values.append(float(self.plan['rows'][order]['measured_nm']))
+            y_values.append(float(row.get(
+                'signal_adc_code', row.get('ch1_adc_code', np.nan)
+            )))
+        finite = np.isfinite(np.asarray(y_values, dtype=float))
+        if not x_values or not np.any(finite):
+            self.reference_failed_curve.clear()
+            return
+        x_array = np.asarray(x_values, dtype=float)[finite]
+        y_array = np.asarray(y_values, dtype=float)[finite]
+        self.reference_failed_curve.setData(
+            x_array,
+            self._plot_display_values(
+                y_array, reference=True, selector=selector
+            ),
+        )
+
     def redraw_dense_selection(self, _checked=None):
         live_rows = self._live_dense_rows if self._dense_capture_active else []
         if live_rows:
@@ -2278,6 +2635,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         if not visible:
             self.dense_curve.clear()
             self.dense_failed_curve.clear()
+            self.manual_selection_curve.clear()
             self._clear_selection_markers()
             return
         self.dense_curve.setData(
@@ -2312,8 +2670,37 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         # live curve alone; the newly selected markers are drawn by prepare()
         # as soon as the scan is stopped or completed.
         if self._dense_capture_active:
+            self.manual_selection_curve.clear()
             self._clear_selection_markers()
             return
+        if self.manual_selection_active:
+            self._clear_selection_markers()
+            if self.manual_selection_indices:
+                import app_JDSU as app
+                table = tuple(app.load_fullband_accuracy_table())
+                selected_x = np.asarray([
+                    table[index].measured_nm
+                    for index in self.manual_selection_indices
+                ], dtype=float)
+                selected_y = np.asarray([
+                    self._dense_value_at(wavelength_nm)
+                    for wavelength_nm in selected_x
+                ], dtype=float)
+                brushes = [
+                    pg.mkBrush(pg.intColor(min(i // 5, 8), 9))
+                    for i in range(len(selected_x))
+                ]
+                self.manual_selection_curve.setData(
+                    selected_x,
+                    self._plot_display_values(
+                        selected_y, selector=self.dense_feedback_selector
+                    ),
+                    symbolBrush=brushes,
+                )
+            else:
+                self.manual_selection_curve.clear()
+            return
+        self.manual_selection_curve.clear()
         if self.plan is None:
             self._clear_selection_markers()
             return
@@ -2375,7 +2762,29 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         suffix = f'；已标红{failed}个未通过点' if failed else ''
         self.status.setText(
             f'{self.channel_name()}密集光谱实时绘制 {completed}/{total}{suffix}。'
-            '若已看到9个峰，可点“停止绘制”尝试提前选点。'
+            '若范围已经足够，可点“停止绘制”，随后手动放置45点。'
+        )
+
+    @QtCore.pyqtSlot(object)
+    def update_reference_line_point(self, payload):
+        """Show failed sparse-reference points immediately without aborting."""
+
+        if not self._reference_line_capture_active:
+            return
+        row = dict(payload.get('row', {}))
+        order = max(0, int(payload.get('completed', 1)) - 1)
+        self._live_reference_line_rows.append({'order': order, 'row': row})
+        self._redraw_reference_failures()
+        failed = sum(
+            not bool(item['row'].get(
+                'point_passed', item['row'].get('stable', False)
+            )) or bool(item['row'].get('signal_saturated'))
+            for item in self._live_reference_line_rows
+        )
+        completed = int(payload.get('completed', len(self._live_reference_line_rows)))
+        total = int(payload.get('total', self.point_count()))
+        self.status.setText(
+            f'采集45点参考线 {completed}/{total}；已标红{failed}个未通过点，继续后续点。'
         )
 
     def stop_dense_reference(self):
@@ -2385,7 +2794,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.stop_dense_button.setEnabled(False)
         self.stop_button.setEnabled(False)
         self.status.setText(
-            '正在停止密集绘制并安全关光；已采部分会继续尝试识别峰和选点…'
+            '正在停止密集绘制并安全关光；已采部分会保留，停光后可手动放置45点…'
         )
 
     def _refresh_selection_marker_styles(self):
@@ -2430,9 +2839,20 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         group, point = self.selected_selection_point
         flat_index = group * 5 + point
         indices = [int(row['index']) for row in self.plan['rows']]
-        lower = indices[flat_index - 1] + 1 if flat_index else 0
+        import app_JDSU as app
+        table = tuple(app.load_fullband_accuracy_table())
+        measured_axis = np.asarray([entry.measured_nm for entry in table], dtype=float)
+        dense_left = int(np.searchsorted(
+            measured_axis, float(self.dense_wavelengths[0]), side='left'
+        )) if self.dense_wavelengths is not None else 0
+        dense_right = int(np.searchsorted(
+            measured_axis, float(self.dense_wavelengths[-1]), side='right'
+        ) - 1) if self.dense_wavelengths is not None else len(table) - 1
+        lower = indices[flat_index - 1] + 1 if flat_index else dense_left
         upper = (indices[flat_index + 1] - 1
-                 if flat_index < self.point_count() - 1 else 2000)
+                 if flat_index < self.point_count() - 1 else dense_right)
+        lower = max(lower, dense_left)
+        upper = min(upper, dense_right)
         requested = indices[flat_index] + step
         if not lower <= requested <= upper:
             self.status.setText(
@@ -2441,8 +2861,6 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 + '移动：相邻采样点之间必须保留严格顺序。'
             )
             return False
-        import app_JDSU as app
-        table = tuple(app.load_fullband_accuracy_table())
         changed = self.apply_dragged_selection(
             group, point, float(table[requested].measured_nm)
         )
@@ -2468,9 +2886,17 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         ]
         flat = [index for indices in groups for index in indices]
         flat_index = group * 5 + point
-        lower = flat[flat_index - 1] + 1 if flat_index else 0
+        dense_left = int(np.searchsorted(
+            measured, float(self.dense_wavelengths[0]), side='left'
+        ))
+        dense_right = int(np.searchsorted(
+            measured, float(self.dense_wavelengths[-1]), side='right'
+        ) - 1)
+        lower = flat[flat_index - 1] + 1 if flat_index else dense_left
         upper = (flat[flat_index + 1] - 1
-                 if flat_index < self.point_count() - 1 else len(table) - 1)
+                 if flat_index < self.point_count() - 1 else dense_right)
+        lower = max(lower, dense_left)
+        upper = min(upper, dense_right)
         requested = min(max(requested, lower), upper)
         if requested == groups[group][point]:
             self.redraw_dense_selection()
@@ -2615,16 +3041,20 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             'point_passed': False,
         } for row in rows
             if not row.get('point_passed', row.get('stable', False))]
-        usable_rows = [
+        usable_rows = sorted([
             row for row in rows
             if np.isfinite(row.get('measured_wavelength_nm', np.nan))
             and np.isfinite(row.get(
                 'signal_adc_code', row.get('ch1_adc_code', np.nan)
             ))
-        ]
-        # Adopt the newly observed spectrum even when automatic peak selection
-        # cannot yet succeed.  This lets the operator see where an early stop
-        # occurred while the previous usable route remains intact.
+        ], key=lambda row: float(row['measured_wavelength_nm']))
+        # A partial report can contain a duplicated retry row.  Retain the last
+        # finite observation at each wavelength so the plotted axis is strict.
+        usable_rows = list({
+            float(row['measured_wavelength_nm']): row for row in usable_rows
+        }.values())
+        # Always retain and draw the raw spectrum.  Peak recognition is no
+        # longer a gate: the operator places all 45 points directly.
         if usable_rows:
             self.dense_wavelengths = np.asarray([
                 row['measured_wavelength_nm'] for row in usable_rows
@@ -2639,46 +3069,19 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             )
             self.dense_failed_points = failed_points
             self._spectrum_dirty = True
-            self.save_finger_button.setEnabled(True)
         try:
-            if len(usable_rows) < 5:
-                raise ValueError('已采有效点不足5个')
-            dense_x = np.asarray([
-                row['measured_wavelength_nm'] for row in usable_rows
-            ], dtype=float)
-            dense_y = np.asarray([
-                row.get('signal_adc_code', row.get('ch1_adc_code'))
-                for row in usable_rows
-            ], dtype=float)
-            passed = np.asarray([
-                bool(row.get('point_passed', row.get('stable', False)))
-                for row in usable_rows
-            ], dtype=bool)
-            selection_y = dense_y.copy()
-            # An unstable-but-finite sample is still drawn at its raw value
-            # and marked red.  It must not create/delete/move a detected FBG
-            # peak, so only the selector sees a local interpolation through
-            # accepted neighbours.  The subsequent 15/45-point reference is
-            # the independent live remeasurement of any selected wavelength.
-            if np.any(~passed) and np.count_nonzero(passed) >= 2:
-                selection_y[~passed] = np.interp(
-                    dense_x[~passed], dense_x[passed], dense_y[passed]
+            if len(usable_rows) < MANUAL_SELECTION_POINT_COUNT:
+                raise ValueError(
+                    f'已采有效点只有{len(usable_rows)}个，手动放置45点至少需要45个谱线点'
                 )
-            self.prepare(dense_x, dense_y, str(self.worker.output),
-                         failed_points=failed_points,
-                         selection_values=(selection_y if np.any(~passed) else None))
             self.dense_feedback_selector = int(
                 report.get('feedback_selector', self.effective_feedback_selector())
             )
-            # Dense forward acquisition proves the 2001 individual points,
-            # not the sparse 45-point entry path.  Require the dedicated slow
-            # reference to pass all nine five-point shapes before realtime
-            # scanning can be enabled.
-            self.plan_ready = False
-            self.start_button.setEnabled(False)
-            self.reference_line_button.setEnabled(True)
-            self.show_dense_selection.setChecked(True)
-            self.redraw_dense_selection()
+            self.dense_scan_range_nm = (
+                float(self.dense_wavelengths[0]),
+                float(self.dense_wavelengths[-1]),
+            )
+            self.begin_manual_selection()
             total = self.dense_expected_points
             completion = (
                 f'完成{len(rows)}/{total}点' if report.get('complete')
@@ -2695,18 +3098,17 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             )
             self.status.setText(
                 f'{self.channel_name(signal_channel)}密集光谱·{method}{completion}{quality}；'
-                f'已按dBm光强识别{self.peak_count()}峰并选出'
-                f'{self.point_count()}点。未通过的密集点不影响继续采集当前'
-                f'{self.point_count()}点参考线或执行开关速度测试。'
+                f'扫描范围{self.dense_scan_range_nm[0]:.3f}～'
+                f'{self.dense_scan_range_nm[1]:.3f} nm。现在请直接在谱线上点击45个点；'
+                '不再自动识别9峰，也不会自动放置点。'
             )
-            self._save_last_route_session(ready=False)
         except Exception as exc:
             self.redraw_dense_selection()
             previous = '；已保留上一张可用临时点表' if self.plan is not None else ''
             self.status.setText(
                 f'已绘制{len(rows)}个{self.channel_name(signal_channel)}密集点'
                 f'（其中{len(failed_points)}个未通过已标红），'
-                f'但当前范围还不足以自动选点：{exc}{previous}。'
+                f'但当前范围还不能手动放置完整45点：{exc}{previous}。'
             )
 
     def clear_reference_line(self, _value=None):
@@ -2714,6 +3116,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.clear_peak_fits('等待有效点表及实时帧')
         self.reference_values = None
         self.reference_wavelengths = None
+        self.reference_failed_points = []
+        self._live_reference_line_rows = []
+        self._reference_line_capture_active = False
+        self.reference_failed_curve.clear()
         for curve in self.reference_curves:
             curve.clear()
         for i in range(self.point_count()):
@@ -2795,6 +3201,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         return True
 
     def reference_line_ready(self, report):
+        self._reference_line_capture_active = False
+        self._live_reference_line_rows = []
         try:
             rows = report.get('rows', [])
             point_count = self.point_count()
@@ -2812,7 +3220,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                     or feedback_selector != self.effective_feedback_selector(signal_channel)):
                 raise ValueError('参考未完整完成、停光未确认或模拟档位不一致')
             quality_issues = []
-            for row, selected in zip(rows, self.plan['rows']):
+            new_failed_points = []
+            for order, (row, selected) in enumerate(zip(rows, self.plan['rows'])):
                 if (row['index'] != selected['index'] or row['dac_codes'] != selected['codes']
                         or not np.isfinite(row.get(
                             'signal_adc_code', row.get('ch1_adc_code', np.nan)
@@ -2821,17 +3230,41 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                             'signal_adc_code', row.get('ch1_adc_code', np.nan)
                         ) <= 4095):
                     raise ValueError('参考点不匹配或没有有效ADC读数')
-                if not row.get('stable'):
+                point_passed = bool(row.get(
+                    'point_passed', row.get('stable', False)
+                ))
+                saturated = bool(
+                    row.get('signal_saturated', row.get('ch1_saturated', False))
+                    or row.get('signal_adc_code', row.get('ch1_adc_code', 0)) >= 4080
+                )
+                if not point_passed:
                     quality_issues.append(f"点{row['index']}稳定性未通过")
-                if row.get('signal_saturated') or row.get(
-                        'signal_adc_code', row.get('ch1_adc_code', 0)) >= 4080:
+                if saturated:
                     quality_issues.append(f"点{row['index']}可能饱和")
+                if not point_passed or saturated:
+                    new_failed_points.append({
+                        'order': int(order),
+                        'row': {
+                            'index': int(row['index']),
+                            'point_passed': bool(point_passed),
+                            'stable': bool(row.get('stable', False)),
+                            'signal_saturated': bool(saturated),
+                            'signal_adc_code': float(row.get(
+                                'signal_adc_code', row.get('ch1_adc_code')
+                            )),
+                            'failure_reason': str(
+                                row.get('failure_reason')
+                                or '稳定性或饱和检查未通过'
+                            ),
+                        },
+                    })
             self.reference_values = [
                 row.get('signal_adc_code', row.get('ch1_adc_code')) for row in rows
             ]
             self._spectrum_dirty = True
             self.reference_feedback_selector = feedback_selector
             self.reference_channel = signal_channel
+            self.reference_failed_points = new_failed_points
             self.reference_wavelengths = [
                 float(row['measured_nm']) for row in self.plan['rows']
             ]
@@ -2841,7 +3274,19 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.plan.pop('manual_adjustment_reference_reused', None)
             self.plan.pop('manual_adjustment_reference_note', None)
             for i, value in enumerate(self.reference_values):
-                self.table.setItem(i, 5, QtWidgets.QTableWidgetItem(f'{value:g}'))
+                item = QtWidgets.QTableWidgetItem(f'{value:g}')
+                failed_item = next((
+                    failed for failed in new_failed_points
+                    if failed['order'] == i
+                ), None)
+                if failed_item is not None:
+                    reason = failed_item['row'].get(
+                        'failure_reason', '稳定性或饱和检查未通过'
+                    )
+                    item.setForeground(QtGui.QBrush(QtGui.QColor('#dc2626')))
+                    item.setBackground(QtGui.QBrush(QtGui.QColor('#fee2e2')))
+                    item.setToolTip(f'未通过但已继续采集：{reason}')
+                self.table.setItem(i, 5, item)
             self.show_reference.setChecked(True)
             self.redraw_values()
             self.fit_values()
@@ -2889,6 +3334,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             )
             self._save_last_route_session(ready=True)
         except Exception as exc:
+            self._redraw_reference_failures()
             self.plan_ready = bool(
                 self._reference_line_prior_ready
                 or (isinstance(self.reference_values, list)
@@ -2945,7 +3391,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.worker.message.connect(self.status.setText)
         self.worker.finished.connect(self.finished)
         for widget in (
-                self.reference_button, self.save_finger_button,
+                self.equal_interval_reference_button,
+                self.scan_start_nm, self.scan_stop_nm,
+                self.equal_interval_nm, self.equal_interval_settle,
+                self.save_finger_button,
                 self.load_finger_button, self.spacing, self.cycles,
                 self.start_button, self.analog_gain, self.first_delay,
                 self.boundary_delay, self.reference_line_button,
@@ -3031,13 +3480,21 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.status.setText(f'开关速度结果未采用：{exc}')
 
     def start_equal_interval_reference(self, _checked=False):
-        """Acquire a selectable-stride spectrum through EqualIntervalWorker."""
-        stride = max(1, min(5, int(round(self.equal_interval_nm.value() / .02))))
-        actual_nm = stride * .02
+        """Acquire only the requested wavelength window at a selectable stride."""
+        import app_JDSU as app
+        try:
+            indices, actual_nm = equal_interval_indices_for_range(
+                app.load_fullband_accuracy_table(),
+                self.scan_start_nm.value(), self.scan_stop_nm.value(),
+                self.equal_interval_nm.value(),
+            )
+        except Exception as exc:
+            self.status.setText(f'等间隔密集光谱未启动：{exc}')
+            return
         self.equal_interval_nm.setValue(actual_nm)
-        indices = list(range(0, 2001, stride))
-        if indices[-1] != 2000:
-            indices.append(2000)
+        self.dense_scan_range_nm = (
+            float(self.scan_start_nm.value()), float(self.scan_stop_nm.value())
+        )
         self.start_scan(
             reference=True,
             equal_interval=True,
@@ -3066,7 +3523,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             feedback_selector = self.effective_feedback_selector(signal_channel)
             if (self.plan is not None and not reference
                     and int(self.plan.get('signal_channel', 1)) != signal_channel):
-                raise ValueError('当前点表属于其他ADC通道，请为所选通道重新采集光谱并选点')
+                raise ValueError('当前点表属于其他ADC通道，请为所选通道重采光谱并手动放置45点')
             selected_cycles = 0 if self.continuous.isChecked() else self.cycles.value()
             options = dict(first_delay_us=self.first_delay.value(),
                            boundary_extra_us=self.boundary_delay.value(),
@@ -3114,12 +3571,15 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.worker.reference.connect(self.reference_ready)
             self.worker.reference_point.connect(self.update_dense_reference_point)
         elif reference_line:
+            self._live_reference_line_rows = []
+            self._reference_line_capture_active = True
             self.worker.reference.connect(self.reference_line_ready)
+            self.worker.reference_point.connect(self.update_reference_line_point)
         self.worker.frame.connect(self.update_frame)
         self.worker.message.connect(self.status.setText)
         self.worker.finished.connect(self.finished)
-        for widget in (self.channel_combo, self.reference_button,
-                       self.equal_interval_reference_button,
+        for widget in (self.channel_combo, self.equal_interval_reference_button,
+                       self.scan_start_nm, self.scan_stop_nm,
                        self.equal_interval_nm, self.equal_interval_settle,
                        self.save_finger_button, self.load_finger_button,
                        self.spacing, self.cycles, self.start_button,
@@ -3134,6 +3594,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             f'正在采集当前{self.point_count()}点慢速参考线…' if reference_line
             else (f'正在按等间隔模式采集{len(dense_indices)}点'
                   f'{self.channel_name()}光谱（{self.equal_interval_nm.value():.2f} nm，'
+                  f'{self.scan_start_nm.value():.2f}～{self.scan_stop_nm.value():.2f} nm，'
                   f'{self.equal_interval_settle.value():.3f} s/点）…')
             if reference and equal_interval
             else f"正在采集{self.channel_name()}密集稳定参考（可能需要数分钟）…" if reference
@@ -3143,9 +3604,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.refresh_wait_controls()
 
     def redraw_values(self, _value=None):
-        if self.plan is None:
-            return
         self.redraw_dense_selection()
+        if self.plan is None:
+            self._update_plot_unit_label()
+            return
         rows = self.plan['rows']
         current_x = [row['measured_nm'] for row in rows]
         reference_x = self.reference_wavelengths or current_x
@@ -3167,6 +3629,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                               ))
         self._update_plot_unit_label()
         self._refresh_table_display_values()
+        self._redraw_reference_failures()
         self.redraw_peak_fits()
 
     def clear_peak_fits(self, reason='等待实时帧'):
@@ -3343,22 +3806,30 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.worker = None
         self._dense_capture_active = False
         self._live_dense_rows = []
+        self._reference_line_capture_active = False
+        self._live_reference_line_rows = []
         self.peak_fit_status.setText('已停采，保留最后一帧拟合（非实时）；波长精度未验证。')
-        for widget in (self.channel_combo, self.reference_button,
-                       self.equal_interval_reference_button,
+        for widget in (self.channel_combo, self.equal_interval_reference_button,
+                       self.scan_start_nm, self.scan_stop_nm,
                        self.equal_interval_nm, self.equal_interval_settle,
                        self.save_finger_button, self.load_finger_button,
                        self.spacing, self.cycles,
                        self.analog_gain, self.first_delay, self.boundary_delay):
             widget.setEnabled(True)
         self.spacing.setEnabled(False)
-        self.start_button.setEnabled(self.plan is not None and self.plan_ready)
-        self.reference_line_button.setEnabled(self.plan is not None)
-        self.test_switch_timing.setEnabled(self.plan is not None)
+        route_available = self.plan is not None and not self.manual_selection_active
+        self.start_button.setEnabled(route_available and self.plan_ready)
+        self.reference_line_button.setEnabled(route_available)
+        self.test_switch_timing.setEnabled(route_available)
+        self.save_finger_button.setEnabled(
+            self._valid_dense_spectrum(self.dense_wavelengths, self.dense_values)
+        )
         self.continuous.setEnabled(True)
         self.cycles.setEnabled(not self.continuous.isChecked())
         self.stop_button.setEnabled(False)
         self.stop_dense_button.setEnabled(False)
+        self._sync_manual_selection_controls()
         self.redraw_dense_selection()
+        self._redraw_reference_failures()
         self._sync_channel_ui()
         self.refresh_wait_controls()
