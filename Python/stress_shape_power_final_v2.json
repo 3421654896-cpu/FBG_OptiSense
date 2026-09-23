@@ -1,0 +1,1625 @@
+{
+  "created": "2026-08-14T12:32:20",
+  "purpose": "final_post_power_shape_selected_63_point_stress_table",
+  "old_total_table_used": false,
+  "point_count": 63,
+  "limits_ma": {
+    "gain": 135.0,
+    "soa": 135.0,
+    "phase": 10.0,
+    "wave_a": 30.0,
+    "wave_b": 30.0
+  },
+  "power_summary_mw": {
+    "minimum": 1.4810538311230292,
+    "mean": 1.5063942433599582,
+    "maximum": 1.5358147563288174,
+    "coefficient_of_variation_percent": 0.6682518302332309
+  },
+  "fits": [
+    {
+      "segment": 0,
+      "center_nm": 1527.8866248,
+      "center_error_from_broadband_reference_pm": -24.07519999997021,
+      "amplitude_v": 0.21675107123113033,
+      "r_squared": 0.9741193771983101,
+      "rmse_v": 0.008632335032388168,
+      "center_std_pm": 2.2654450135780015,
+      "valid": true
+    },
+    {
+      "segment": 1,
+      "center_nm": 1532.1190006,
+      "center_error_from_broadband_reference_pm": -24.09940000006827,
+      "amplitude_v": 0.17621864012373584,
+      "r_squared": 0.9338381183524858,
+      "rmse_v": 0.014044176291723609,
+      "center_std_pm": 13.580702722921233,
+      "valid": true
+    },
+    {
+      "segment": 2,
+      "center_nm": 1536.3933111333336,
+      "center_error_from_broadband_reference_pm": 8.211133333588805,
+      "amplitude_v": 0.5860555020246698,
+      "r_squared": 0.9931188462092253,
+      "rmse_v": 0.006883712090681852,
+      "center_std_pm": 2.852680931532338,
+      "valid": true
+    },
+    {
+      "segment": 3,
+      "center_nm": 1540.1580151833334,
+      "center_error_from_broadband_reference_pm": -10.48481666657608,
+      "amplitude_v": 0.2174059598514183,
+      "r_squared": 0.9151468677465746,
+      "rmse_v": 0.008841757543562678,
+      "center_std_pm": 8.320285885978963,
+      "valid": true
+    },
+    {
+      "segment": 4,
+      "center_nm": 1544.4385605666666,
+      "center_error_from_broadband_reference_pm": -16.639433333466513,
+      "amplitude_v": 0.22348229448052598,
+      "r_squared": 0.93104630498209,
+      "rmse_v": 0.007694797252786695,
+      "center_std_pm": 8.514195054487992,
+      "valid": true
+    },
+    {
+      "segment": 5,
+      "center_nm": 1547.86380225,
+      "center_error_from_broadband_reference_pm": -27.097750000166343,
+      "amplitude_v": 0.2987794412341481,
+      "r_squared": 0.9985532350805071,
+      "rmse_v": 0.0035512015929309395,
+      "center_std_pm": 1.9132982430364038,
+      "valid": true
+    },
+    {
+      "segment": 6,
+      "center_nm": 1551.7567842,
+      "center_error_from_broadband_reference_pm": -28.115800000023228,
+      "amplitude_v": 0.2649125966532663,
+      "r_squared": 0.9809695812328989,
+      "rmse_v": 0.010759414565303117,
+      "center_std_pm": 4.924987445592657,
+      "valid": true
+    },
+    {
+      "segment": 7,
+      "center_nm": 1555.836379425,
+      "center_error_from_broadband_reference_pm": 26.979424999808543,
+      "amplitude_v": 0.5727009396941167,
+      "r_squared": 0.8916393559015491,
+      "rmse_v": 0.021615764817655793,
+      "center_std_pm": 11.68514431834535,
+      "valid": true
+    },
+    {
+      "segment": 8,
+      "center_nm": 1559.9621407000002,
+      "center_error_from_broadband_reference_pm": 46.04070000027605,
+      "amplitude_v": 0.34901480523258227,
+      "r_squared": 0.9516445826147566,
+      "rmse_v": 0.023426705633431896,
+      "center_std_pm": 10.347441374421662,
+      "valid": true
+    }
+  ],
+  "rows": [
+    {
+      "index": 0,
+      "segment": 0,
+      "wavelength_nm": 1527.675685,
+      "power_mw": 1.4920744427329473,
+      "ch1_v": 0.28900146484375,
+      "codes": [
+        58982,
+        54741,
+        32540,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.29220581054688,
+        9.930419921875,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 28.88812244,
+      "wavelength_span_pm": 0.12999999989915523,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 1,
+      "segment": 0,
+      "wavelength_nm": 1527.70007,
+      "power_mw": 1.501525392519711,
+      "ch1_v": 0.28961181640625,
+      "codes": [
+        58982,
+        54974,
+        30645,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.82550048828125,
+        9.35211181640625,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 31.10635904,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 2,
+      "segment": 0,
+      "wavelength_nm": 1527.72903,
+      "power_mw": 1.5004026760979148,
+      "ch1_v": 0.4290771484375,
+      "codes": [
+        58982,
+        56517,
+        28478,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.35714721679688,
+        8.6907958984375,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 30.07521035,
+      "wavelength_span_pm": 0.1199999999244028,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 3,
+      "segment": 0,
+      "wavelength_nm": 1527.78409,
+      "power_mw": 1.5088511269775293,
+      "ch1_v": 0.347900390625,
+      "codes": [
+        58982,
+        56893,
+        24097,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        130.21774291992188,
+        7.35382080078125,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 28.977766170000002,
+      "wavelength_span_pm": 0.040000000126383384,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 4,
+      "segment": 0,
+      "wavelength_nm": 1527.802865,
+      "power_mw": 1.5042067867779563,
+      "ch1_v": 0.39947509765625,
+      "codes": [
+        58982,
+        56363,
+        22572,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.00466918945312,
+        6.888427734375,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 28.53776868,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 5,
+      "segment": 0,
+      "wavelength_nm": 1528.02142,
+      "power_mw": 1.5038910174780227,
+      "ch1_v": 0.40771484375,
+      "codes": [
+        58982,
+        54935,
+        14707,
+        3686,
+        819
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.73623657226562,
+        4.48822021484375,
+        4.49951171875,
+        0.999755859375
+      ],
+      "smsr_min_db": 30.02321516,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 6,
+      "segment": 0,
+      "wavelength_nm": 1528.267105,
+      "power_mw": 1.5131724997854024,
+      "ch1_v": 0.25146484375,
+      "codes": [
+        58982,
+        58982,
+        15171,
+        3277,
+        16794
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        134.99908447265625,
+        4.62982177734375,
+        4.000244140625,
+        20.50048828125
+      ],
+      "smsr_min_db": 28.943882340000002,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 7,
+      "segment": 1,
+      "wavelength_nm": 1531.73818,
+      "power_mw": 1.5001551483526425,
+      "ch1_v": 0.1104736328125,
+      "codes": [
+        58982,
+        53509,
+        25826,
+        8602,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        122.47238159179688,
+        7.8814697265625,
+        10.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 33.98663595,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 8,
+      "segment": 1,
+      "wavelength_nm": 1531.837195,
+      "power_mw": 1.5079160311716957,
+      "ch1_v": 0.11962890625,
+      "codes": [
+        58982,
+        56411,
+        19591,
+        8602,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.11453247070312,
+        5.97869873046875,
+        10.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 31.915187380000003,
+      "wavelength_span_pm": 0.09000000000014552,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 9,
+      "segment": 1,
+      "wavelength_nm": 1531.9958350000002,
+      "power_mw": 1.503285294032855,
+      "ch1_v": 0.1885986328125,
+      "codes": [
+        58982,
+        54403,
+        32434,
+        8602,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        124.51858520507812,
+        9.8980712890625,
+        10.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 29.60740541,
+      "wavelength_span_pm": 0.08999999977277184,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 10,
+      "segment": 1,
+      "wavelength_nm": 1532.1439449999998,
+      "power_mw": 1.511084112796771,
+      "ch1_v": 0.20751953125,
+      "codes": [
+        58982,
+        57702,
+        31131,
+        7782,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        132.06939697265625,
+        9.50042724609375,
+        9.49951171875,
+        4.000244140625
+      ],
+      "smsr_min_db": 29.85283197,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 11,
+      "segment": 1,
+      "wavelength_nm": 1532.2967700000002,
+      "power_mw": 1.5019850310101799,
+      "ch1_v": 0.2239990234375,
+      "codes": [
+        58982,
+        54091,
+        17711,
+        7782,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        123.80447387695312,
+        5.40496826171875,
+        9.49951171875,
+        4.000244140625
+      ],
+      "smsr_min_db": 28.798098340000003,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 12,
+      "segment": 1,
+      "wavelength_nm": 1532.55401,
+      "power_mw": 1.5096118004745214,
+      "ch1_v": 0.101318359375,
+      "codes": [
+        58982,
+        52624,
+        13676,
+        6144,
+        2458
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        120.44677734375,
+        4.173583984375,
+        7.5,
+        3.00048828125
+      ],
+      "smsr_min_db": 30.167858690000003,
+      "wavelength_span_pm": 0.05999999984851456,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 13,
+      "segment": 1,
+      "wavelength_nm": 1532.796015,
+      "power_mw": 1.500779706033759,
+      "ch1_v": 0.030517578125,
+      "codes": [
+        58982,
+        55258,
+        5492,
+        6144,
+        2458
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        126.47552490234375,
+        1.676025390625,
+        7.5,
+        3.00048828125
+      ],
+      "smsr_min_db": 30.54448051,
+      "wavelength_span_pm": 0.049999999873762135,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 14,
+      "segment": 2,
+      "wavelength_nm": 1536.28175,
+      "power_mw": 1.4934186260785665,
+      "ch1_v": 0.3350830078125,
+      "codes": [
+        45875,
+        58982,
+        4915,
+        13107,
+        7782
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        134.99908447265625,
+        1.49993896484375,
+        15.999755859375,
+        9.49951171875
+      ],
+      "smsr_min_db": 27.86712328,
+      "wavelength_span_pm": 0.279999999975189,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 15,
+      "segment": 2,
+      "wavelength_nm": 1536.3111049999998,
+      "power_mw": 1.4953732714311414,
+      "ch1_v": 0.3387451171875,
+      "codes": [
+        45875,
+        58982,
+        323,
+        13107,
+        8192
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        134.99908447265625,
+        0.09857177734375,
+        15.999755859375,
+        10.0
+      ],
+      "smsr_min_db": 30.55262531,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 16,
+      "segment": 2,
+      "wavelength_nm": 1536.3966099999998,
+      "power_mw": 1.4929007758633903,
+      "ch1_v": 0.33905029296875,
+      "codes": [
+        58982,
+        53808,
+        18448,
+        12698,
+        7782
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        123.15673828125,
+        5.6298828125,
+        15.50048828125,
+        9.49951171875
+      ],
+      "smsr_min_db": 26.53600435,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 17,
+      "segment": 2,
+      "wavelength_nm": 1536.4170800000002,
+      "power_mw": 1.5014528206743816,
+      "ch1_v": 0.3631591796875,
+      "codes": [
+        58982,
+        52015,
+        323,
+        13107,
+        8192
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        119.05288696289062,
+        0.09857177734375,
+        15.999755859375,
+        10.0
+      ],
+      "smsr_min_db": 32.56528675,
+      "wavelength_span_pm": 0.13999999987390765,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 18,
+      "segment": 2,
+      "wavelength_nm": 1536.5357099999999,
+      "power_mw": 1.5123502218185274,
+      "ch1_v": 0.3192138671875,
+      "codes": [
+        58982,
+        55589,
+        1900,
+        13926,
+        8192
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        127.23312377929688,
+        0.579833984375,
+        16.99951171875,
+        10.0
+      ],
+      "smsr_min_db": 30.53972431,
+      "wavelength_span_pm": 0.14000000010128133,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 19,
+      "segment": 2,
+      "wavelength_nm": 1536.7248949999998,
+      "power_mw": 1.5059810115079628,
+      "ch1_v": 0.2142333984375,
+      "codes": [
+        58982,
+        53932,
+        27663,
+        11059,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        123.4405517578125,
+        8.44207763671875,
+        13.499755859375,
+        9.000244140625
+      ],
+      "smsr_min_db": 31.148365690000002,
+      "wavelength_span_pm": 0.009999999974752427,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 20,
+      "segment": 2,
+      "wavelength_nm": 1536.84901,
+      "power_mw": 1.5015439541604945,
+      "ch1_v": 0.118408203125,
+      "codes": [
+        58982,
+        54641,
+        18324,
+        11059,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.06332397460938,
+        5.592041015625,
+        13.499755859375,
+        9.000244140625
+      ],
+      "smsr_min_db": 28.92574016,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 21,
+      "segment": 3,
+      "wavelength_nm": 1539.88668,
+      "power_mw": 1.5133593096970348,
+      "ch1_v": 0.1629638671875,
+      "codes": [
+        58982,
+        58982,
+        21696,
+        2048,
+        22528
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        134.99908447265625,
+        6.62109375,
+        2.5,
+        27.5
+      ],
+      "smsr_min_db": 31.12528081,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 22,
+      "segment": 3,
+      "wavelength_nm": 1539.959895,
+      "power_mw": 1.5023797834613233,
+      "ch1_v": 0.2032470703125,
+      "codes": [
+        58982,
+        56582,
+        17928,
+        2048,
+        22528
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.50592041015625,
+        5.47119140625,
+        2.5,
+        27.5
+      ],
+      "smsr_min_db": 30.26576953,
+      "wavelength_span_pm": 0.09000000000014552,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 23,
+      "segment": 3,
+      "wavelength_nm": 1540.042295,
+      "power_mw": 1.523140843264745,
+      "ch1_v": 0.216064453125,
+      "codes": [
+        58982,
+        47489,
+        21340,
+        2048,
+        1228
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        108.69369506835938,
+        6.512451171875,
+        2.5,
+        1.4990234375
+      ],
+      "smsr_min_db": 28.235671370000002,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 24,
+      "segment": 3,
+      "wavelength_nm": 1540.10637,
+      "power_mw": 1.5052478967253218,
+      "ch1_v": 0.2227783203125,
+      "codes": [
+        58982,
+        57953,
+        11210,
+        2048,
+        22528
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        132.64389038085938,
+        3.4210205078125,
+        2.5,
+        27.5
+      ],
+      "smsr_min_db": 28.169405679999997,
+      "wavelength_span_pm": 0.13999999987390765,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 25,
+      "segment": 3,
+      "wavelength_nm": 1540.15942,
+      "power_mw": 1.4857938805254132,
+      "ch1_v": 0.205078125,
+      "codes": [
+        58982,
+        58982,
+        8589,
+        2048,
+        22528
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        134.99908447265625,
+        2.62115478515625,
+        2.5,
+        27.5
+      ],
+      "smsr_min_db": 28.15900022,
+      "wavelength_span_pm": 0.1999999999497959,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 26,
+      "segment": 3,
+      "wavelength_nm": 1540.4499300000002,
+      "power_mw": 1.5057574655064565,
+      "ch1_v": 0.17333984375,
+      "codes": [
+        58982,
+        58120,
+        15269,
+        1638,
+        19251
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        133.026123046875,
+        4.65972900390625,
+        1.99951171875,
+        23.499755859375
+      ],
+      "smsr_min_db": 26.09736297,
+      "wavelength_span_pm": 0.1599999998234125,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 27,
+      "segment": 3,
+      "wavelength_nm": 1540.53529,
+      "power_mw": 1.5184077332991186,
+      "ch1_v": 0.1324462890625,
+      "codes": [
+        58982,
+        52935,
+        18022,
+        24576,
+        819
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        121.15859985351562,
+        5.4998779296875,
+        30.0,
+        0.999755859375
+      ],
+      "smsr_min_db": 24.14918448,
+      "wavelength_span_pm": 0.2399999998488056,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 28,
+      "segment": 4,
+      "wavelength_nm": 1544.08039,
+      "power_mw": 1.4903309426789102,
+      "ch1_v": 0.1873779296875,
+      "codes": [
+        58982,
+        52692,
+        26738,
+        4506,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        120.6024169921875,
+        8.1597900390625,
+        5.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 28.656157110000002,
+      "wavelength_span_pm": 0.1199999999244028,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 29,
+      "segment": 4,
+      "wavelength_nm": 1544.146345,
+      "power_mw": 1.504159730414694,
+      "ch1_v": 0.2093505859375,
+      "codes": [
+        58982,
+        48479,
+        262,
+        5325,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        110.95962524414062,
+        0.0799560546875,
+        6.500244140625,
+        5.0
+      ],
+      "smsr_min_db": 28.85959024,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 30,
+      "segment": 4,
+      "wavelength_nm": 1544.4448000000002,
+      "power_mw": 1.5015602182077936,
+      "ch1_v": 0.2490234375,
+      "codes": [
+        58982,
+        51392,
+        31631,
+        4506,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        117.626953125,
+        9.65301513671875,
+        5.50048828125,
+        4.000244140625
+      ],
+      "smsr_min_db": 28.699431540000003,
+      "wavelength_span_pm": 0.1199999999244028,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 31,
+      "segment": 4,
+      "wavelength_nm": 1544.46424,
+      "power_mw": 1.5044282184462148,
+      "ch1_v": 0.2703857421875,
+      "codes": [
+        58982,
+        50388,
+        29337,
+        4506,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        115.3289794921875,
+        8.95294189453125,
+        5.50048828125,
+        4.000244140625
+      ],
+      "smsr_min_db": 28.60517771,
+      "wavelength_span_pm": 0.10000000020227162,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 32,
+      "segment": 4,
+      "wavelength_nm": 1544.476765,
+      "power_mw": 1.5085343675067633,
+      "ch1_v": 0.250244140625,
+      "codes": [
+        58982,
+        49857,
+        27863,
+        4506,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.11361694335938,
+        8.50311279296875,
+        5.50048828125,
+        4.000244140625
+      ],
+      "smsr_min_db": 28.24069628,
+      "wavelength_span_pm": 0.06999999982326699,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 33,
+      "segment": 4,
+      "wavelength_nm": 1544.7375299999999,
+      "power_mw": 1.50534698143903,
+      "ch1_v": 0.2154541015625,
+      "codes": [
+        58982,
+        48544,
+        18022,
+        3686,
+        2867
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        111.1083984375,
+        5.4998779296875,
+        4.49951171875,
+        3.499755859375
+      ],
+      "smsr_min_db": 28.258218069999998,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 34,
+      "segment": 4,
+      "wavelength_nm": 1544.85342,
+      "power_mw": 1.5154147522674375,
+      "ch1_v": 0.164794921875,
+      "codes": [
+        58982,
+        49735,
+        11403,
+        3686,
+        2867
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        113.83438110351562,
+        3.47991943359375,
+        4.49951171875,
+        3.499755859375
+      ],
+      "smsr_min_db": 27.88326539,
+      "wavelength_span_pm": 0.03999999989900971,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 35,
+      "segment": 5,
+      "wavelength_nm": 1547.39754,
+      "power_mw": 1.5073211357102365,
+      "ch1_v": 0.111083984375,
+      "codes": [
+        58982,
+        49936,
+        18249,
+        14336,
+        0
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.29443359375,
+        5.56915283203125,
+        17.5,
+        0.0
+      ],
+      "smsr_min_db": 31.79448682,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 36,
+      "segment": 5,
+      "wavelength_nm": 1547.62948,
+      "power_mw": 1.4976373456942307,
+      "ch1_v": 0.2423095703125,
+      "codes": [
+        58982,
+        50202,
+        26809,
+        14336,
+        0
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.90325927734375,
+        8.18145751953125,
+        17.5,
+        0.0
+      ],
+      "smsr_min_db": 31.57523914,
+      "wavelength_span_pm": 0.019999999949504854,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 37,
+      "segment": 5,
+      "wavelength_nm": 1547.847285,
+      "power_mw": 1.5007007368157903,
+      "ch1_v": 0.3131103515625,
+      "codes": [
+        45875,
+        55865,
+        8355,
+        11878,
+        12288
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        127.86483764648438,
+        2.54974365234375,
+        14.49951171875,
+        15.0
+      ],
+      "smsr_min_db": 31.39877889,
+      "wavelength_span_pm": 0.010000000202126103,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 38,
+      "segment": 5,
+      "wavelength_nm": 1547.8958,
+      "power_mw": 1.5034743480677337,
+      "ch1_v": 0.323486328125,
+      "codes": [
+        58982,
+        54166,
+        11237,
+        11878,
+        12288
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        123.97613525390625,
+        3.42926025390625,
+        14.49951171875,
+        15.0
+      ],
+      "smsr_min_db": 29.90857093,
+      "wavelength_span_pm": 0.14000000010128133,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 39,
+      "segment": 5,
+      "wavelength_nm": 1548.049315,
+      "power_mw": 1.5081210864812513,
+      "ch1_v": 0.27130126953125,
+      "codes": [
+        45875,
+        56287,
+        17998,
+        11059,
+        10240
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        128.83071899414062,
+        5.4925537109375,
+        13.499755859375,
+        12.5
+      ],
+      "smsr_min_db": 31.292558860000003,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 40,
+      "segment": 5,
+      "wavelength_nm": 1548.13043,
+      "power_mw": 1.502770849151775,
+      "ch1_v": 0.2197265625,
+      "codes": [
+        45875,
+        53740,
+        3768,
+        11059,
+        9830
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        123.0010986328125,
+        1.14990234375,
+        13.499755859375,
+        11.99951171875
+      ],
+      "smsr_min_db": 29.84252721,
+      "wavelength_span_pm": 0.2500000000509317,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 41,
+      "segment": 5,
+      "wavelength_nm": 1548.4860899999999,
+      "power_mw": 1.4984283447369924,
+      "ch1_v": 0.0567626953125,
+      "codes": [
+        45875,
+        55883,
+        20131,
+        9011,
+        9830
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        127.90603637695312,
+        6.14349365234375,
+        10.999755859375,
+        11.99951171875
+      ],
+      "smsr_min_db": 29.25659241,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "stress_points_shape_selected_final.json"
+    },
+    {
+      "index": 42,
+      "segment": 6,
+      "wavelength_nm": 1551.557385,
+      "power_mw": 1.507699559083503,
+      "ch1_v": 0.2435302734375,
+      "codes": [
+        58982,
+        48432,
+        17075,
+        1638,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        110.85205078125,
+        5.21087646484375,
+        1.99951171875,
+        2.5
+      ],
+      "smsr_min_db": 27.719462070000002,
+      "wavelength_span_pm": 0.049999999873762135,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 43,
+      "segment": 6,
+      "wavelength_nm": 1551.58986,
+      "power_mw": 1.5140210271471841,
+      "ch1_v": 0.2886962890625,
+      "codes": [
+        58982,
+        47977,
+        20284,
+        1228,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        109.81063842773438,
+        6.190185546875,
+        1.4990234375,
+        2.5
+      ],
+      "smsr_min_db": 30.912468049999998,
+      "wavelength_span_pm": 0.1199999999244028,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 44,
+      "segment": 6,
+      "wavelength_nm": 1551.68403,
+      "power_mw": 1.5326316044420136,
+      "ch1_v": 0.3076171875,
+      "codes": [
+        58982,
+        45084,
+        15369,
+        1228,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        103.1890869140625,
+        4.69024658203125,
+        1.4990234375,
+        2.5
+      ],
+      "smsr_min_db": 29.99093975,
+      "wavelength_span_pm": 0.14000000010128133,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 45,
+      "segment": 6,
+      "wavelength_nm": 1551.841455,
+      "power_mw": 1.5072346830395404,
+      "ch1_v": 0.3289794921875,
+      "codes": [
+        58982,
+        49964,
+        16461,
+        24576,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.3585205078125,
+        5.02349853515625,
+        30.0,
+        2.5
+      ],
+      "smsr_min_db": 29.48903782,
+      "wavelength_span_pm": 0.27000000000043656,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 46,
+      "segment": 6,
+      "wavelength_nm": 1551.86486,
+      "power_mw": 1.5052807095301501,
+      "ch1_v": 0.3131103515625,
+      "codes": [
+        58982,
+        49525,
+        3913,
+        24576,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        113.35372924804688,
+        1.19415283203125,
+        30.0,
+        2.5
+      ],
+      "smsr_min_db": 29.50397343,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 47,
+      "segment": 6,
+      "wavelength_nm": 1551.90783,
+      "power_mw": 1.5058282116951132,
+      "ch1_v": 0.2716064453125,
+      "codes": [
+        58982,
+        49360,
+        12105,
+        24576,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        112.97607421875,
+        3.69415283203125,
+        30.0,
+        2.5
+      ],
+      "smsr_min_db": 28.423685889999998,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 48,
+      "segment": 6,
+      "wavelength_nm": 1552.324305,
+      "power_mw": 1.4990497117505752,
+      "ch1_v": 0.0823974609375,
+      "codes": [
+        58982,
+        50698,
+        20510,
+        0,
+        22937
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        116.03851318359375,
+        6.2591552734375,
+        0.0,
+        27.999267578125
+      ],
+      "smsr_min_db": 34.35915008,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 49,
+      "segment": 7,
+      "wavelength_nm": 1555.41608,
+      "power_mw": 1.5161706629951635,
+      "ch1_v": 0.1861572265625,
+      "codes": [
+        58982,
+        48009,
+        1813,
+        4506,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        109.88388061523438,
+        0.55328369140625,
+        5.50048828125,
+        9.000244140625
+      ],
+      "smsr_min_db": 31.19183403,
+      "wavelength_span_pm": 0.05999999984851456,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 50,
+      "segment": 7,
+      "wavelength_nm": 1555.535405,
+      "power_mw": 1.502331738936476,
+      "ch1_v": 0.2685546875,
+      "codes": [
+        58982,
+        48920,
+        466,
+        4915,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        111.968994140625,
+        0.1422119140625,
+        5.999755859375,
+        9.000244140625
+      ],
+      "smsr_min_db": 29.54419565,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 51,
+      "segment": 7,
+      "wavelength_nm": 1555.60724,
+      "power_mw": 1.5253157273840494,
+      "ch1_v": 0.31005859375,
+      "codes": [
+        58982,
+        46064,
+        0,
+        4506,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        105.43212890625,
+        0.0,
+        5.50048828125,
+        9.000244140625
+      ],
+      "smsr_min_db": 29.73536029,
+      "wavelength_span_pm": 0.07999999979801942,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 52,
+      "segment": 7,
+      "wavelength_nm": 1555.855095,
+      "power_mw": 1.5071630016820305,
+      "ch1_v": 0.390625,
+      "codes": [
+        58982,
+        48162,
+        2228,
+        4096,
+        5734
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        110.23406982421875,
+        0.679931640625,
+        5.0,
+        6.99951171875
+      ],
+      "smsr_min_db": 30.54758416,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 53,
+      "segment": 7,
+      "wavelength_nm": 1555.942935,
+      "power_mw": 1.5138936587888212,
+      "ch1_v": 0.341796875,
+      "codes": [
+        58982,
+        46978,
+        7143,
+        4096,
+        5734
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        107.52410888671875,
+        2.17987060546875,
+        5.0,
+        6.99951171875
+      ],
+      "smsr_min_db": 30.684702129999998,
+      "wavelength_span_pm": 0.009999999747378752,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 54,
+      "segment": 7,
+      "wavelength_nm": 1556.228505,
+      "power_mw": 1.5094465872294216,
+      "ch1_v": 0.2313232421875,
+      "codes": [
+        58982,
+        46356,
+        16974,
+        2867,
+        5325
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        106.1004638671875,
+        5.1800537109375,
+        3.499755859375,
+        6.500244140625
+      ],
+      "smsr_min_db": 29.44052645,
+      "wavelength_span_pm": 0.009999999747378752,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 55,
+      "segment": 7,
+      "wavelength_nm": 1556.3398149999998,
+      "power_mw": 1.521407550995137,
+      "ch1_v": 0.1409912109375,
+      "codes": [
+        58982,
+        47096,
+        11731,
+        2867,
+        5325
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        107.794189453125,
+        3.58001708984375,
+        3.499755859375,
+        6.500244140625
+      ],
+      "smsr_min_db": 29.076204660000002,
+      "wavelength_span_pm": 0.049999999873762135,
+      "source_pool": "uniform_power_candidate_pool.json"
+    },
+    {
+      "index": 56,
+      "segment": 8,
+      "wavelength_nm": 1559.7365300000001,
+      "power_mw": 1.4810538311230292,
+      "ch1_v": 0.2862548828125,
+      "codes": [
+        45875,
+        58982,
+        1757,
+        10650,
+        15565
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        134.99908447265625,
+        0.53619384765625,
+        13.00048828125,
+        19.000244140625
+      ],
+      "smsr_min_db": 29.97119631,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 57,
+      "segment": 8,
+      "wavelength_nm": 1559.870435,
+      "power_mw": 1.534300165270212,
+      "ch1_v": 0.318603515625,
+      "codes": [
+        58982,
+        44037,
+        17517,
+        9420,
+        409
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        100.79269409179688,
+        5.34576416015625,
+        11.4990234375,
+        0.499267578125
+      ],
+      "smsr_min_db": 26.442712320000002,
+      "wavelength_span_pm": 0.09000000000014552,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 58,
+      "segment": 8,
+      "wavelength_nm": 1559.892325,
+      "power_mw": 1.5019478559913861,
+      "ch1_v": 0.3668212890625,
+      "codes": [
+        45875,
+        53314,
+        524,
+        9420,
+        16793
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        122.02606201171875,
+        0.159912109375,
+        11.4990234375,
+        20.499267578125
+      ],
+      "smsr_min_db": 30.32518709,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 59,
+      "segment": 8,
+      "wavelength_nm": 1559.9471250000001,
+      "power_mw": 1.5065737210660552,
+      "ch1_v": 0.416259765625,
+      "codes": [
+        52429,
+        51280,
+        524,
+        9420,
+        16793
+      ],
+      "currents_ma": [
+        120.00045776367188,
+        117.37060546875,
+        0.159912109375,
+        11.4990234375,
+        20.499267578125
+      ],
+      "smsr_min_db": 30.061253590000003,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 60,
+      "segment": 8,
+      "wavelength_nm": 1560.004125,
+      "power_mw": 1.5045845464185827,
+      "ch1_v": 0.3466796875,
+      "codes": [
+        58982,
+        51512,
+        524,
+        9420,
+        16793
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        117.901611328125,
+        0.159912109375,
+        11.4990234375,
+        20.499267578125
+      ],
+      "smsr_min_db": 29.5058984,
+      "wavelength_span_pm": 0.05000000010113581,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 61,
+      "segment": 8,
+      "wavelength_nm": 1560.23484,
+      "power_mw": 1.5358147563288174,
+      "ch1_v": 0.245361328125,
+      "codes": [
+        45875,
+        43821,
+        3539,
+        8192,
+        0
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        100.29830932617188,
+        1.08001708984375,
+        10.0,
+        0.0
+      ],
+      "smsr_min_db": 32.53315144,
+      "wavelength_span_pm": 0.08000000002539309,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    },
+    {
+      "index": 62,
+      "segment": 8,
+      "wavelength_nm": 1560.5619350000002,
+      "power_mw": 1.506810302905456,
+      "ch1_v": 0.0628662109375,
+      "codes": [
+        45875,
+        50684,
+        614,
+        6554,
+        12288
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        116.0064697265625,
+        0.1873779296875,
+        8.00048828125,
+        15.0
+      ],
+      "smsr_min_db": 31.302318839999998,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "uniform_power_candidate_pool_extra.json"
+    }
+  ]
+}

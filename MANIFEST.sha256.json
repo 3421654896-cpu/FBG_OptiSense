@@ -1,0 +1,615 @@
+{
+  "schema": "fbg_developer_source_manifest_v1",
+  "application_version": "1.0.4",
+  "machine_profile": "universal",
+  "generated_utc": "2026-09-23T01:05:49.8640241Z",
+  "python": "CPython 3.12 x64",
+  "payload_file_count": 121,
+  "files": [
+    {
+      "path": "Python/adaptive_sampling_optimizer.py",
+      "bytes": 33894,
+      "sha256": "d27e1887646b938a506eb241f9eae05beb45f5ec76603a4742d26810a3915abc"
+    },
+    {
+      "path": "Python/analyze_wavelength_switch_board_capture.py",
+      "bytes": 9918,
+      "sha256": "fe929fe24d3ff68c1ddf40e0d6a6a395b2f5844a3dafdb8ad33edf28841a3fe1"
+    },
+    {
+      "path": "Python/app_JDSU.py",
+      "bytes": 384714,
+      "sha256": "15bd6b9ac481fd6f241dc5b012e64578ae875ceccaaa9e4401ab4ccd578901c2"
+    },
+    {
+      "path": "Python/app_version.py",
+      "bytes": 193,
+      "sha256": "13027c4469b7cb75eecef446dcf9a07ba9db84de2a5dbf8ebbc696062fd60524"
+    },
+    {
+      "path": "Python/artifacts/ch1_measured_template_selection_v4_certified_20260905.json",
+      "bytes": 241151,
+      "sha256": "2330f3d5091744329f0170b8823bde89d3bddcb5897dace67c64a7113c8e9c3e"
+    },
+    {
+      "path": "Python/assets/press_tool_v2.stl",
+      "bytes": 15684,
+      "sha256": "852280b129120243cf2240ed346d823fcf6664066cf16c372be3ea8a21c7f466"
+    },
+    {
+      "path": "Python/assets/thumb_real.STL",
+      "bytes": 461984,
+      "sha256": "c964a2b02472afe46f4dd91018070800af3563abbe9c6bc52a1c25ca0e2c4bc3"
+    },
+    {
+      "path": "Python/attach_contact_area_truth.py",
+      "bytes": 9616,
+      "sha256": "773e9d3818a626f3f2f9d11ec4203184dea692cbab56a6a8c52f502999291efa"
+    },
+    {
+      "path": "Python/audit_stress_timing_budget.py",
+      "bytes": 12349,
+      "sha256": "64a395486b7bed8da81401179680a532e09c44fdbe77c0d38151ce5dbe8a5bc9"
+    },
+    {
+      "path": "Python/benchmark_stress_realtime.py",
+      "bytes": 42451,
+      "sha256": "e2ce01dfbb86929e3d745d07bcbc426480ffd41a14ea6cb23cb4388dab8b6e61"
+    },
+    {
+      "path": "Python/calibration_backups/2号解调仪第一次校准/2号解调仪第一次校准_2001点.json",
+      "bytes": 18157158,
+      "sha256": "37f3be1364c9ea3fca6ce616d9cddcf5364ec5e466ec5ccc5f2ac841a7c10f02"
+    },
+    {
+      "path": "Python/capture_certified_ch1_transients.py",
+      "bytes": 9659,
+      "sha256": "f0c9e742d99af85f01f43d4d53bca051900c85f6985a5fe9dc47a947e4f61a4d"
+    },
+    {
+      "path": "Python/capture_ch1_rc_diagnostic.py",
+      "bytes": 8120,
+      "sha256": "a1371cad0b3068a38bd8c3b3ee8f268aa9ac5a0271abf56c0b7dd0dbd422eacb"
+    },
+    {
+      "path": "Python/capture_ch1_teacher_spectrum.py",
+      "bytes": 21461,
+      "sha256": "d44ea34c5ff0bea63ef3d2185267d538501b7dbab168ea34e74dd0453101ca70"
+    },
+    {
+      "path": "Python/capture_fast_flank_stream.py",
+      "bytes": 17360,
+      "sha256": "fa58c1207fa968c088114f6b381834aff606dbf7a21a2e238b0d3d145d1da4e8"
+    },
+    {
+      "path": "Python/capture_fast_fullmap_stream.py",
+      "bytes": 15644,
+      "sha256": "036d02fc01e3809b84249f39b37600e1534fc5069290e28c7477cc15bb4ac948"
+    },
+    {
+      "path": "Python/capture_fullband_feedback_reference.py",
+      "bytes": 8115,
+      "sha256": "ca252c3ab3973507b28e5f831b1aa08a477f28ab146bec3f5fb1315a52f1bddb"
+    },
+    {
+      "path": "Python/capture_short_route_teacher.py",
+      "bytes": 14677,
+      "sha256": "d3b06f81b641117e15fb3c289a113bb4da5c961c16ea16a7ace0f46e53decef5"
+    },
+    {
+      "path": "Python/capture_temporary_half_height_transients.py",
+      "bytes": 17398,
+      "sha256": "a6e79e1de9fa2a3f09a40f1649db1b03a5883f884119226e8c0529ebe0a973a4"
+    },
+    {
+      "path": "Python/ch1_contact_localizer.py",
+      "bytes": 82312,
+      "sha256": "47a4cbb448c2fc0eadfb488eafc23b5ce46d4b10cccfff760638ac900257452b"
+    },
+    {
+      "path": "Python/client_seed/outputs/device_profiles/ota_machine_profiles.json",
+      "bytes": 402,
+      "sha256": "bcd04a7e57a6ae706c2a9f03706264e0083b1e69e050505e0354e9b9dd958b7c"
+    },
+    {
+      "path": "Python/client_seed/outputs/machines/machine_1/temporary_test/finger_captures/0号手指.json",
+      "bytes": 126746,
+      "sha256": "ddf1d6d6920fd46dc7fff1d97a02330288df11804879d6e447d499213a945e68"
+    },
+    {
+      "path": "Python/client_seed/outputs/machines/machine_1/temporary_test/finger_captures/9个光栅最新通过.json",
+      "bytes": 144656,
+      "sha256": "9147466c634e0699bf896675b50d44dfab4d25be37b9fcd1b6a2cbd31c8e99b5"
+    },
+    {
+      "path": "Python/client_seed/outputs/machines/machine_1/temporary_test/last_45_session.json",
+      "bytes": 83090,
+      "sha256": "2a4ff93abb5d14fa0961d016ebcd2f0c915952c9f61fa16fe85622faa9a317b3"
+    },
+    {
+      "path": "Python/client_seed/outputs/machines/machine_1/temporary_test/last_finger_capture.json",
+      "bytes": 144656,
+      "sha256": "9147466c634e0699bf896675b50d44dfab4d25be37b9fcd1b6a2cbd31c8e99b5"
+    },
+    {
+      "path": "Python/displacement_pressure_reference.py",
+      "bytes": 1632,
+      "sha256": "70cfb335334cf0c28e3980013d001641c44bb3d0fa792d0c33013e490145e3c9"
+    },
+    {
+      "path": "Python/evaluate_coverage_position.py",
+      "bytes": 14692,
+      "sha256": "f9df861c69b6026d77dd1be14aa120ebe6f8035650549f796c94f683520e1718"
+    },
+    {
+      "path": "Python/export_fullband_calibration.py",
+      "bytes": 25051,
+      "sha256": "d5acfeaa1f32ab82ba03fc2d0794dbd6fe155baae8d03a132e967ee553dd1eb4"
+    },
+    {
+      "path": "Python/f18_spacing_protocol.py",
+      "bytes": 1907,
+      "sha256": "d1cf234a995290e48c3b10375cab1a7651a772a5de5cff3bf549f3c2023ec3b9"
+    },
+    {
+      "path": "Python/fast_fullmap_live.py",
+      "bytes": 6951,
+      "sha256": "0e87bbb6ee0530d3f8db2b44630c39d7171bceb2112e7dcf0c9fc404c6204eb1"
+    },
+    {
+      "path": "Python/fast_fullmap_qt.py",
+      "bytes": 2318,
+      "sha256": "43050a17e3f5b00b28a9bcac139097583e9ac93d3a76fc427a896700a7248df5"
+    },
+    {
+      "path": "Python/fast_fullmap_realtime.py",
+      "bytes": 22086,
+      "sha256": "9d91421a883d6b6c603762b90f2353b293f13b9a0a2b8961b06b2c0e5ce29b56"
+    },
+    {
+      "path": "Python/fbg_lan_serial.py",
+      "bytes": 23380,
+      "sha256": "a72d953552d00fe18bb7ffc66929b67ecb14692ac887aebd376ddb48a463f6fc"
+    },
+    {
+      "path": "Python/fbg_lan_transport.py",
+      "bytes": 12567,
+      "sha256": "c61850da0d12ecdcae27852084ca8b75a3823689a8dc875ca1cd4380eeb41a6d"
+    },
+    {
+      "path": "Python/fbg_mqtt_transport.py",
+      "bytes": 17337,
+      "sha256": "e79545ca553b5f13e256aa27512a82e38467dd59e4f6b3e4dc3d968b72f364b5"
+    },
+    {
+      "path": "Python/fbg_network_transport.py",
+      "bytes": 5330,
+      "sha256": "4140fdd023f852358eed85dd79daeb55d2111fdcb5cab6a4257a8437d13f281f"
+    },
+    {
+      "path": "Python/fbg_ota_protocol.py",
+      "bytes": 39690,
+      "sha256": "52d9e2fbf545f91513d74278b16258e7d88e5958d1470c907f8ca607bb2888b8"
+    },
+    {
+      "path": "Python/fbg_ota_widget.py",
+      "bytes": 20616,
+      "sha256": "e8637ff49f119d5fc010e120ca4530c4ed96c33b30e0034b7a28baa6f303f998"
+    },
+    {
+      "path": "Python/fbg_peak_fitting.py",
+      "bytes": 37836,
+      "sha256": "f3240acd21b0ecd3bcda0584c937b83a5b55e8fc8ef394756af909f564654d93"
+    },
+    {
+      "path": "Python/fbg_processing_common.py",
+      "bytes": 1314,
+      "sha256": "59d7ac30e89e77d3238c27a04b7a4dfa1cf89dad5649600ff68bae717e2dd6a7"
+    },
+    {
+      "path": "Python/fbg_remote_config.yaml",
+      "bytes": 345,
+      "sha256": "a295da80b32b5bae389bc8a34c7fb5ebe0d7c0606374f6a4d15f1c09dbe187a6"
+    },
+    {
+      "path": "Python/fbg_remote_protocol.py",
+      "bytes": 18708,
+      "sha256": "bdaadb55f23851478c1e3d6f8bd35111848c4dd27bcc933386f96951e8c94ac7"
+    },
+    {
+      "path": "Python/fbg_remote_viewer.py",
+      "bytes": 53651,
+      "sha256": "6040fbab0663758e8600931d297b1849b16f4c9a5c25e9ae1510ffd6a412e649"
+    },
+    {
+      "path": "Python/fbg_studio_launcher.py",
+      "bytes": 2441,
+      "sha256": "4d5124f9b85ac0415f87a92d62c5756729497c30139ff011aa017cf3320d854c"
+    },
+    {
+      "path": "Python/fbg_unified_app.py",
+      "bytes": 136835,
+      "sha256": "a97bbb59b349cd8d3b38443c119e162528ed1e594ff7391f670e5b0637f7628e"
+    },
+    {
+      "path": "Python/fbg_wifi_setup.py",
+      "bytes": 16968,
+      "sha256": "ffa06a4fc1a98ab0d8f2b2e549f09f000b1d16d3d416395bb273c002818d0e87"
+    },
+    {
+      "path": "Python/finger_dataset.py",
+      "bytes": 27786,
+      "sha256": "9365b68448307d8249f75aebef7421a1a81ea8202f61053dc2b9acd5de43f892"
+    },
+    {
+      "path": "Python/finger_features.py",
+      "bytes": 27491,
+      "sha256": "fe131e0305948ba4ee068973391b7d776227a850e5d0e0d1eac2b2826ce23a08"
+    },
+    {
+      "path": "Python/finger_sampling_template.py",
+      "bytes": 31352,
+      "sha256": "27b04ec6e02cd75eeae2f348d398ed13f8a19bd59af574d4c9fac8bb2b5a9276"
+    },
+    {
+      "path": "Python/finger_sensor_layout.yaml",
+      "bytes": 1529,
+      "sha256": "2bec92a54da3f75bbc9d411aa0f277707f6d35301defa1a2c6b0c9d43b6d09f5"
+    },
+    {
+      "path": "Python/firmware/JDSU_F205RE_v1.0.87.fbgfw",
+      "bytes": 182144,
+      "sha256": "19d51f8e0320e8751f7759baa075a094e1c8ef53f6025e9565e10cafb5fd5722"
+    },
+    {
+      "path": "Python/frame_telemetry.py",
+      "bytes": 20693,
+      "sha256": "5f0b5518c7f0747cd0419c360224691c946a626043d13ff4d7d5ecde277150e2"
+    },
+    {
+      "path": "Python/fullband_auto_calibration_widget.py",
+      "bytes": 16370,
+      "sha256": "0c8afb4f9802f933aa18c741cdd3804eddf654e5bc9b68a036d48ab37495fb5d"
+    },
+    {
+      "path": "Python/fullband_auto_calibration.py",
+      "bytes": 68232,
+      "sha256": "a775ef872ca4489ced77a6a4ab61f00ccb41ab2483106298a8e1a1c4deac8606"
+    },
+    {
+      "path": "Python/fullband_dense_high_power_2001.json",
+      "bytes": 20339757,
+      "sha256": "49a885bea1abaf6595c44137f5399d963be9e76f2cfe7044a5d580289f20d97c"
+    },
+    {
+      "path": "Python/fullband_equal_power_model.py",
+      "bytes": 246431,
+      "sha256": "9ac992f9366f1b0fffe9d45c0086e97ef540f4e5c765a0c76f8a06b0efb58951"
+    },
+    {
+      "path": "Python/fullband_equal_power_operational_2001_transition_guards.json",
+      "bytes": 979,
+      "sha256": "5b796d1926391c9f20cf5f0457f7f00b9256a90c88ce059dd502b665f2140fcd"
+    },
+    {
+      "path": "Python/fullband_equal_power_operational_2001.csv",
+      "bytes": 403148,
+      "sha256": "480200c6c798a7f8b030a3f108e79a86cbadada1a9c4f747b3f3665e8ba29d71"
+    },
+    {
+      "path": "Python/fullband_equal_power_operational_2001.json",
+      "bytes": 16948189,
+      "sha256": "b586ad3e29ca912ee784f0bf7fb65391fb35096a2bf3dc90b38e8a3780742d1f"
+    },
+    {
+      "path": "Python/fullband_pdt_pdr_reference_2001.json",
+      "bytes": 802768,
+      "sha256": "2e7e6bca04d7af0feca26cb3a042fcc167b1c29d61abe85fd8bf31aa4e3f121d"
+    },
+    {
+      "path": "Python/hyperos_theme.py",
+      "bytes": 17925,
+      "sha256": "18267034fcda682f6209534bb8cfd47b5d15d12644a4732e7c83cdacb04a3560"
+    },
+    {
+      "path": "Python/laser_calibration_checkpoint.json",
+      "bytes": 254650,
+      "sha256": "49bf68560117b101d740af3baed24b6d2bc411288854403a0dfb3a27b1ff7d53"
+    },
+    {
+      "path": "Python/laser_calibration_report.json",
+      "bytes": 254650,
+      "sha256": "49bf68560117b101d740af3baed24b6d2bc411288854403a0dfb3a27b1ff7d53"
+    },
+    {
+      "path": "Python/laser_dac_safety.py",
+      "bytes": 2548,
+      "sha256": "3e0e0a378ce9e1039dd5eed76ad54e79b8f570a774528e1a65c0ed689fd91db8"
+    },
+    {
+      "path": "Python/laser_power_calibration.py",
+      "bytes": 26342,
+      "sha256": "9c3aceddd517760fef4859d0594b39f45698d40b9efdabf1089bbef2cf00d771"
+    },
+    {
+      "path": "Python/laser_switching_test.py",
+      "bytes": 12994,
+      "sha256": "5bede848b164727445b75eedbbefceae3cba94218727d4da7643050718c00141"
+    },
+    {
+      "path": "Python/mach3_bridge.ps1",
+      "bytes": 21354,
+      "sha256": "590ce3003482e3be7701a72e3435905bdba61502f55aa77eef0b8e4cf6662db2"
+    },
+    {
+      "path": "Python/mach3_controller.py",
+      "bytes": 14495,
+      "sha256": "8b6be13198bae0903ac4f9866321c0a85b2333feeb138d68952035a776f12d26"
+    },
+    {
+      "path": "Python/machine_defaults/machine_1/temporary_test_defaults.json",
+      "bytes": 1313,
+      "sha256": "d047dee69e81ab79a38ad52b8f48da0ac466b373ed414577289fe00cb63c05ff"
+    },
+    {
+      "path": "Python/machine_defaults/machine_2/temporary_test_defaults.json",
+      "bytes": 491,
+      "sha256": "3d9991c2c3de2d0c0faa5cba42305cfffb63ee25e26d0d4e39871161f4ee40b1"
+    },
+    {
+      "path": "Python/machine_profile.json",
+      "bytes": 2250,
+      "sha256": "2a8454ddef79deba6399a2e382b70b37aa9b46a351b60b248e3eba84c60555fe"
+    },
+    {
+      "path": "Python/machine_profile.py",
+      "bytes": 6661,
+      "sha256": "c0b7698f14e3217ba69db9b0d09cccf4ea2aeb18838f0937de051dc8bfb4978c"
+    },
+    {
+      "path": "Python/machine_registry.json",
+      "bytes": 948,
+      "sha256": "8f3a94c8172e7d44fa723247c1e6ba22b1a1ea36ef5b7247c4ba31c46769fdad"
+    },
+    {
+      "path": "Python/mechanical_finger_3d.py",
+      "bytes": 146870,
+      "sha256": "89fe996f89f7bfb7e926a046241c0a5403e8e8649b48548b2a6ef1e6ab676f11"
+    },
+    {
+      "path": "Python/mode_table_manager.py",
+      "bytes": 51561,
+      "sha256": "1834a8595440530f8e67997dacccc2d2bb697c3307c949d48df8f0187503fb2b"
+    },
+    {
+      "path": "Python/mode_tables_from_fullband_2001.json",
+      "bytes": 163176,
+      "sha256": "0ee2c47a2b255e25bab9f6b51a3b87192b1d3228ab281c170291e602c65c76c1"
+    },
+    {
+      "path": "Python/native_frame_recorder.py",
+      "bytes": 2962,
+      "sha256": "6beb9842fa411836ba107ebe075d8b4eada34573701d24399a8c1a5fe6c95bdf"
+    },
+    {
+      "path": "Python/ota_debug_recovery.py",
+      "bytes": 7917,
+      "sha256": "5483d0e7624a5a26fcd5b33ee8099faa8ab7153efc3ff6fe09afd0864008eb77"
+    },
+    {
+      "path": "Python/ota_machine_profiles.py",
+      "bytes": 9230,
+      "sha256": "e3b6635e756fccb1c2ed209a6635f9ad0374e56ccbcee71d693d871dd0de1dab"
+    },
+    {
+      "path": "Python/outputs/device_profiles/ota_machine_profiles.json",
+      "bytes": 402,
+      "sha256": "bcd04a7e57a6ae706c2a9f03706264e0083b1e69e050505e0354e9b9dd958b7c"
+    },
+    {
+      "path": "Python/outputs/machines/machine_1/temporary_test/finger_captures/0号手指.json",
+      "bytes": 126746,
+      "sha256": "ddf1d6d6920fd46dc7fff1d97a02330288df11804879d6e447d499213a945e68"
+    },
+    {
+      "path": "Python/outputs/machines/machine_1/temporary_test/finger_captures/9个光栅最新通过.json",
+      "bytes": 144656,
+      "sha256": "9147466c634e0699bf896675b50d44dfab4d25be37b9fcd1b6a2cbd31c8e99b5"
+    },
+    {
+      "path": "Python/outputs/machines/machine_1/temporary_test/last_45_session.json",
+      "bytes": 83090,
+      "sha256": "2a4ff93abb5d14fa0961d016ebcd2f0c915952c9f61fa16fe85622faa9a317b3"
+    },
+    {
+      "path": "Python/outputs/machines/machine_1/temporary_test/last_finger_capture.json",
+      "bytes": 144656,
+      "sha256": "9147466c634e0699bf896675b50d44dfab4d25be37b9fcd1b6a2cbd31c8e99b5"
+    },
+    {
+      "path": "Python/physical_pressure_validation.py",
+      "bytes": 37915,
+      "sha256": "0c5b3c85a53786a5a6d3398d194303750f30843be459297f290ea4ccfd8bb695"
+    },
+    {
+      "path": "Python/probe_ch1_g4_candidates.py",
+      "bytes": 11282,
+      "sha256": "fbedfee8608e5c12f3249332f2595d13b944b488579913e9def829c6304a1669"
+    },
+    {
+      "path": "Python/rc_dynamic_model_validation.json",
+      "bytes": 96107,
+      "sha256": "2161572e9f20dcd68c410ee980be07bdfee3392fad917c4dc6d3fb1f643fa505"
+    },
+    {
+      "path": "Python/rc_model_accuracy_63.json",
+      "bytes": 33672,
+      "sha256": "c1b93c9ff80a8c4b2aab505bed789cf773b36188e9328aea2a6634f9cc98b2f3"
+    },
+    {
+      "path": "Python/realtime_frame_queue.py",
+      "bytes": 5055,
+      "sha256": "22c6c616dc7708ea9e1dee798719ef34abd1ba7aba0a2db51e9198a69462d55b"
+    },
+    {
+      "path": "Python/responsive_layout.py",
+      "bytes": 9216,
+      "sha256": "0d847e093c41031b6feedf5be60745f4d4d6cd54936ffb7e6b93c88eafb04caf"
+    },
+    {
+      "path": "Python/resume_verified_ota_bootloader.py",
+      "bytes": 5219,
+      "sha256": "c2d30e4c5d7fbf42e178b76ddc0749c0a1cde61d447cdb9100e17508b16a64c7"
+    },
+    {
+      "path": "Python/runtime_paths.py",
+      "bytes": 4453,
+      "sha256": "ced901c2f342d267414a6bf098f6b62e61146c8ab43ff462759ce7dcd5f5ec96"
+    },
+    {
+      "path": "Python/screen_ch1_reduced_pairs.py",
+      "bytes": 19008,
+      "sha256": "79832178b76a23e222c776a31ae2487798b1eb85e661984632e269611ff8861c"
+    },
+    {
+      "path": "Python/select_old_ch1.py",
+      "bytes": 1895,
+      "sha256": "a90bd439ceb81cacada67cd6ab6f0ab22b6a87f98860c3ecc7119f4685640ca9"
+    },
+    {
+      "path": "Python/selected_calibration_bridge.py",
+      "bytes": 74852,
+      "sha256": "b42b2bb0ccb5d9189906a89c686d95840c9b44758a2bb95a8865392c7cf4306f"
+    },
+    {
+      "path": "Python/SolidWorks.Interop.sldworks.dll",
+      "bytes": 2773312,
+      "sha256": "fa85c4e9b26d0ba996c53362e95afe42ab563c96f27d87cd6809d262f3d3c4cb"
+    },
+    {
+      "path": "Python/SolidWorks.Interop.swconst.dll",
+      "bytes": 465728,
+      "sha256": "25897dc6f2e04f29f62f9364ffedd498d2e68eca2eed65b843792718b434feff"
+    },
+    {
+      "path": "Python/stress_high_power_135_final.json",
+      "bytes": 199517,
+      "sha256": "2ef919f4a2dc81bb56ccb5ceed9099bd100207d66571df64bb45b569536c647d"
+    },
+    {
+      "path": "Python/stress_multirate_protocol.py",
+      "bytes": 15932,
+      "sha256": "2bdac91491924b849911badd04c44302d9a06556f6e36fe88a0642bfb189e753"
+    },
+    {
+      "path": "Python/stress_realtime_benchmark_latest.json",
+      "bytes": 667,
+      "sha256": "006312f326d1035040625c8d71a4b4c0ca23cd6538681446559fc29e1eca89f2"
+    },
+    {
+      "path": "Python/stress_shape_power_dynamic_v3.json",
+      "bytes": 58396,
+      "sha256": "6bf2c9f23e31e29be3a9a97f8a533d591db0d625c995ca9fb0a8921844a49a56"
+    },
+    {
+      "path": "Python/stress_shape_power_final_v2.json",
+      "bytes": 39692,
+      "sha256": "91f4233801fa779e9570fb060f866a4942c43526edd014ea2ff63fa02233a392"
+    },
+    {
+      "path": "Python/stress_wave_const.yaml",
+      "bytes": 771,
+      "sha256": "2934b646a6d38699282ea15d44eac7aa7cf14632ba2fed014099f73f1f0df811"
+    },
+    {
+      "path": "Python/t31_touch_calibration.json",
+      "bytes": 7612,
+      "sha256": "985f66e1b2c9ec0e01cce7d81adaf93a8161d988dc5d6e4e6b6e1c7569c3f098"
+    },
+    {
+      "path": "Python/temporary_optical_units.py",
+      "bytes": 2688,
+      "sha256": "1598f1fa6713babced8f856d973e97ba4a6bc085116688d2ca590784af50cec0"
+    },
+    {
+      "path": "Python/temporary_peak_fit.py",
+      "bytes": 6503,
+      "sha256": "0267a2370b45a8d83f717725016670430fc89271cf4cd43a79508b4e567dc891"
+    },
+    {
+      "path": "Python/temporary_reference.py",
+      "bytes": 18988,
+      "sha256": "c9ba86ff0c31519542b1d62ae699b77ff8d701f93edfd3c6768ff31499837723"
+    },
+    {
+      "path": "Python/temporary_test_default_plan.json",
+      "bytes": 12189,
+      "sha256": "4ad992f6d0aa7c8a963790a94562f090b8d5d7387131c0c067a809f9508747b6"
+    },
+    {
+      "path": "Python/temporary_test_defaults.json",
+      "bytes": 1313,
+      "sha256": "d047dee69e81ab79a38ad52b8f48da0ac466b373ed414577289fe00cb63c05ff"
+    },
+    {
+      "path": "Python/temporary_test_mode.py",
+      "bytes": 44380,
+      "sha256": "6f87747dd34497806bfb4c29541a44184b61eef7b08c7242d0f8f09e36745830"
+    },
+    {
+      "path": "Python/temporary_test_widget.py",
+      "bytes": 172025,
+      "sha256": "a9a84bc6077248c268f4b14de37bb931314ff164ec17c3f23c7646e275694603"
+    },
+    {
+      "path": "Python/train_rc_dynamic_model.py",
+      "bytes": 12476,
+      "sha256": "6e38aec8328963411be3904de3dffe1ae5d2edc81ae84cb1f5d3b7dfde8eb4cb"
+    },
+    {
+      "path": "Python/verify_lan_full_function_live.py",
+      "bytes": 8052,
+      "sha256": "9ed5f18f20db3561a33909a8a1a026a3569159b344ad38c0f08f0c8cff0f3429"
+    },
+    {
+      "path": "Python/verify_runtime_firmware.py",
+      "bytes": 4172,
+      "sha256": "41b83fdaab3dd25c458aa31bbdc2e574a18d3e3d3d054e4f366738d8f184b8ea"
+    },
+    {
+      "path": "Python/wave_const.yaml",
+      "bytes": 925,
+      "sha256": "b32648a0337a5d49f1f6437c5f377e0bbbf26c95d637dd59a42461f3ef7b549c"
+    },
+    {
+      "path": "README_开发调试.md",
+      "bytes": 3698,
+      "sha256": "f3e3e380303bb866949291b5cdfb2f5e8080ea5892bc106a19d8b0754d8e7e7b"
+    },
+    {
+      "path": "requirements-build.txt",
+      "bytes": 80,
+      "sha256": "0bd185772d487b0a52aaf00c2285583f4d5b1ceaa273480db3eaff88fcf2de3a"
+    },
+    {
+      "path": "requirements-lock.txt",
+      "bytes": 967,
+      "sha256": "3bdf1a955215e68a495cb5b9d8ce48162d19e90cbe14ad699e2a215b6665246c"
+    },
+    {
+      "path": "setup_dev.ps1",
+      "bytes": 1071,
+      "sha256": "d41506d9050339e7487c270f6e8eb3450bfd25a7e3860855acad5a41a72a5590"
+    },
+    {
+      "path": "start_demo.ps1",
+      "bytes": 393,
+      "sha256": "bdde32afbdc429f1b0e41c53128b94a44c01fdaf46fdec7d1dc7ad248392caab"
+    },
+    {
+      "path": "start_dev.ps1",
+      "bytes": 401,
+      "sha256": "48f1ba470c14b23388b9a18b0c3304fcfc81222d4bec8db707a5b6bc0ea48fad"
+    }
+  ]
+}

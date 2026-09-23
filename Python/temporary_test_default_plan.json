@@ -1,0 +1,715 @@
+{
+  "schema": "temporary_test_45_plan_v1",
+  "rows": [
+    {
+      "group": 1,
+      "index": 95,
+      "target_nm": 1526.9,
+      "measured_nm": 1526.90023,
+      "codes": [
+        58981,
+        52916,
+        3963,
+        6551,
+        2246
+      ]
+    },
+    {
+      "group": 1,
+      "index": 110,
+      "target_nm": 1527.2,
+      "measured_nm": 1527.20041,
+      "codes": [
+        58981,
+        52334,
+        797,
+        6133,
+        1829
+      ]
+    },
+    {
+      "group": 1,
+      "index": 125,
+      "target_nm": 1527.5,
+      "measured_nm": 1527.50053,
+      "codes": [
+        58981,
+        51135,
+        3125,
+        5032,
+        1266
+      ]
+    },
+    {
+      "group": 1,
+      "index": 140,
+      "target_nm": 1527.8,
+      "measured_nm": 1527.79987,
+      "codes": [
+        58981,
+        52531,
+        66,
+        4687,
+        1201
+      ]
+    },
+    {
+      "group": 1,
+      "index": 155,
+      "target_nm": 1528.1,
+      "measured_nm": 1528.1004,
+      "codes": [
+        58981,
+        58175,
+        1111,
+        3443,
+        20840
+      ]
+    },
+    {
+      "group": 2,
+      "index": 184,
+      "target_nm": 1528.68,
+      "measured_nm": 1528.67962,
+      "codes": [
+        58981,
+        56021,
+        926,
+        2221,
+        17131
+      ]
+    },
+    {
+      "group": 2,
+      "index": 200,
+      "target_nm": 1529.0,
+      "measured_nm": 1528.9987,
+      "codes": [
+        58981,
+        56418,
+        10095,
+        2016,
+        14714
+      ]
+    },
+    {
+      "group": 2,
+      "index": 216,
+      "target_nm": 1529.32,
+      "measured_nm": 1529.32141,
+      "codes": [
+        58981,
+        55426,
+        19028,
+        1229,
+        12288
+      ]
+    },
+    {
+      "group": 2,
+      "index": 232,
+      "target_nm": 1529.64,
+      "measured_nm": 1529.64049,
+      "codes": [
+        58981,
+        54218,
+        24740,
+        1215,
+        11058
+      ]
+    },
+    {
+      "group": 2,
+      "index": 248,
+      "target_nm": 1529.96,
+      "measured_nm": 1529.95999,
+      "codes": [
+        58981,
+        53530,
+        9549,
+        19046,
+        9830
+      ]
+    },
+    {
+      "group": 3,
+      "index": 319,
+      "target_nm": 1531.38,
+      "measured_nm": 1531.37964,
+      "codes": [
+        58981,
+        51718,
+        0,
+        11000,
+        4873
+      ]
+    },
+    {
+      "group": 3,
+      "index": 334,
+      "target_nm": 1531.68,
+      "measured_nm": 1531.6814,
+      "codes": [
+        58981,
+        50813,
+        806,
+        9826,
+        4830
+      ]
+    },
+    {
+      "group": 3,
+      "index": 349,
+      "target_nm": 1531.98,
+      "measured_nm": 1531.9799,
+      "codes": [
+        58981,
+        50707,
+        13926,
+        8307,
+        3648
+      ]
+    },
+    {
+      "group": 3,
+      "index": 364,
+      "target_nm": 1532.28,
+      "measured_nm": 1532.28002,
+      "codes": [
+        58981,
+        50942,
+        22938,
+        7306,
+        2903
+      ]
+    },
+    {
+      "group": 3,
+      "index": 379,
+      "target_nm": 1532.58,
+      "measured_nm": 1532.58069,
+      "codes": [
+        58981,
+        48468,
+        3237,
+        5775,
+        2662
+      ]
+    },
+    {
+      "group": 4,
+      "index": 387,
+      "target_nm": 1532.74,
+      "measured_nm": 1532.73939,
+      "codes": [
+        58981,
+        49119,
+        1337,
+        5681,
+        2579
+      ]
+    },
+    {
+      "group": 4,
+      "index": 404,
+      "target_nm": 1533.08,
+      "measured_nm": 1533.08012,
+      "codes": [
+        58981,
+        51275,
+        13040,
+        4950,
+        1869
+      ]
+    },
+    {
+      "group": 4,
+      "index": 421,
+      "target_nm": 1533.42,
+      "measured_nm": 1533.41895,
+      "codes": [
+        58981,
+        57164,
+        13233,
+        3686,
+        24575
+      ]
+    },
+    {
+      "group": 4,
+      "index": 438,
+      "target_nm": 1533.76,
+      "measured_nm": 1533.76004,
+      "codes": [
+        58981,
+        50987,
+        24576,
+        3646,
+        1214
+      ]
+    },
+    {
+      "group": 4,
+      "index": 455,
+      "target_nm": 1534.1,
+      "measured_nm": 1534.09803,
+      "codes": [
+        58981,
+        45070,
+        3304,
+        2744,
+        796
+      ]
+    },
+    {
+      "group": 5,
+      "index": 472,
+      "target_nm": 1534.44,
+      "measured_nm": 1534.44028,
+      "codes": [
+        58981,
+        46160,
+        18837,
+        2204,
+        761
+      ]
+    },
+    {
+      "group": 5,
+      "index": 488,
+      "target_nm": 1534.76,
+      "measured_nm": 1534.75997,
+      "codes": [
+        58981,
+        52615,
+        3809,
+        24517,
+        17037
+      ]
+    },
+    {
+      "group": 5,
+      "index": 504,
+      "target_nm": 1535.08,
+      "measured_nm": 1535.0807,
+      "codes": [
+        58981,
+        53222,
+        9582,
+        1229,
+        16056
+      ]
+    },
+    {
+      "group": 5,
+      "index": 520,
+      "target_nm": 1535.4,
+      "measured_nm": 1535.39982,
+      "codes": [
+        58981,
+        47320,
+        151,
+        21668,
+        0
+      ]
+    },
+    {
+      "group": 5,
+      "index": 536,
+      "target_nm": 1535.72,
+      "measured_nm": 1535.71953,
+      "codes": [
+        58981,
+        55268,
+        6461,
+        18022,
+        10240
+      ]
+    },
+    {
+      "group": 6,
+      "index": 544,
+      "target_nm": 1535.88,
+      "measured_nm": 1535.88089,
+      "codes": [
+        58981,
+        49822,
+        18102,
+        41,
+        9830
+      ]
+    },
+    {
+      "group": 6,
+      "index": 562,
+      "target_nm": 1536.24,
+      "measured_nm": 1536.23988,
+      "codes": [
+        58981,
+        51035,
+        5113,
+        15064,
+        9525
+      ]
+    },
+    {
+      "group": 6,
+      "index": 580,
+      "target_nm": 1536.6,
+      "measured_nm": 1536.60182,
+      "codes": [
+        58981,
+        52407,
+        2581,
+        12288,
+        7373
+      ]
+    },
+    {
+      "group": 6,
+      "index": 598,
+      "target_nm": 1536.96,
+      "measured_nm": 1536.95997,
+      "codes": [
+        58981,
+        51555,
+        4096,
+        10943,
+        6151
+      ]
+    },
+    {
+      "group": 6,
+      "index": 616,
+      "target_nm": 1537.32,
+      "measured_nm": 1537.32023,
+      "codes": [
+        58981,
+        49479,
+        25631,
+        8643,
+        4915
+      ]
+    },
+    {
+      "group": 7,
+      "index": 670,
+      "target_nm": 1538.4,
+      "measured_nm": 1538.39974,
+      "codes": [
+        58981,
+        49987,
+        6554,
+        5684,
+        3243
+      ]
+    },
+    {
+      "group": 7,
+      "index": 692,
+      "target_nm": 1538.84,
+      "measured_nm": 1538.83955,
+      "codes": [
+        58981,
+        45260,
+        2040,
+        4224,
+        2253
+      ]
+    },
+    {
+      "group": 7,
+      "index": 714,
+      "target_nm": 1539.28,
+      "measured_nm": 1539.28039,
+      "codes": [
+        58981,
+        47580,
+        3413,
+        2831,
+        1936
+      ]
+    },
+    {
+      "group": 7,
+      "index": 736,
+      "target_nm": 1539.72,
+      "measured_nm": 1539.72038,
+      "codes": [
+        58981,
+        46397,
+        13127,
+        2672,
+        1440
+      ]
+    },
+    {
+      "group": 7,
+      "index": 758,
+      "target_nm": 1540.16,
+      "measured_nm": 1540.15837,
+      "codes": [
+        58981,
+        44534,
+        147,
+        1810,
+        1001
+      ]
+    },
+    {
+      "group": 8,
+      "index": 790,
+      "target_nm": 1540.8,
+      "measured_nm": 1540.79984,
+      "codes": [
+        58981,
+        55263,
+        22936,
+        1175,
+        17201
+      ]
+    },
+    {
+      "group": 8,
+      "index": 806,
+      "target_nm": 1541.12,
+      "measured_nm": 1541.11818,
+      "codes": [
+        58981,
+        53038,
+        16384,
+        0,
+        15836
+      ]
+    },
+    {
+      "group": 8,
+      "index": 822,
+      "target_nm": 1541.44,
+      "measured_nm": 1541.43897,
+      "codes": [
+        58981,
+        49734,
+        29450,
+        16693,
+        0
+      ]
+    },
+    {
+      "group": 8,
+      "index": 838,
+      "target_nm": 1541.76,
+      "measured_nm": 1541.7602,
+      "codes": [
+        58981,
+        53790,
+        6525,
+        15867,
+        12203
+      ]
+    },
+    {
+      "group": 8,
+      "index": 854,
+      "target_nm": 1542.08,
+      "measured_nm": 1542.07985,
+      "codes": [
+        58981,
+        49094,
+        0,
+        12618,
+        9492
+      ]
+    },
+    {
+      "group": 9,
+      "index": 870,
+      "target_nm": 1542.4,
+      "measured_nm": 1542.40058,
+      "codes": [
+        58981,
+        49174,
+        6640,
+        10979,
+        9678
+      ]
+    },
+    {
+      "group": 9,
+      "index": 890,
+      "target_nm": 1542.8,
+      "measured_nm": 1542.79864,
+      "codes": [
+        58981,
+        51430,
+        32748,
+        9661,
+        7303
+      ]
+    },
+    {
+      "group": 9,
+      "index": 910,
+      "target_nm": 1543.2,
+      "measured_nm": 1543.20008,
+      "codes": [
+        58981,
+        50730,
+        2957,
+        8528,
+        6135
+      ]
+    },
+    {
+      "group": 9,
+      "index": 930,
+      "target_nm": 1543.6,
+      "measured_nm": 1543.60158,
+      "codes": [
+        58981,
+        47638,
+        21840,
+        6185,
+        4915
+      ]
+    },
+    {
+      "group": 9,
+      "index": 950,
+      "target_nm": 1544.0,
+      "measured_nm": 1543.99991,
+      "codes": [
+        58981,
+        46488,
+        1746,
+        4711,
+        4608
+      ]
+    }
+  ],
+  "peaks_nm": [
+    1527.50053,
+    1529.32141,
+    1531.9799,
+    1533.41895,
+    1535.0807,
+    1536.60182,
+    1539.28039,
+    1541.43897,
+    1543.20008
+  ],
+  "reference_kind": "dense_CH1",
+  "optical_accuracy_verified": false,
+  "discarded_weak_peaks": 3,
+  "spacing_basis": "nominal_calibrated_table",
+  "hidden_points": 0,
+  "baseline_fraction": 0.1,
+  "soft_baseline": true,
+  "endpoint_checks": [
+    {
+      "group": 1,
+      "spacing_nm": 0.3,
+      "endpoint_adc": [
+        21.0,
+        72.0
+      ],
+      "preferred_threshold_adc": 76.19999999999993,
+      "preferred_baseline_met": true,
+      "peak_center_index": 125
+    },
+    {
+      "group": 2,
+      "spacing_nm": 0.32,
+      "endpoint_adc": [
+        50.0,
+        5.0
+      ],
+      "preferred_threshold_adc": 69.5,
+      "preferred_baseline_met": true,
+      "peak_center_index": 216
+    },
+    {
+      "group": 3,
+      "spacing_nm": 0.3,
+      "endpoint_adc": [
+        68.0,
+        9.0
+      ],
+      "preferred_threshold_adc": 66.10000000000002,
+      "preferred_baseline_met": false,
+      "peak_center_index": 349
+    },
+    {
+      "group": 4,
+      "spacing_nm": 0.34,
+      "endpoint_adc": [
+        57.0,
+        39.0
+      ],
+      "preferred_threshold_adc": 56.19999999999999,
+      "preferred_baseline_met": false,
+      "peak_center_index": 421
+    },
+    {
+      "group": 5,
+      "spacing_nm": 0.32,
+      "endpoint_adc": [
+        32.0,
+        31.0
+      ],
+      "preferred_threshold_adc": 73.89999999999998,
+      "preferred_baseline_met": true,
+      "peak_center_index": 504
+    },
+    {
+      "group": 6,
+      "spacing_nm": 0.36,
+      "endpoint_adc": [
+        53.0,
+        92.0
+      ],
+      "preferred_threshold_adc": 77.29999999999995,
+      "preferred_baseline_met": false,
+      "peak_center_index": 580
+    },
+    {
+      "group": 7,
+      "spacing_nm": 0.44,
+      "endpoint_adc": [
+        43.0,
+        30.0
+      ],
+      "preferred_threshold_adc": 60.0,
+      "preferred_baseline_met": true,
+      "peak_center_index": 714
+    },
+    {
+      "group": 8,
+      "spacing_nm": 0.32,
+      "endpoint_adc": [
+        107.0,
+        40.0
+      ],
+      "preferred_threshold_adc": 109.0,
+      "preferred_baseline_met": true,
+      "peak_center_index": 822
+    },
+    {
+      "group": 9,
+      "spacing_nm": 0.4,
+      "endpoint_adc": [
+        4.0,
+        41.0
+      ],
+      "preferred_threshold_adc": 107.60000000000002,
+      "preferred_baseline_met": true,
+      "peak_center_index": 910
+    }
+  ],
+  "spacing_nm": 0,
+  "selection_only": true,
+  "stability_filter_applied": false,
+  "source_record_filename": "old_ch1_spacing_selection_1789027857234933700.json",
+  "warning": "Saved dense-spectrum selection; not a live calibration or stability certification"
+}
+

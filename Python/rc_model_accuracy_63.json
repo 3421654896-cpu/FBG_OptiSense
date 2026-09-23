@@ -1,0 +1,1354 @@
+{
+  "created": "2026-08-14T11:18:56",
+  "method": {
+    "truth": "predecessor row -> target row -> settled EXTRA/single-value ADC median",
+    "precondition_s": 0.3,
+    "target_settle_s": 0.35,
+    "stress": "TABLE mode fast RC reconstruction, median after 3 startup frames",
+    "stress_seconds": 8.0
+  },
+  "point_count": 63,
+  "segment_count": 9,
+  "single_rt_frames_per_point": {
+    "minimum": 116,
+    "median": 141,
+    "maximum": 158
+  },
+  "stress_frame_count": 80,
+  "stress_fps": 9.961399576691345,
+  "ch1_voltage_metrics": {
+    "bias_v": 0.008341471354166666,
+    "mae_v": 0.03506130642361111,
+    "rmse_v": 0.04450769531806304,
+    "maximum_absolute_error_v": 0.1617431640625,
+    "r_squared": 0.8199628637128357,
+    "pearson_r": 0.9511254723713949,
+    "within_0p02_v_percent": 34.92063492063492,
+    "within_0p05_v_percent": 79.36507936507937,
+    "within_0p10_v_percent": 98.4126984126984
+  },
+  "laser_power_mw": {
+    "minimum": 1.4736483289198143,
+    "mean": 1.5254012266590988,
+    "maximum": 1.5534461436363185,
+    "coefficient_of_variation_percent": 1.0403652469679547
+  },
+  "peak_comparison": [
+    {
+      "segment": 0,
+      "single": {
+        "segment": 0,
+        "start_index": 0,
+        "stop_index": 7,
+        "center_nm": 1527.9595143000001,
+        "amplitude_v": 0.3169987423856152,
+        "r_squared": 0.7426562207557477,
+        "rmse_v": 0.019887959727108225,
+        "center_std_pm": 12.536379313287492,
+        "valid": true
+      },
+      "stress": {
+        "segment": 0,
+        "start_index": 0,
+        "stop_index": 7,
+        "center_nm": 1527.8457831333333,
+        "amplitude_v": 0.18091550767233963,
+        "r_squared": 0.8816373888302006,
+        "rmse_v": 0.02276696054865354,
+        "center_std_pm": 9.805568404184461,
+        "valid": true
+      },
+      "center_error_pm": -113.73116666686656,
+      "amplitude_error_v": -0.13608323471327557
+    },
+    {
+      "segment": 1,
+      "single": {
+        "segment": 1,
+        "start_index": 7,
+        "stop_index": 14,
+        "center_nm": 1532.237063666667,
+        "amplitude_v": 0.544770891693066,
+        "r_squared": 0.8900357955191678,
+        "rmse_v": 0.0187969255960951,
+        "center_std_pm": 12.757928791328432,
+        "valid": true
+      },
+      "stress": {
+        "segment": 1,
+        "start_index": 7,
+        "stop_index": 14,
+        "center_nm": 1532.2587516666667,
+        "amplitude_v": 0.9358131636206417,
+        "r_squared": 0.8606185291413564,
+        "rmse_v": 0.02697573480893565,
+        "center_std_pm": 12.671030066706901,
+        "valid": true
+      },
+      "center_error_pm": 21.687999999812746,
+      "amplitude_error_v": 0.3910422719275757
+    },
+    {
+      "segment": 2,
+      "single": {
+        "segment": 2,
+        "start_index": 14,
+        "stop_index": 21,
+        "center_nm": 1536.4104907,
+        "amplitude_v": 0.3284512523161209,
+        "r_squared": 0.9311239874118586,
+        "rmse_v": 0.016320980562900014,
+        "center_std_pm": 9.967781674016425,
+        "valid": true
+      },
+      "stress": {
+        "segment": 2,
+        "start_index": 14,
+        "stop_index": 21,
+        "center_nm": 1536.4124763166667,
+        "amplitude_v": 0.3388375756297051,
+        "r_squared": 0.9587588284690263,
+        "rmse_v": 0.019713962971367547,
+        "center_std_pm": 7.928696265333346,
+        "valid": true
+      },
+      "center_error_pm": 1.985616666615897,
+      "amplitude_error_v": 0.010386323313584245
+    },
+    {
+      "segment": 3,
+      "single": {
+        "segment": 3,
+        "start_index": 21,
+        "stop_index": 28,
+        "center_nm": 1540.1964597249998,
+        "amplitude_v": 0.17295454329606383,
+        "r_squared": 0.8112561086053203,
+        "rmse_v": 0.014983664984799996,
+        "center_std_pm": 18.61231525038098,
+        "valid": true
+      },
+      "stress": {
+        "segment": 3,
+        "start_index": 21,
+        "stop_index": 28,
+        "center_nm": 1540.2022991583333,
+        "amplitude_v": 0.4603951158021511,
+        "r_squared": 0.8480209745984493,
+        "rmse_v": 0.021427440288072044,
+        "center_std_pm": 13.798387111632456,
+        "valid": true
+      },
+      "center_error_pm": 5.839433333449051,
+      "amplitude_error_v": 0.28744057250608723
+    },
+    {
+      "segment": 4,
+      "single": {
+        "segment": 4,
+        "start_index": 28,
+        "stop_index": 35,
+        "center_nm": 1544.4102496333333,
+        "amplitude_v": 0.3585255631129991,
+        "r_squared": 0.8509338406829424,
+        "rmse_v": 0.018630788059443733,
+        "center_std_pm": 12.304893122731412,
+        "valid": true
+      },
+      "stress": {
+        "segment": 4,
+        "start_index": 28,
+        "stop_index": 35,
+        "center_nm": 1544.3890636666667,
+        "amplitude_v": 0.45281807370171484,
+        "r_squared": 0.8361191258388078,
+        "rmse_v": 0.028719993390623238,
+        "center_std_pm": 14.379255252984105,
+        "valid": true
+      },
+      "center_error_pm": -21.18596666650774,
+      "amplitude_error_v": 0.09429251058871574
+    },
+    {
+      "segment": 5,
+      "single": {
+        "segment": 5,
+        "start_index": 35,
+        "stop_index": 42,
+        "center_nm": 1547.7613273083332,
+        "amplitude_v": 0.397095755728281,
+        "r_squared": 0.5921743981539218,
+        "rmse_v": 0.055416256656625515,
+        "center_std_pm": 46.742950099434324,
+        "valid": false
+      },
+      "stress": {
+        "segment": 5,
+        "start_index": 35,
+        "stop_index": 42,
+        "center_nm": 1547.8330293,
+        "amplitude_v": 1.379972866846599,
+        "r_squared": 0.6702007484653182,
+        "rmse_v": 0.06779122082861659,
+        "center_std_pm": 26.33110652604691,
+        "valid": true
+      },
+      "center_error_pm": 71.7019916667141,
+      "amplitude_error_v": 0.9828771111183179
+    },
+    {
+      "segment": 6,
+      "single": {
+        "segment": 6,
+        "start_index": 42,
+        "stop_index": 49,
+        "center_nm": 1551.77162,
+        "amplitude_v": 0.258661092069536,
+        "r_squared": 0.9688696998475631,
+        "rmse_v": 0.013417466955058764,
+        "center_std_pm": 7.021345382249213,
+        "valid": true
+      },
+      "stress": {
+        "segment": 6,
+        "start_index": 42,
+        "stop_index": 49,
+        "center_nm": 1551.8162053333333,
+        "amplitude_v": 0.6322853548524795,
+        "r_squared": 0.9251252633162558,
+        "rmse_v": 0.024585139183663687,
+        "center_std_pm": 10.302210684346235,
+        "valid": true
+      },
+      "center_error_pm": 44.58533333331616,
+      "amplitude_error_v": 0.3736242627829435
+    },
+    {
+      "segment": 7,
+      "single": {
+        "segment": 7,
+        "start_index": 49,
+        "stop_index": 56,
+        "center_nm": 1555.8881462833333,
+        "amplitude_v": 0.6209816139241915,
+        "r_squared": 0.8743413378616651,
+        "rmse_v": 0.021045650901773003,
+        "center_std_pm": 11.431483992644935,
+        "valid": true
+      },
+      "stress": {
+        "segment": 7,
+        "start_index": 49,
+        "stop_index": 56,
+        "center_nm": 1555.85637195,
+        "amplitude_v": 0.8600722356046642,
+        "r_squared": 0.8858978726308369,
+        "rmse_v": 0.025711325829824612,
+        "center_std_pm": 10.605900986876494,
+        "valid": true
+      },
+      "center_error_pm": -31.774333333260074,
+      "amplitude_error_v": 0.23909062168047268
+    },
+    {
+      "segment": 8,
+      "single": {
+        "segment": 8,
+        "start_index": 56,
+        "stop_index": 63,
+        "center_nm": 1559.945279525,
+        "amplitude_v": 0.8251864343704007,
+        "r_squared": 0.9326450530931791,
+        "rmse_v": 0.027734849016863152,
+        "center_std_pm": 11.895903485695904,
+        "valid": true
+      },
+      "stress": {
+        "segment": 8,
+        "start_index": 56,
+        "stop_index": 63,
+        "center_nm": 1559.8664519000001,
+        "amplitude_v": 0.6172010797145936,
+        "r_squared": 0.9938278689871135,
+        "rmse_v": 0.012784127369546181,
+        "center_std_pm": 4.744529389716304,
+        "valid": true
+      },
+      "center_error_pm": -78.82762499980345,
+      "amplitude_error_v": -0.20798535465580714
+    }
+  ],
+  "rows": [
+    {
+      "index": 0,
+      "segment": 0,
+      "wavelength_nm": 1527.6717250000002,
+      "laser_power_mw": 1.5381334066932855,
+      "codes": [
+        58982,
+        54950,
+        32768,
+        4096,
+        1229
+      ],
+      "single_ch1_v": 0.27435302734375,
+      "stress_ch1_v": 0.3485107421875,
+      "error_v": 0.07415771484375,
+      "absolute_error_v": 0.07415771484375
+    },
+    {
+      "index": 1,
+      "segment": 0,
+      "wavelength_nm": 1527.7637,
+      "laser_power_mw": 1.518117077143569,
+      "codes": [
+        58982,
+        56684,
+        25625,
+        4096,
+        1229
+      ],
+      "single_ch1_v": 0.3790283203125,
+      "stress_ch1_v": 0.45654296875,
+      "error_v": 0.0775146484375,
+      "absolute_error_v": 0.0775146484375
+    },
+    {
+      "index": 2,
+      "segment": 0,
+      "wavelength_nm": 1527.80382,
+      "laser_power_mw": 1.5443068746351392,
+      "codes": [
+        58982,
+        58982,
+        22676,
+        4096,
+        1229
+      ],
+      "single_ch1_v": 0.36865234375,
+      "stress_ch1_v": 0.4266357421875,
+      "error_v": 0.0579833984375,
+      "absolute_error_v": 0.0579833984375
+    },
+    {
+      "index": 3,
+      "segment": 0,
+      "wavelength_nm": 1527.9684000000002,
+      "laser_power_mw": 1.5061698193633113,
+      "codes": [
+        58982,
+        58982,
+        1768,
+        4096,
+        20070
+      ],
+      "single_ch1_v": 0.3668212890625,
+      "stress_ch1_v": 0.401611328125,
+      "error_v": 0.0347900390625,
+      "absolute_error_v": 0.0347900390625
+    },
+    {
+      "index": 4,
+      "segment": 0,
+      "wavelength_nm": 1528.018005,
+      "laser_power_mw": 1.5242238744222996,
+      "codes": [
+        58982,
+        53683,
+        14746,
+        3686,
+        819
+      ],
+      "single_ch1_v": 0.3704833984375,
+      "stress_ch1_v": 0.43701171875,
+      "error_v": 0.0665283203125,
+      "absolute_error_v": 0.0665283203125
+    },
+    {
+      "index": 5,
+      "segment": 0,
+      "wavelength_nm": 1528.221145,
+      "laser_power_mw": 1.5284892055344574,
+      "codes": [
+        58982,
+        58982,
+        16646,
+        3277,
+        16794
+      ],
+      "single_ch1_v": 0.32867431640625,
+      "stress_ch1_v": 0.31494140625,
+      "error_v": -0.01373291015625,
+      "absolute_error_v": 0.01373291015625
+    },
+    {
+      "index": 6,
+      "segment": 0,
+      "wavelength_nm": 1528.265105,
+      "laser_power_mw": 1.5253703937737069,
+      "codes": [
+        58982,
+        58982,
+        15171,
+        3277,
+        16794
+      ],
+      "single_ch1_v": 0.291748046875,
+      "stress_ch1_v": 0.245361328125,
+      "error_v": -0.04638671875,
+      "absolute_error_v": 0.04638671875
+    },
+    {
+      "index": 7,
+      "segment": 1,
+      "wavelength_nm": 1531.734625,
+      "laser_power_mw": 1.5124437865980158,
+      "codes": [
+        58982,
+        54800,
+        26050,
+        8602,
+        4096
+      ],
+      "single_ch1_v": 0.0665283203125,
+      "stress_ch1_v": 0.0,
+      "error_v": -0.0665283203125,
+      "absolute_error_v": 0.0665283203125
+    },
+    {
+      "index": 8,
+      "segment": 1,
+      "wavelength_nm": 1531.89491,
+      "laser_power_mw": 1.52064753652502,
+      "codes": [
+        58982,
+        55423,
+        262,
+        8192,
+        4096
+      ],
+      "single_ch1_v": 0.1641845703125,
+      "stress_ch1_v": 0.1678466796875,
+      "error_v": 0.003662109375,
+      "absolute_error_v": 0.003662109375
+    },
+    {
+      "index": 9,
+      "segment": 1,
+      "wavelength_nm": 1532.0125699999999,
+      "laser_power_mw": 1.5026455300705854,
+      "codes": [
+        58982,
+        55244,
+        30474,
+        8602,
+        4096
+      ],
+      "single_ch1_v": 0.20263671875,
+      "stress_ch1_v": 0.166015625,
+      "error_v": -0.03662109375,
+      "absolute_error_v": 0.03662109375
+    },
+    {
+      "index": 10,
+      "segment": 1,
+      "wavelength_nm": 1532.253525,
+      "laser_power_mw": 1.5425992039858674,
+      "codes": [
+        58982,
+        58982,
+        21718,
+        7782,
+        3277
+      ],
+      "single_ch1_v": 0.3631591796875,
+      "stress_ch1_v": 0.37353515625,
+      "error_v": 0.0103759765625,
+      "absolute_error_v": 0.0103759765625
+    },
+    {
+      "index": 11,
+      "segment": 1,
+      "wavelength_nm": 1532.47228,
+      "laser_power_mw": 1.5262850743136194,
+      "codes": [
+        58982,
+        54273,
+        16406,
+        6144,
+        2458
+      ],
+      "single_ch1_v": 0.1849365234375,
+      "stress_ch1_v": 0.1812744140625,
+      "error_v": -0.003662109375,
+      "absolute_error_v": 0.003662109375
+    },
+    {
+      "index": 12,
+      "segment": 1,
+      "wavelength_nm": 1532.62153,
+      "laser_power_mw": 1.5224563145610146,
+      "codes": [
+        58982,
+        52727,
+        11491,
+        6144,
+        2458
+      ],
+      "single_ch1_v": 0.145263671875,
+      "stress_ch1_v": 0.1202392578125,
+      "error_v": -0.0250244140625,
+      "absolute_error_v": 0.0250244140625
+    },
+    {
+      "index": 13,
+      "segment": 1,
+      "wavelength_nm": 1532.8190250000002,
+      "laser_power_mw": 1.5193733477483844,
+      "codes": [
+        58982,
+        56305,
+        21299,
+        5734,
+        2458
+      ],
+      "single_ch1_v": 0.0433349609375,
+      "stress_ch1_v": 0.010986328125,
+      "error_v": -0.0323486328125,
+      "absolute_error_v": 0.0323486328125
+    },
+    {
+      "index": 14,
+      "segment": 2,
+      "wavelength_nm": 1536.27944,
+      "laser_power_mw": 1.5441281543941163,
+      "codes": [
+        45875,
+        58982,
+        4915,
+        13107,
+        7782
+      ],
+      "single_ch1_v": 0.33203125,
+      "stress_ch1_v": 0.360107421875,
+      "error_v": 0.028076171875,
+      "absolute_error_v": 0.028076171875
+    },
+    {
+      "index": 15,
+      "segment": 2,
+      "wavelength_nm": 1536.3633100000002,
+      "laser_power_mw": 1.5175262405333083,
+      "codes": [
+        52429,
+        57283,
+        323,
+        13107,
+        8192
+      ],
+      "single_ch1_v": 0.3216552734375,
+      "stress_ch1_v": 0.3466796875,
+      "error_v": 0.0250244140625,
+      "absolute_error_v": 0.0250244140625
+    },
+    {
+      "index": 16,
+      "segment": 2,
+      "wavelength_nm": 1536.478395,
+      "laser_power_mw": 1.521681710473023,
+      "codes": [
+        52429,
+        54995,
+        1900,
+        13926,
+        8192
+      ],
+      "single_ch1_v": 0.33203125,
+      "stress_ch1_v": 0.379638671875,
+      "error_v": 0.047607421875,
+      "absolute_error_v": 0.047607421875
+    },
+    {
+      "index": 17,
+      "segment": 2,
+      "wavelength_nm": 1536.593045,
+      "laser_power_mw": 1.4736483289198143,
+      "codes": [
+        45875,
+        58982,
+        19923,
+        12698,
+        7782
+      ],
+      "single_ch1_v": 0.340576171875,
+      "stress_ch1_v": 0.3375244140625,
+      "error_v": -0.0030517578125,
+      "absolute_error_v": 0.0030517578125
+    },
+    {
+      "index": 18,
+      "segment": 2,
+      "wavelength_nm": 1536.683485,
+      "laser_power_mw": 1.5378374177597887,
+      "codes": [
+        58982,
+        58982,
+        22872,
+        12698,
+        7782
+      ],
+      "single_ch1_v": 0.1898193359375,
+      "stress_ch1_v": 0.216064453125,
+      "error_v": 0.0262451171875,
+      "absolute_error_v": 0.0262451171875
+    },
+    {
+      "index": 19,
+      "segment": 2,
+      "wavelength_nm": 1536.75961,
+      "laser_power_mw": 1.5152969821999698,
+      "codes": [
+        52429,
+        55266,
+        19799,
+        11059,
+        7373
+      ],
+      "single_ch1_v": 0.23681640625,
+      "stress_ch1_v": 0.1751708984375,
+      "error_v": -0.0616455078125,
+      "absolute_error_v": 0.0616455078125
+    },
+    {
+      "index": 20,
+      "segment": 2,
+      "wavelength_nm": 1536.875125,
+      "laser_power_mw": 1.5159039686785927,
+      "codes": [
+        52429,
+        56489,
+        16908,
+        10650,
+        6554
+      ],
+      "single_ch1_v": 0.145263671875,
+      "stress_ch1_v": 0.115966796875,
+      "error_v": -0.029296875,
+      "absolute_error_v": 0.029296875
+    },
+    {
+      "index": 21,
+      "segment": 3,
+      "wavelength_nm": 1539.8329549999999,
+      "laser_power_mw": 1.5073839581416104,
+      "codes": [
+        58982,
+        56777,
+        24317,
+        2048,
+        22528
+      ],
+      "single_ch1_v": 0.115966796875,
+      "stress_ch1_v": 0.0787353515625,
+      "error_v": -0.0372314453125,
+      "absolute_error_v": 0.0372314453125
+    },
+    {
+      "index": 22,
+      "segment": 3,
+      "wavelength_nm": 1539.9595649999999,
+      "laser_power_mw": 1.5407670083224638,
+      "codes": [
+        58982,
+        58982,
+        17928,
+        2048,
+        22528
+      ],
+      "single_ch1_v": 0.1361083984375,
+      "stress_ch1_v": 0.17333984375,
+      "error_v": 0.0372314453125,
+      "absolute_error_v": 0.0372314453125
+    },
+    {
+      "index": 23,
+      "segment": 3,
+      "wavelength_nm": 1540.1016949999998,
+      "laser_power_mw": 1.512982354468559,
+      "codes": [
+        58982,
+        55982,
+        11210,
+        2048,
+        22528
+      ],
+      "single_ch1_v": 0.150146484375,
+      "stress_ch1_v": 0.1885986328125,
+      "error_v": 0.0384521484375,
+      "absolute_error_v": 0.0384521484375
+    },
+    {
+      "index": 24,
+      "segment": 3,
+      "wavelength_nm": 1540.24551,
+      "laser_power_mw": 1.5484153250169868,
+      "codes": [
+        58982,
+        58982,
+        10026,
+        1638,
+        19251
+      ],
+      "single_ch1_v": 0.244140625,
+      "stress_ch1_v": 0.2337646484375,
+      "error_v": -0.0103759765625,
+      "absolute_error_v": 0.0103759765625
+    },
+    {
+      "index": 25,
+      "segment": 3,
+      "wavelength_nm": 1540.4115900000002,
+      "laser_power_mw": 1.5185658041627672,
+      "codes": [
+        58982,
+        55636,
+        17890,
+        1638,
+        19251
+      ],
+      "single_ch1_v": 0.157470703125,
+      "stress_ch1_v": 0.1434326171875,
+      "error_v": -0.0140380859375,
+      "absolute_error_v": 0.0140380859375
+    },
+    {
+      "index": 26,
+      "segment": 3,
+      "wavelength_nm": 1540.5340350000001,
+      "laser_power_mw": 1.5254919477131659,
+      "codes": [
+        58982,
+        53673,
+        18022,
+        24576,
+        819
+      ],
+      "single_ch1_v": 0.1300048828125,
+      "stress_ch1_v": 0.145263671875,
+      "error_v": 0.0152587890625,
+      "absolute_error_v": 0.0152587890625
+    },
+    {
+      "index": 27,
+      "segment": 3,
+      "wavelength_nm": 1540.70887,
+      "laser_power_mw": 1.5215780878144485,
+      "codes": [
+        58982,
+        58982,
+        24576,
+        22118,
+        17203
+      ],
+      "single_ch1_v": 0.0469970703125,
+      "stress_ch1_v": 0.020751953125,
+      "error_v": -0.0262451171875,
+      "absolute_error_v": 0.0262451171875
+    },
+    {
+      "index": 28,
+      "segment": 4,
+      "wavelength_nm": 1544.10243,
+      "laser_power_mw": 1.5266517838035871,
+      "codes": [
+        58982,
+        53215,
+        25263,
+        4506,
+        4096
+      ],
+      "single_ch1_v": 0.15899658203125,
+      "stress_ch1_v": 0.1959228515625,
+      "error_v": 0.03692626953125,
+      "absolute_error_v": 0.03692626953125
+    },
+    {
+      "index": 29,
+      "segment": 4,
+      "wavelength_nm": 1544.20254,
+      "laser_power_mw": 1.545549202500639,
+      "codes": [
+        58982,
+        49703,
+        18874,
+        4506,
+        4096
+      ],
+      "single_ch1_v": 0.1934814453125,
+      "stress_ch1_v": 0.2117919921875,
+      "error_v": 0.018310546875,
+      "absolute_error_v": 0.018310546875
+    },
+    {
+      "index": 30,
+      "segment": 4,
+      "wavelength_nm": 1544.2795500000002,
+      "laser_power_mw": 1.5082883483688014,
+      "codes": [
+        58982,
+        46888,
+        3628,
+        4506,
+        4096
+      ],
+      "single_ch1_v": 0.2337646484375,
+      "stress_ch1_v": 0.303955078125,
+      "error_v": 0.0701904296875,
+      "absolute_error_v": 0.0701904296875
+    },
+    {
+      "index": 31,
+      "segment": 4,
+      "wavelength_nm": 1544.4433549999999,
+      "laser_power_mw": 1.5160088808775094,
+      "codes": [
+        58982,
+        52506,
+        31631,
+        4506,
+        3277
+      ],
+      "single_ch1_v": 0.27587890625,
+      "stress_ch1_v": 0.3155517578125,
+      "error_v": 0.0396728515625,
+      "absolute_error_v": 0.0396728515625
+    },
+    {
+      "index": 32,
+      "segment": 4,
+      "wavelength_nm": 1544.59123,
+      "laser_power_mw": 1.5046258366421803,
+      "codes": [
+        58982,
+        47046,
+        8782,
+        3686,
+        2867
+      ],
+      "single_ch1_v": 0.2117919921875,
+      "stress_ch1_v": 0.2484130859375,
+      "error_v": 0.03662109375,
+      "absolute_error_v": 0.03662109375
+    },
+    {
+      "index": 33,
+      "segment": 4,
+      "wavelength_nm": 1544.73013,
+      "laser_power_mw": 1.543979000665527,
+      "codes": [
+        58982,
+        50467,
+        5014,
+        3686,
+        2867
+      ],
+      "single_ch1_v": 0.1800537109375,
+      "stress_ch1_v": 0.179443359375,
+      "error_v": -0.0006103515625,
+      "absolute_error_v": 0.0006103515625
+    },
+    {
+      "index": 34,
+      "segment": 4,
+      "wavelength_nm": 1544.8501700000002,
+      "laser_power_mw": 1.5450191390981134,
+      "codes": [
+        58982,
+        49664,
+        11403,
+        3686,
+        2867
+      ],
+      "single_ch1_v": 0.0738525390625,
+      "stress_ch1_v": 0.05615234375,
+      "error_v": -0.0177001953125,
+      "absolute_error_v": 0.0177001953125
+    },
+    {
+      "index": 35,
+      "segment": 5,
+      "wavelength_nm": 1547.3911899999998,
+      "laser_power_mw": 1.5434911298551204,
+      "codes": [
+        58982,
+        50196,
+        18447,
+        14336,
+        0
+      ],
+      "single_ch1_v": 0.107421875,
+      "stress_ch1_v": 0.09765625,
+      "error_v": -0.009765625,
+      "absolute_error_v": 0.009765625
+    },
+    {
+      "index": 36,
+      "segment": 5,
+      "wavelength_nm": 1547.42692,
+      "laser_power_mw": 1.5339517921335544,
+      "codes": [
+        58982,
+        50090,
+        16973,
+        14336,
+        0
+      ],
+      "single_ch1_v": 0.086669921875,
+      "stress_ch1_v": 0.0701904296875,
+      "error_v": -0.0164794921875,
+      "absolute_error_v": 0.0164794921875
+    },
+    {
+      "index": 37,
+      "segment": 5,
+      "wavelength_nm": 1547.82078,
+      "laser_power_mw": 1.5420994256543736,
+      "codes": [
+        58982,
+        52764,
+        13697,
+        11878,
+        12288
+      ],
+      "single_ch1_v": 0.29541015625,
+      "stress_ch1_v": 0.3216552734375,
+      "error_v": 0.0262451171875,
+      "absolute_error_v": 0.0262451171875
+    },
+    {
+      "index": 38,
+      "segment": 5,
+      "wavelength_nm": 1547.964595,
+      "laser_power_mw": 1.5237579706642945,
+      "codes": [
+        52429,
+        55192,
+        1668,
+        11469,
+        11059
+      ],
+      "single_ch1_v": 0.3363037109375,
+      "stress_ch1_v": 0.3558349609375,
+      "error_v": 0.01953125,
+      "absolute_error_v": 0.01953125
+    },
+    {
+      "index": 39,
+      "segment": 5,
+      "wavelength_nm": 1548.1707549999999,
+      "laser_power_mw": 1.537565954857533,
+      "codes": [
+        58982,
+        51854,
+        18022,
+        11059,
+        10240
+      ],
+      "single_ch1_v": 0.1898193359375,
+      "stress_ch1_v": 0.164794921875,
+      "error_v": -0.0250244140625,
+      "absolute_error_v": 0.0250244140625
+    },
+    {
+      "index": 40,
+      "segment": 5,
+      "wavelength_nm": 1548.2823250000001,
+      "laser_power_mw": 1.4861407471583743,
+      "codes": [
+        45875,
+        58982,
+        25362,
+        10650,
+        10650
+      ],
+      "single_ch1_v": 0.162353515625,
+      "stress_ch1_v": 0.3240966796875,
+      "error_v": 0.1617431640625,
+      "absolute_error_v": 0.1617431640625
+    },
+    {
+      "index": 41,
+      "segment": 5,
+      "wavelength_nm": 1548.553925,
+      "laser_power_mw": 1.526349863043715,
+      "codes": [
+        45875,
+        55523,
+        333,
+        9421,
+        9421
+      ],
+      "single_ch1_v": 0.0372314453125,
+      "stress_ch1_v": 0.0,
+      "error_v": -0.0372314453125,
+      "absolute_error_v": 0.0372314453125
+    },
+    {
+      "index": 42,
+      "segment": 6,
+      "wavelength_nm": 1551.53558,
+      "laser_power_mw": 1.5100972479913077,
+      "codes": [
+        58982,
+        44593,
+        6554,
+        1229,
+        2048
+      ],
+      "single_ch1_v": 0.2496337890625,
+      "stress_ch1_v": 0.2569580078125,
+      "error_v": 0.00732421875,
+      "absolute_error_v": 0.00732421875
+    },
+    {
+      "index": 43,
+      "segment": 6,
+      "wavelength_nm": 1551.6702100000002,
+      "laser_power_mw": 1.5442906629798223,
+      "codes": [
+        58982,
+        51999,
+        9156,
+        24576,
+        2048
+      ],
+      "single_ch1_v": 0.3448486328125,
+      "stress_ch1_v": 0.301513671875,
+      "error_v": -0.0433349609375,
+      "absolute_error_v": 0.0433349609375
+    },
+    {
+      "index": 44,
+      "segment": 6,
+      "wavelength_nm": 1551.78767,
+      "laser_power_mw": 1.51940877074191,
+      "codes": [
+        58982,
+        44244,
+        31097,
+        1228,
+        2048
+      ],
+      "single_ch1_v": 0.32958984375,
+      "stress_ch1_v": 0.2978515625,
+      "error_v": -0.03173828125,
+      "absolute_error_v": 0.03173828125
+    },
+    {
+      "index": 45,
+      "segment": 6,
+      "wavelength_nm": 1551.87142,
+      "laser_power_mw": 1.510086537305909,
+      "codes": [
+        58982,
+        48571,
+        14167,
+        24576,
+        2048
+      ],
+      "single_ch1_v": 0.33660888671875,
+      "stress_ch1_v": 0.350341796875,
+      "error_v": 0.01373291015625,
+      "absolute_error_v": 0.01373291015625
+    },
+    {
+      "index": 46,
+      "segment": 6,
+      "wavelength_nm": 1551.90717,
+      "laser_power_mw": 1.5405080663270683,
+      "codes": [
+        58982,
+        50673,
+        12105,
+        24576,
+        2048
+      ],
+      "single_ch1_v": 0.2960205078125,
+      "stress_ch1_v": 0.3033447265625,
+      "error_v": 0.00732421875,
+      "absolute_error_v": 0.00732421875
+    },
+    {
+      "index": 47,
+      "segment": 6,
+      "wavelength_nm": 1551.91592,
+      "laser_power_mw": 1.5333151046324562,
+      "codes": [
+        58982,
+        50159,
+        11546,
+        24576,
+        2048
+      ],
+      "single_ch1_v": 0.32470703125,
+      "stress_ch1_v": 0.364990234375,
+      "error_v": 0.040283203125,
+      "absolute_error_v": 0.040283203125
+    },
+    {
+      "index": 48,
+      "segment": 6,
+      "wavelength_nm": 1552.32238,
+      "laser_power_mw": 1.5286820781729793,
+      "codes": [
+        58982,
+        52294,
+        20510,
+        0,
+        22937
+      ],
+      "single_ch1_v": 0.11383056640625,
+      "stress_ch1_v": 0.0738525390625,
+      "error_v": -0.03997802734375,
+      "absolute_error_v": 0.03997802734375
+    },
+    {
+      "index": 49,
+      "segment": 7,
+      "wavelength_nm": 1555.4131200000002,
+      "laser_power_mw": 1.553077663087629,
+      "codes": [
+        58982,
+        47285,
+        1813,
+        4506,
+        7373
+      ],
+      "single_ch1_v": 0.1263427734375,
+      "stress_ch1_v": 0.1092529296875,
+      "error_v": -0.01708984375,
+      "absolute_error_v": 0.01708984375
+    },
+    {
+      "index": 50,
+      "segment": 7,
+      "wavelength_nm": 1555.53381,
+      "laser_power_mw": 1.5534461436363185,
+      "codes": [
+        58982,
+        49895,
+        466,
+        4915,
+        7373
+      ],
+      "single_ch1_v": 0.21240234375,
+      "stress_ch1_v": 0.2423095703125,
+      "error_v": 0.0299072265625,
+      "absolute_error_v": 0.0299072265625
+    },
+    {
+      "index": 51,
+      "segment": 7,
+      "wavelength_nm": 1555.658005,
+      "laser_power_mw": 1.5130086635649773,
+      "codes": [
+        58982,
+        45711,
+        3671,
+        4506,
+        6963
+      ],
+      "single_ch1_v": 0.2685546875,
+      "stress_ch1_v": 0.28076171875,
+      "error_v": 0.01220703125,
+      "absolute_error_v": 0.01220703125
+    },
+    {
+      "index": 52,
+      "segment": 7,
+      "wavelength_nm": 1555.87041,
+      "laser_power_mw": 1.54123590545329,
+      "codes": [
+        58982,
+        50898,
+        10092,
+        4096,
+        5734
+      ],
+      "single_ch1_v": 0.4345703125,
+      "stress_ch1_v": 0.477294921875,
+      "error_v": 0.042724609375,
+      "absolute_error_v": 0.042724609375
+    },
+    {
+      "index": 53,
+      "segment": 7,
+      "wavelength_nm": 1556.08668,
+      "laser_power_mw": 1.5185467003621165,
+      "codes": [
+        58982,
+        44999,
+        524,
+        3277,
+        6144
+      ],
+      "single_ch1_v": 0.2838134765625,
+      "stress_ch1_v": 0.284423828125,
+      "error_v": 0.0006103515625,
+      "absolute_error_v": 0.0006103515625
+    },
+    {
+      "index": 54,
+      "segment": 7,
+      "wavelength_nm": 1556.201695,
+      "laser_power_mw": 1.536936212879873,
+      "codes": [
+        58982,
+        49269,
+        18269,
+        2867,
+        5325
+      ],
+      "single_ch1_v": 0.2276611328125,
+      "stress_ch1_v": 0.1904296875,
+      "error_v": -0.0372314453125,
+      "absolute_error_v": 0.0372314453125
+    },
+    {
+      "index": 55,
+      "segment": 7,
+      "wavelength_nm": 1556.36635,
+      "laser_power_mw": 1.5146473947811514,
+      "codes": [
+        58982,
+        45485,
+        10256,
+        2867,
+        5325
+      ],
+      "single_ch1_v": 0.125732421875,
+      "stress_ch1_v": 0.084228515625,
+      "error_v": -0.04150390625,
+      "absolute_error_v": 0.04150390625
+    },
+    {
+      "index": 56,
+      "segment": 8,
+      "wavelength_nm": 1559.5091,
+      "laser_power_mw": 1.5409836206450331,
+      "codes": [
+        45875,
+        50054,
+        18022,
+        11059,
+        819
+      ],
+      "single_ch1_v": 0.16876220703125,
+      "stress_ch1_v": 0.2685546875,
+      "error_v": 0.09979248046875,
+      "absolute_error_v": 0.09979248046875
+    },
+    {
+      "index": 57,
+      "segment": 8,
+      "wavelength_nm": 1559.695385,
+      "laser_power_mw": 1.5396851992913811,
+      "codes": [
+        52429,
+        54168,
+        1900,
+        11059,
+        17203
+      ],
+      "single_ch1_v": 0.35888671875,
+      "stress_ch1_v": 0.4364013671875,
+      "error_v": 0.0775146484375,
+      "absolute_error_v": 0.0775146484375
+    },
+    {
+      "index": 58,
+      "segment": 8,
+      "wavelength_nm": 1559.84544,
+      "laser_power_mw": 1.5126273316056786,
+      "codes": [
+        58982,
+        45350,
+        18991,
+        9420,
+        409
+      ],
+      "single_ch1_v": 0.439453125,
+      "stress_ch1_v": 0.450439453125,
+      "error_v": 0.010986328125,
+      "absolute_error_v": 0.010986328125
+    },
+    {
+      "index": 59,
+      "segment": 8,
+      "wavelength_nm": 1560.065395,
+      "laser_power_mw": 1.512181761084595,
+      "codes": [
+        45875,
+        49119,
+        26214,
+        8602,
+        0
+      ],
+      "single_ch1_v": 0.3289794921875,
+      "stress_ch1_v": 0.3973388671875,
+      "error_v": 0.068359375,
+      "absolute_error_v": 0.068359375
+    },
+    {
+      "index": 60,
+      "segment": 8,
+      "wavelength_nm": 1560.1764400000002,
+      "laser_power_mw": 1.5125380327432119,
+      "codes": [
+        58982,
+        45105,
+        26214,
+        8602,
+        0
+      ],
+      "single_ch1_v": 0.308837890625,
+      "stress_ch1_v": 0.3131103515625,
+      "error_v": 0.0042724609375,
+      "absolute_error_v": 0.0042724609375
+    },
+    {
+      "index": 61,
+      "segment": 8,
+      "wavelength_nm": 1560.478685,
+      "laser_power_mw": 1.5100962921749372,
+      "codes": [
+        45875,
+        56786,
+        21299,
+        6963,
+        11878
+      ],
+      "single_ch1_v": 0.1397705078125,
+      "stress_ch1_v": 0.0830078125,
+      "error_v": -0.0567626953125,
+      "absolute_error_v": 0.0567626953125
+    },
+    {
+      "index": 62,
+      "segment": 8,
+      "wavelength_nm": 1560.5601350000002,
+      "laser_power_mw": 1.5389300807713542,
+      "codes": [
+        45875,
+        51594,
+        614,
+        6554,
+        12288
+      ],
+      "single_ch1_v": 0.0616455078125,
+      "stress_ch1_v": 0.0006103515625,
+      "error_v": -0.06103515625,
+      "absolute_error_v": 0.06103515625
+    }
+  ]
+}

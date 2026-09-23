@@ -1,0 +1,30 @@
+{
+  "schema": "fbg_machine_registry_v1",
+  "default_machine_id": "machine_1",
+  "machines": {
+    "machine_1": {
+      "machine_label": "一号机",
+      "fullband": {
+        "label": "一号机正式2001点",
+        "source_format": "operational_csv",
+        "source_path": "fullband_equal_power_operational_2001.csv",
+        "guard_path": "fullband_equal_power_operational_2001_transition_guards.json",
+        "validation_passed": 2001,
+        "validation_failed": 0,
+        "certified": true
+      }
+    },
+    "machine_2": {
+      "machine_label": "二号机",
+      "fullband": {
+        "label": "2号解调仪第一次校准",
+        "source_format": "calibration_json",
+        "source_path": "calibration_backups/2号解调仪第一次校准/2号解调仪第一次校准_2001点.json",
+        "guard_path": null,
+        "validation_passed": 1716,
+        "validation_failed": 285,
+        "certified": false
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+device_id: "fbg-395736563033"
+topic_prefix: "fbg/v1"
+
+broker:
+  host: "7fa8d07c1a7841f782875dc608f13d75.s1.eu.hivemq.cloud"
+  port: 8883
+  keepalive_s: 30
+  client_id_prefix: "fbg-viewer"
+
+tls:
+  enabled: true
+  ca_file: ""
+  client_cert: ""
+  client_key: ""
+
+credentials:
+  username_env: "FBG_MQTT_USERNAME"
+  password_env: "FBG_MQTT_PASSWORD"

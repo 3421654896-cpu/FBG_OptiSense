@@ -1,0 +1,50 @@
+{
+  "source_table": "fullband_equal_power_operational_2001.json",
+  "limit_profile": "fullband_2001_145mA_v1",
+  "scan_direction": "forward",
+  "guards": [
+    {
+      "target_nm": 1529.82,
+      "hold_ms_per_stage": 5,
+      "precondition_codes": [
+        [
+          58982,
+          53673,
+          0,
+          19472,
+          9600
+        ],
+        [
+          58982,
+          53673,
+          0,
+          19144,
+          9545
+        ]
+      ],
+      "verification": "3/3 wavelength+mode passes"
+    },
+    {
+      "target_nm": 1562.08,
+      "hold_ms_per_stage": 20,
+      "precondition_codes": [
+        [
+          58982,
+          44508,
+          14273,
+          2562,
+          6404
+        ],
+        [
+          58982,
+          44508,
+          14273,
+          2534,
+          6334
+        ]
+      ],
+      "verification": "5/5 wavelength+mode passes"
+    }
+  ],
+  "total_guard_hold_ms_per_full_scan": 50
+}

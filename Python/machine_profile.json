@@ -1,0 +1,67 @@
+{
+  "schema": "fbg_machine_profile_v1",
+  "machine_id": "machine_1",
+  "machine_label": "一号机",
+  "parameter_owner": "一号机",
+  "parameter_note": "当前9峰、2001点和3峰/15点参数均为一号机专用参数",
+  "parameter_groups": {
+    "fullband_2001": [
+      "fullband_equal_power_operational_2001.json",
+      "fullband_equal_power_operational_2001.csv"
+    ],
+    "nine_peak": [
+      "mode_tables_from_fullband_2001.json",
+      "wave_const.yaml",
+      "stress_wave_const.yaml",
+      "temporary_test_default_plan.json",
+      "outputs/temporary_test/last_45_session.json",
+      "outputs/temporary_test/finger_captures/9个光栅最新通过.json"
+    ],
+    "three_peak": [
+      "outputs/temporary_test/last_finger_capture.json",
+      "outputs/temporary_test/finger_captures/0号手指.json"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "fullband_equal_power_operational_2001.json",
+      "sha256": "b586ad3e29ca912ee784f0bf7fb65391fb35096a2bf3dc90b38e8a3780742d1f",
+      "bytes": 16948189
+    },
+    {
+      "path": "fullband_equal_power_operational_2001.csv",
+      "sha256": "480200c6c798a7f8b030a3f108e79a86cbadada1a9c4f747b3f3665e8ba29d71",
+      "bytes": 403148
+    },
+    {
+      "path": "mode_tables_from_fullband_2001.json",
+      "sha256": "0ee2c47a2b255e25bab9f6b51a3b87192b1d3228ab281c170291e602c65c76c1",
+      "bytes": 163176
+    },
+    {
+      "path": "wave_const.yaml",
+      "sha256": "b32648a0337a5d49f1f6437c5f377e0bbbf26c95d637dd59a42461f3ef7b549c",
+      "bytes": 925
+    },
+    {
+      "path": "stress_wave_const.yaml",
+      "sha256": "2934b646a6d38699282ea15d44eac7aa7cf14632ba2fed014099f73f1f0df811",
+      "bytes": 771
+    },
+    {
+      "path": "temporary_test_default_plan.json",
+      "sha256": "4ad992f6d0aa7c8a963790a94562f090b8d5d7387131c0c067a809f9508747b6",
+      "bytes": 12189
+    },
+    {
+      "path": "outputs/temporary_test/finger_captures/0号手指.json",
+      "sha256": "ddf1d6d6920fd46dc7fff1d97a02330288df11804879d6e447d499213a945e68",
+      "bytes": 126746
+    },
+    {
+      "path": "outputs/temporary_test/finger_captures/9个光栅最新通过.json",
+      "sha256": "9147466c634e0699bf896675b50d44dfab4d25be37b9fcd1b6a2cbd31c8e99b5",
+      "bytes": 144656
+    }
+  ]
+}

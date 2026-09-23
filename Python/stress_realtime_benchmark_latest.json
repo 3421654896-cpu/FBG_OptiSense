@@ -1,0 +1,29 @@
+{
+  "schema": "stress_realtime_benchmark_v1",
+  "transport": "usb",
+  "endpoint": "COM6",
+  "feedback_selector": 1,
+  "point_count": 63,
+  "timed_intervals": 59,
+  "measured_hz": 10.079824522192268,
+  "period_ms": {
+    "mean": 99.20807627140213,
+    "median": 84.83060001162812,
+    "p95": 136.74280997365713,
+    "p99": 136.91874400363304,
+    "min": 75.44709998182952,
+    "max": 136.94090000353754
+  },
+  "active_channel_masks": [
+    2
+  ],
+  "firmware_versions": [
+    "1.0.21"
+  ],
+  "acceptance": {
+    "mean_hz_at_least_15": false,
+    "p99_period_at_most_80_ms": false,
+    "ch1_only_after_discovery": true
+  },
+  "pass": false
+}

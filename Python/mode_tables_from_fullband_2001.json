@@ -1,0 +1,5104 @@
+{
+  "schema": "installed_auto_mode_tables_v1",
+  "source_table": "fullband_equal_power_operational_2001.csv",
+  "source_selection_schema": "equal_interval_auto_mode_selection_v4",
+  "candidate_report": "C:\\Users\\xiechengxin\\Desktop\\chat光栅解调工作室\\JDSU_Laser_HAL_最新\\Python\\artifacts\\ch1_measured_template_selection_v4_certified_20260905.json",
+  "installed_at": "2026-09-05T06:47:43",
+  "selection_rule": "adaptive peak count from a complete measured 2001-point raw ADC scan; all DAC rows copied exactly from the audited single-mode table",
+  "all_runtime_points_from_fullband_2001": true,
+  "detected_peak_count": 9,
+  "fbg_channels": [
+    1
+  ],
+  "analog_feedback": {
+    "ch0_selector": 0,
+    "ch1_selector": 1,
+    "ch0_kohm": 2,
+    "ch1_kohm": 40,
+    "digital_gain": 1.0
+  },
+  "sparse_sequence_validation": {
+    "status": "passed",
+    "validation_method": "hardware_sparse_order_replay",
+    "stress_table_fingerprint_sha256": "3bf10abbbb5fe208c0de79a50d1f6a6bc7bda0ccd20ab4cecaf85b3ea4f164ee",
+    "validated_point_count": 45,
+    "validated_repeats": 2,
+    "validated_fullband_indices": [
+      118,
+      122,
+      141,
+      170,
+      178,
+      333,
+      341,
+      357,
+      365,
+      386,
+      538,
+      551,
+      567,
+      584,
+      589,
+      724,
+      750,
+      752,
+      764,
+      784,
+      943,
+      957,
+      960,
+      961,
+      997,
+      1110,
+      1123,
+      1137,
+      1158,
+      1174,
+      1307,
+      1313,
+      1334,
+      1356,
+      1362,
+      1503,
+      1524,
+      1539,
+      1547,
+      1569,
+      1721,
+      1735,
+      1744,
+      1757,
+      1776
+    ],
+    "per_point_results": [
+      {
+        "mode_index": 0,
+        "fullband_index": 118,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1527.3611500000002,
+            "power_mw": 1.6733414884991964,
+            "normalized_smsr_db": 34.01379249
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1527.3602899999998,
+            "power_mw": 1.6756224754324005,
+            "normalized_smsr_db": 33.87218997
+          }
+        ]
+      },
+      {
+        "mode_index": 1,
+        "fullband_index": 122,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1527.4397999999999,
+            "power_mw": 1.6828051443925989,
+            "normalized_smsr_db": 33.86997661
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1527.43939,
+            "power_mw": 1.6829405237967199,
+            "normalized_smsr_db": 34.11884078
+          }
+        ]
+      },
+      {
+        "mode_index": 2,
+        "fullband_index": 141,
+        "passed": true,
+        "requires_hidden_predecessor": true,
+        "runtime_path": "previous_sparse->hidden_fullband_predecessor->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1527.8192999999999,
+            "power_mw": 1.6869594055819952,
+            "normalized_smsr_db": 31.87159562
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1527.81889,
+            "power_mw": 1.6855797028027573,
+            "normalized_smsr_db": 31.18809683
+          }
+        ],
+        "hidden_predecessor": {
+          "fullband_index": 140,
+          "codes": [
+            58981,
+            52531,
+            66,
+            4687,
+            1201
+          ],
+          "hold_us": 5000
+        }
+      },
+      {
+        "mode_index": 3,
+        "fullband_index": 170,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1528.39929,
+            "power_mw": 1.6837273247531537,
+            "normalized_smsr_db": 33.1663896
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1528.39911,
+            "power_mw": 1.6846541804541797,
+            "normalized_smsr_db": 33.291688640000004
+          }
+        ]
+      },
+      {
+        "mode_index": 4,
+        "fullband_index": 178,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1528.56035,
+            "power_mw": 1.685340219301503,
+            "normalized_smsr_db": 35.01960945
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1528.56015,
+            "power_mw": 1.6856626342444434,
+            "normalized_smsr_db": 34.9859637
+          }
+        ]
+      },
+      {
+        "mode_index": 5,
+        "fullband_index": 333,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1531.66003,
+            "power_mw": 1.676588094901055,
+            "normalized_smsr_db": 34.20455398
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1531.65982,
+            "power_mw": 1.6773936283547046,
+            "normalized_smsr_db": 33.72623679
+          }
+        ]
+      },
+      {
+        "mode_index": 6,
+        "fullband_index": 341,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1531.81919,
+            "power_mw": 1.6787080846732343,
+            "normalized_smsr_db": 33.83650942
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1531.81919,
+            "power_mw": 1.678169369725653,
+            "normalized_smsr_db": 33.4716164
+          }
+        ]
+      },
+      {
+        "mode_index": 7,
+        "fullband_index": 357,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1532.13924,
+            "power_mw": 1.679410661827232,
+            "normalized_smsr_db": 34.438595060000004
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1532.13895,
+            "power_mw": 1.6802067457650522,
+            "normalized_smsr_db": 34.48107394
+          }
+        ]
+      },
+      {
+        "mode_index": 8,
+        "fullband_index": 365,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1532.30071,
+            "power_mw": 1.6726570293509297,
+            "normalized_smsr_db": 35.031731199999996
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1532.30054,
+            "power_mw": 1.6732874701545575,
+            "normalized_smsr_db": 34.77615959
+          }
+        ]
+      },
+      {
+        "mode_index": 9,
+        "fullband_index": 386,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1532.72013,
+            "power_mw": 1.679785948335447,
+            "normalized_smsr_db": 33.575698540000005
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1532.71984,
+            "power_mw": 1.6809587919116271,
+            "normalized_smsr_db": 33.39696557
+          }
+        ]
+      },
+      {
+        "mode_index": 10,
+        "fullband_index": 538,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1535.75928,
+            "power_mw": 1.6715502698285685,
+            "normalized_smsr_db": 36.421664220000004
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1535.75931,
+            "power_mw": 1.6738216387117881,
+            "normalized_smsr_db": 36.44595788
+          }
+        ]
+      },
+      {
+        "mode_index": 11,
+        "fullband_index": 551,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1536.02018,
+            "power_mw": 1.6712138032274833,
+            "normalized_smsr_db": 35.17889744
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1536.02008,
+            "power_mw": 1.671468852461499,
+            "normalized_smsr_db": 36.150739879999996
+          }
+        ]
+      },
+      {
+        "mode_index": 12,
+        "fullband_index": 567,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1536.33927,
+            "power_mw": 1.6751269933614,
+            "normalized_smsr_db": 37.62271667
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1536.33923,
+            "power_mw": 1.6766307538223866,
+            "normalized_smsr_db": 36.43037558
+          }
+        ]
+      },
+      {
+        "mode_index": 13,
+        "fullband_index": 584,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1536.67928,
+            "power_mw": 1.6699750435109588,
+            "normalized_smsr_db": 36.15676631
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1536.67925,
+            "power_mw": 1.6679326686792477,
+            "normalized_smsr_db": 35.440225950000006
+          }
+        ]
+      },
+      {
+        "mode_index": 14,
+        "fullband_index": 589,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1536.77949,
+            "power_mw": 1.6735801995660688,
+            "normalized_smsr_db": 33.78374509
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1536.7794199999998,
+            "power_mw": 1.6739268247170134,
+            "normalized_smsr_db": 34.67604149
+          }
+        ]
+      },
+      {
+        "mode_index": 15,
+        "fullband_index": 724,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1539.4798199999998,
+            "power_mw": 1.665565628781717,
+            "normalized_smsr_db": 30.750253
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1539.4795100000001,
+            "power_mw": 1.6640212536486247,
+            "normalized_smsr_db": 30.76551099
+          }
+        ]
+      },
+      {
+        "mode_index": 16,
+        "fullband_index": 750,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1539.9997600000002,
+            "power_mw": 1.6706673875574929,
+            "normalized_smsr_db": 32.42009265
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1539.99969,
+            "power_mw": 1.669210653994328,
+            "normalized_smsr_db": 32.46896138
+          }
+        ]
+      },
+      {
+        "mode_index": 17,
+        "fullband_index": 752,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1540.03978,
+            "power_mw": 1.6755502773060997,
+            "normalized_smsr_db": 32.87583814
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1540.03956,
+            "power_mw": 1.6757613593764655,
+            "normalized_smsr_db": 32.21764562
+          }
+        ]
+      },
+      {
+        "mode_index": 18,
+        "fullband_index": 764,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1540.28044,
+            "power_mw": 1.6733846851649314,
+            "normalized_smsr_db": 29.2128102
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1540.2802000000001,
+            "power_mw": 1.6719694853979663,
+            "normalized_smsr_db": 30.160591869999998
+          }
+        ]
+      },
+      {
+        "mode_index": 19,
+        "fullband_index": 784,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1540.68003,
+            "power_mw": 1.6715059350902437,
+            "normalized_smsr_db": 31.872987929999997
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1540.67982,
+            "power_mw": 1.670966449503309,
+            "normalized_smsr_db": 31.144283899999998
+          }
+        ]
+      },
+      {
+        "mode_index": 20,
+        "fullband_index": 943,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1543.8595,
+            "power_mw": 1.6685086865106702,
+            "normalized_smsr_db": 34.64922712
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1543.8595,
+            "power_mw": 1.6687827889725322,
+            "normalized_smsr_db": 34.469571519999995
+          }
+        ]
+      },
+      {
+        "mode_index": 21,
+        "fullband_index": 957,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1544.14039,
+            "power_mw": 1.6775531313326493,
+            "normalized_smsr_db": 35.00811164
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1544.14035,
+            "power_mw": 1.677652610622679,
+            "normalized_smsr_db": 35.89467027
+          }
+        ]
+      },
+      {
+        "mode_index": 22,
+        "fullband_index": 960,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1544.19957,
+            "power_mw": 1.6649596809740665,
+            "normalized_smsr_db": 34.70359091
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1544.19957,
+            "power_mw": 1.666919894981772,
+            "normalized_smsr_db": 34.496859300000004
+          }
+        ]
+      },
+      {
+        "mode_index": 23,
+        "fullband_index": 961,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1544.22019,
+            "power_mw": 1.6750124445986652,
+            "normalized_smsr_db": 34.57783568
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1544.2200500000001,
+            "power_mw": 1.676584373395954,
+            "normalized_smsr_db": 33.77572154
+          }
+        ]
+      },
+      {
+        "mode_index": 24,
+        "fullband_index": 997,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1544.9392699999999,
+            "power_mw": 1.6781788136805063,
+            "normalized_smsr_db": 31.72972964
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1544.93913,
+            "power_mw": 1.6807823698597457,
+            "normalized_smsr_db": 32.73605234
+          }
+        ]
+      },
+      {
+        "mode_index": 25,
+        "fullband_index": 1110,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1547.20035,
+            "power_mw": 1.6645566265213139,
+            "normalized_smsr_db": 35.83417084
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1547.2003200000001,
+            "power_mw": 1.6663921842241158,
+            "normalized_smsr_db": 35.9336705
+          }
+        ]
+      },
+      {
+        "mode_index": 26,
+        "fullband_index": 1123,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1547.45921,
+            "power_mw": 1.6674890627072456,
+            "normalized_smsr_db": 36.398510640000005
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1547.4591699999999,
+            "power_mw": 1.6666639856294765,
+            "normalized_smsr_db": 35.92175731
+          }
+        ]
+      },
+      {
+        "mode_index": 27,
+        "fullband_index": 1137,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1547.74053,
+            "power_mw": 1.6715342392921921,
+            "normalized_smsr_db": 36.75246987
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1547.74046,
+            "power_mw": 1.6720687452288292,
+            "normalized_smsr_db": 36.57455989
+          }
+        ]
+      },
+      {
+        "mode_index": 28,
+        "fullband_index": 1158,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1548.15976,
+            "power_mw": 1.6689590313576927,
+            "normalized_smsr_db": 34.602804760000005
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1548.15968,
+            "power_mw": 1.6709003808107583,
+            "normalized_smsr_db": 34.51204328
+          }
+        ]
+      },
+      {
+        "mode_index": 29,
+        "fullband_index": 1174,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1548.48022,
+            "power_mw": 1.6604776600262805,
+            "normalized_smsr_db": 34.35867727
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1548.4801,
+            "power_mw": 1.6609519544206774,
+            "normalized_smsr_db": 34.4065637
+          }
+        ]
+      },
+      {
+        "mode_index": 30,
+        "fullband_index": 1307,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1551.14028,
+            "power_mw": 1.6760733895961413,
+            "normalized_smsr_db": 33.40561171
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1551.14002,
+            "power_mw": 1.6759987909563479,
+            "normalized_smsr_db": 32.91741171
+          }
+        ]
+      },
+      {
+        "mode_index": 31,
+        "fullband_index": 1313,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1551.25968,
+            "power_mw": 1.6706934540423384,
+            "normalized_smsr_db": 33.37264811
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1551.25957,
+            "power_mw": 1.6716904059706623,
+            "normalized_smsr_db": 32.1073255
+          }
+        ]
+      },
+      {
+        "mode_index": 32,
+        "fullband_index": 1334,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1551.68005,
+            "power_mw": 1.6601653871608826,
+            "normalized_smsr_db": 35.07367525
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1551.67986,
+            "power_mw": 1.658653872466119,
+            "normalized_smsr_db": 35.018145870000005
+          }
+        ]
+      },
+      {
+        "mode_index": 33,
+        "fullband_index": 1356,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1552.1199,
+            "power_mw": 1.6815041712829593,
+            "normalized_smsr_db": 30.99832459
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1552.11962,
+            "power_mw": 1.6819641505852976,
+            "normalized_smsr_db": 30.723558750000002
+          }
+        ]
+      },
+      {
+        "mode_index": 34,
+        "fullband_index": 1362,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1552.24039,
+            "power_mw": 1.6760861755111158,
+            "normalized_smsr_db": 33.05209504
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1552.24018,
+            "power_mw": 1.6743992777565628,
+            "normalized_smsr_db": 33.15978028
+          }
+        ]
+      },
+      {
+        "mode_index": 35,
+        "fullband_index": 1503,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1555.06008,
+            "power_mw": 1.6774912402907405,
+            "normalized_smsr_db": 35.05602121
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1555.06001,
+            "power_mw": 1.6782333222588537,
+            "normalized_smsr_db": 35.3572408
+          }
+        ]
+      },
+      {
+        "mode_index": 36,
+        "fullband_index": 1524,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1555.47985,
+            "power_mw": 1.6789171290701126,
+            "normalized_smsr_db": 32.9775431
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1555.47967,
+            "power_mw": 1.678959615294272,
+            "normalized_smsr_db": 32.6218759
+          }
+        ]
+      },
+      {
+        "mode_index": 37,
+        "fullband_index": 1539,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1555.78005,
+            "power_mw": 1.669404577498412,
+            "normalized_smsr_db": 36.354573300000006
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1555.78009,
+            "power_mw": 1.6700766806612946,
+            "normalized_smsr_db": 36.391639919999996
+          }
+        ]
+      },
+      {
+        "mode_index": 38,
+        "fullband_index": 1547,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1555.93953,
+            "power_mw": 1.6694320427191838,
+            "normalized_smsr_db": 34.31499995
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1555.93946,
+            "power_mw": 1.6685875814479825,
+            "normalized_smsr_db": 34.24820447
+          }
+        ]
+      },
+      {
+        "mode_index": 39,
+        "fullband_index": 1569,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1556.3804400000001,
+            "power_mw": 1.6716290045098423,
+            "normalized_smsr_db": 35.09752768
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1556.38041,
+            "power_mw": 1.6729140630676855,
+            "normalized_smsr_db": 34.66385262
+          }
+        ]
+      },
+      {
+        "mode_index": 40,
+        "fullband_index": 1721,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1559.4209700000001,
+            "power_mw": 1.6607791350158136,
+            "normalized_smsr_db": 34.4474954
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1559.4208500000002,
+            "power_mw": 1.661980496535455,
+            "normalized_smsr_db": 35.32358373
+          }
+        ]
+      },
+      {
+        "mode_index": 41,
+        "fullband_index": 1735,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1559.70108,
+            "power_mw": 1.6609318262875026,
+            "normalized_smsr_db": 33.92740737
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1559.70108,
+            "power_mw": 1.6610174308637804,
+            "normalized_smsr_db": 33.1103175
+          }
+        ]
+      },
+      {
+        "mode_index": 42,
+        "fullband_index": 1744,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1559.8793999999998,
+            "power_mw": 1.6868630410591383,
+            "normalized_smsr_db": 35.52886183
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1559.87935,
+            "power_mw": 1.687214561792253,
+            "normalized_smsr_db": 35.36049655
+          }
+        ]
+      },
+      {
+        "mode_index": 43,
+        "fullband_index": 1757,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1560.1392899999998,
+            "power_mw": 1.676622333907687,
+            "normalized_smsr_db": 36.125106970000004
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1560.13924,
+            "power_mw": 1.6733661171278182,
+            "normalized_smsr_db": 35.88786511
+          }
+        ]
+      },
+      {
+        "mode_index": 44,
+        "fullband_index": 1776,
+        "passed": true,
+        "requires_hidden_predecessor": false,
+        "runtime_path": "previous_sparse->target",
+        "repetitions": [
+          {
+            "round": 0,
+            "wavelength_nm": 1560.51951,
+            "power_mw": 1.6753242042112575,
+            "normalized_smsr_db": 34.06245433
+          },
+          {
+            "round": 1,
+            "wavelength_nm": 1560.51951,
+            "power_mw": 1.6744434270600983,
+            "normalized_smsr_db": 33.772946489999995
+          }
+        ]
+      }
+    ],
+    "failed_mode_indices": [],
+    "certified_hidden_predecessors": [
+      {
+        "mode_index": 2,
+        "fullband_index": 141,
+        "predecessor_fullband_index": 140,
+        "predecessor_codes": [
+          58981,
+          52531,
+          66,
+          4687,
+          1201
+        ],
+        "hold_us": 5000,
+        "runtime_path": "previous_sparse->hidden_fullband_predecessor->target",
+        "validated_repeats": 2,
+        "certified": true
+      }
+    ],
+    "includes_last_to_first_wraparound_each_round": true,
+    "requires_hardware_sparse_order_replay": true
+  },
+  "modes": {
+    "stress": {
+      "summary": {
+        "point_count": 45,
+        "fullband_candidate_count": 45,
+        "detected_peak_count": 9,
+        "points_per_peak": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "power_min_mw": 1.6570239659688386,
+        "power_max_mw": 1.6837844372652158
+      },
+      "rows": [
+        {
+          "order": 0,
+          "peak_number": 1,
+          "within_peak_order": 0,
+          "fullband_index": 118,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1527.36,
+          "measured_wavelength_nm": 1527.360925,
+          "codes": [
+            58981,
+            52431,
+            5288,
+            5120,
+            1638
+          ],
+          "measured_power_mw": 1.6678749617869477,
+          "minimum_smsr_db": 33.84752711,
+          "wavelength_error_pm": 0.9250000000520231,
+          "wavelength_span_pm": 0.02999999992425728,
+          "power_span_fraction": 0.00023829453014623546,
+          "source_channel": 1,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.757942635135123,
+          "selection_core_half_span_nm": 0.5979426351352686,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.2815043000948134,
+          "template_signal_v": 0.12648913046439184,
+          "template_slope_v_per_nm": 0.9600625299066321,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[0].codes",
+          "mode_index": 0,
+          "precondition_codes": [
+            58981,
+            49250,
+            5577,
+            5120,
+            1638
+          ]
+        },
+        {
+          "order": 1,
+          "peak_number": 1,
+          "within_peak_order": 1,
+          "fullband_index": 122,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1527.44,
+          "measured_wavelength_nm": 1527.44002,
+          "codes": [
+            58981,
+            53086,
+            4571,
+            4710,
+            1434
+          ],
+          "measured_power_mw": 1.6775204949809082,
+          "minimum_smsr_db": 34.79835869,
+          "wavelength_error_pm": 0.019999999949504854,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 7.840532496134586e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.757942635135123,
+          "selection_core_half_span_nm": 0.5979426351352686,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.049587919651497,
+          "template_signal_v": 0.20041187531369692,
+          "template_slope_v_per_nm": 1.0094028757540978,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[1].codes",
+          "mode_index": 1,
+          "precondition_codes": [
+            58981,
+            47224,
+            98,
+            5048,
+            1189
+          ]
+        },
+        {
+          "order": 2,
+          "peak_number": 1,
+          "within_peak_order": 2,
+          "fullband_index": 141,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1527.82,
+          "measured_wavelength_nm": 1527.819315,
+          "codes": [
+            58981,
+            52431,
+            15877,
+            4710,
+            1229
+          ],
+          "measured_power_mw": 1.6830912107714453,
+          "minimum_smsr_db": 31.73548284,
+          "wavelength_error_pm": -0.6849999999758438,
+          "wavelength_span_pm": 0.030000000151630957,
+          "power_span_fraction": 0.00010325942840346618,
+          "source_channel": 1,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.757942635135123,
+          "selection_core_half_span_nm": 0.5979426351352686,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.052014887451783245,
+          "template_signal_v": 0.4316277560510461,
+          "template_slope_v_per_nm": -0.37339354067807135,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[2].codes",
+          "mode_index": 2,
+          "precondition_codes": [
+            58981,
+            52531,
+            66,
+            4687,
+            1201
+          ]
+        },
+        {
+          "order": 3,
+          "peak_number": 1,
+          "within_peak_order": 3,
+          "fullband_index": 170,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1528.4,
+          "measured_wavelength_nm": 1528.399495,
+          "codes": [
+            58981,
+            54396,
+            2655,
+            3072,
+            16179
+          ],
+          "measured_power_mw": 1.681153015611261,
+          "minimum_smsr_db": 32.08119814,
+          "wavelength_error_pm": -0.5050000002029265,
+          "wavelength_span_pm": 0.10999999994965037,
+          "power_span_fraction": 9.242346298191925e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.757942635135123,
+          "selection_core_half_span_nm": 0.5979426351352686,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.7334086456630247,
+          "template_signal_v": 0.11144832524895344,
+          "template_slope_v_per_nm": -1.8489203364458637,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[3].codes",
+          "mode_index": 3,
+          "precondition_codes": [
+            58981,
+            56822,
+            2479,
+            3250,
+            16535
+          ]
+        },
+        {
+          "order": 4,
+          "peak_number": 1,
+          "within_peak_order": 4,
+          "fullband_index": 178,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1528.56,
+          "measured_wavelength_nm": 1528.560305,
+          "codes": [
+            58981,
+            58981,
+            1952,
+            2458,
+            17203
+          ],
+          "measured_power_mw": 1.6831684832032388,
+          "minimum_smsr_db": 34.37316116,
+          "wavelength_error_pm": 0.3050000000257569,
+          "wavelength_span_pm": 0.029999999696883606,
+          "power_span_fraction": 2.0651885698319542e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.757942635135123,
+          "selection_core_half_span_nm": 0.5979426351352686,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.1972414065483385,
+          "template_signal_v": 0.004807840058758842,
+          "template_slope_v_per_nm": -0.4939880166044645,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[4].codes",
+          "mode_index": 4,
+          "precondition_codes": [
+            58981,
+            54002,
+            9791,
+            2386,
+            17171
+          ]
+        },
+        {
+          "order": 5,
+          "peak_number": 2,
+          "within_peak_order": 0,
+          "fullband_index": 333,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1531.66,
+          "measured_wavelength_nm": 1531.66021,
+          "codes": [
+            58981,
+            51776,
+            7188,
+            9792,
+            4850
+          ],
+          "measured_power_mw": 1.6707309130662282,
+          "minimum_smsr_db": 34.18999325,
+          "wavelength_error_pm": 0.20999999992454832,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 7.59254408199847e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.5893675659228848,
+          "selection_core_half_span_nm": 0.3106324340772062,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.7001659650977166,
+          "template_signal_v": 0.13739012266575332,
+          "template_slope_v_per_nm": 1.68476055796637,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[5].codes",
+          "mode_index": 5,
+          "precondition_codes": [
+            58981,
+            53617,
+            7339,
+            9844,
+            4931
+          ]
+        },
+        {
+          "order": 6,
+          "peak_number": 2,
+          "within_peak_order": 1,
+          "fullband_index": 341,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1531.82,
+          "measured_wavelength_nm": 1531.8194600000002,
+          "codes": [
+            58981,
+            52431,
+            4131,
+            9830,
+            3686
+          ],
+          "measured_power_mw": 1.672401298335509,
+          "minimum_smsr_db": 34.0234057,
+          "wavelength_error_pm": -0.5399999997734994,
+          "wavelength_span_pm": 0.06000000007588824,
+          "power_span_fraction": 2.5171860235277617e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.5893675659228848,
+          "selection_core_half_span_nm": 0.3106324340772062,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.1221638243212355,
+          "template_signal_v": 0.23427056081785974,
+          "template_slope_v_per_nm": 1.947704796925733,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[6].codes",
+          "mode_index": 6,
+          "precondition_codes": [
+            58981,
+            50202,
+            22118,
+            8541,
+            3766
+          ]
+        },
+        {
+          "order": 7,
+          "peak_number": 2,
+          "within_peak_order": 2,
+          "fullband_index": 357,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1532.14,
+          "measured_wavelength_nm": 1532.139115,
+          "codes": [
+            58981,
+            51776,
+            31724,
+            7168,
+            3686
+          ],
+          "measured_power_mw": 1.6760133694746022,
+          "minimum_smsr_db": 31.402755210000002,
+          "wavelength_error_pm": -0.8850000001530134,
+          "wavelength_span_pm": 0.02999999992425728,
+          "power_span_fraction": 0.00017451752892524503,
+          "source_channel": 1,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.5893675659228848,
+          "selection_core_half_span_nm": 0.3106324340772062,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.033840457233369876,
+          "template_signal_v": 0.3691290896473505,
+          "template_slope_v_per_nm": -0.8363423363579665,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[7].codes",
+          "mode_index": 7,
+          "precondition_codes": [
+            58981,
+            52182,
+            29491,
+            8135,
+            3444
+          ]
+        },
+        {
+          "order": 8,
+          "peak_number": 2,
+          "within_peak_order": 3,
+          "fullband_index": 365,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1532.3,
+          "measured_wavelength_nm": 1532.300655,
+          "codes": [
+            58981,
+            53086,
+            6508,
+            7168,
+            3277
+          ],
+          "measured_power_mw": 1.6703875540980846,
+          "minimum_smsr_db": 34.38057101,
+          "wavelength_error_pm": 0.6550000000515865,
+          "wavelength_span_pm": 0.030000000151630957,
+          "power_span_fraction": 9.069422158076731e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.5893675659228848,
+          "selection_core_half_span_nm": 0.3106324340772062,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.6118425980098511,
+          "template_signal_v": 0.282012083249055,
+          "template_slope_v_per_nm": -3.2213506557524103,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[8].codes",
+          "mode_index": 8,
+          "precondition_codes": [
+            58981,
+            50942,
+            22938,
+            7306,
+            2903
+          ]
+        },
+        {
+          "order": 9,
+          "peak_number": 2,
+          "within_peak_order": 4,
+          "fullband_index": 386,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1532.72,
+          "measured_wavelength_nm": 1532.71999,
+          "codes": [
+            58981,
+            48501,
+            1476,
+            5734,
+            2662
+          ],
+          "measured_power_mw": 1.6768064585891578,
+          "minimum_smsr_db": 33.491598950000004,
+          "wavelength_error_pm": -0.009999999974752427,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 0.00010404230733311067,
+          "source_channel": 1,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.5893675659228848,
+          "selection_core_half_span_nm": 0.3106324340772062,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.1290982175497573,
+          "template_signal_v": 0.034818593482532155,
+          "template_slope_v_per_nm": -1.0695234706546177,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[9].codes",
+          "mode_index": 9,
+          "precondition_codes": [
+            58981,
+            47092,
+            1651,
+            5734,
+            2662
+          ]
+        },
+        {
+          "order": 10,
+          "peak_number": 3,
+          "within_peak_order": 0,
+          "fullband_index": 538,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1535.76,
+          "measured_wavelength_nm": 1535.7593299999999,
+          "codes": [
+            58981,
+            55051,
+            5682,
+            18022,
+            10240
+          ],
+          "measured_power_mw": 1.6710679816160785,
+          "minimum_smsr_db": 35.83306575,
+          "wavelength_error_pm": -0.670000000127402,
+          "wavelength_span_pm": 0.09999999997489795,
+          "power_span_fraction": 0.000384370524841034,
+          "source_channel": 1,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.5827247422680557,
+          "selection_core_half_span_nm": 0.33727525773201705,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.7881376163221028,
+          "template_signal_v": 0.1004102277485732,
+          "template_slope_v_per_nm": 2.1118782279265504,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[10].codes",
+          "mode_index": 10,
+          "precondition_codes": [
+            58981,
+            55481,
+            5995,
+            18022,
+            10240
+          ]
+        },
+        {
+          "order": 11,
+          "peak_number": 3,
+          "within_peak_order": 1,
+          "fullband_index": 551,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1536.02,
+          "measured_wavelength_nm": 1536.02022,
+          "codes": [
+            58981,
+            53145,
+            12469,
+            15360,
+            9626
+          ],
+          "measured_power_mw": 1.6689734441750277,
+          "minimum_smsr_db": 37.13824496,
+          "wavelength_error_pm": 0.22000000012667442,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 0.00013363973601350385,
+          "source_channel": 1,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.5827247422680557,
+          "selection_core_half_span_nm": 0.33727525773201705,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.9903067597941895,
+          "template_signal_v": 0.29663199021377323,
+          "template_slope_v_per_nm": 2.9071412495122324,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[11].codes",
+          "mode_index": 11,
+          "precondition_codes": [
+            58981,
+            54120,
+            12885,
+            15401,
+            9626
+          ]
+        },
+        {
+          "order": 12,
+          "peak_number": 3,
+          "within_peak_order": 2,
+          "fullband_index": 567,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1536.34,
+          "measured_wavelength_nm": 1536.33952,
+          "codes": [
+            58981,
+            52485,
+            5662,
+            13722,
+            7782
+          ],
+          "measured_power_mw": 1.673305165895737,
+          "minimum_smsr_db": 37.022269529999996,
+          "wavelength_error_pm": -0.4799999999249849,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 0.00026555713721421116,
+          "source_channel": 1,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.5827247422680557,
+          "selection_core_half_span_nm": 0.33727525773201705,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.008361090221533921,
+          "template_signal_v": 0.42021218285019135,
+          "template_slope_v_per_nm": -0.1785574704756312,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[12].codes",
+          "mode_index": 12,
+          "precondition_codes": [
+            58981,
+            53598,
+            20229,
+            13671,
+            7832
+          ]
+        },
+        {
+          "order": 13,
+          "peak_number": 3,
+          "within_peak_order": 3,
+          "fullband_index": 584,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1536.68,
+          "measured_wavelength_nm": 1536.679265,
+          "codes": [
+            58981,
+            53086,
+            1765,
+            12288,
+            7373
+          ],
+          "measured_power_mw": 1.670043091058254,
+          "minimum_smsr_db": 34.40496948,
+          "wavelength_error_pm": -0.7350000000769796,
+          "wavelength_span_pm": 0.030000000151630957,
+          "power_span_fraction": 4.624051382920051e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.5827247422680557,
+          "selection_core_half_span_nm": 0.33727525773201705,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.0349561837000667,
+          "template_signal_v": 0.18758418857448173,
+          "template_slope_v_per_nm": -3.056874383401373,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[13].codes",
+          "mode_index": 13,
+          "precondition_codes": [
+            58981,
+            53457,
+            1913,
+            12288,
+            7373
+          ]
+        },
+        {
+          "order": 14,
+          "peak_number": 3,
+          "within_peak_order": 4,
+          "fullband_index": 589,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1536.78,
+          "measured_wavelength_nm": 1536.779435,
+          "codes": [
+            58981,
+            51121,
+            23352,
+            11059,
+            7373
+          ],
+          "measured_power_mw": 1.670553461337457,
+          "minimum_smsr_db": 34.523230330000004,
+          "wavelength_error_pm": -0.565000000051441,
+          "wavelength_span_pm": 0.030000000151630957,
+          "power_span_fraction": 3.40114844053033e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.5827247422680557,
+          "selection_core_half_span_nm": 0.33727525773201705,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.3418142054413034,
+          "template_signal_v": 0.12896554694910298,
+          "template_slope_v_per_nm": -1.5794114803524162,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[14].codes",
+          "mode_index": 14,
+          "precondition_codes": [
+            58981,
+            49248,
+            880,
+            12180,
+            7287
+          ]
+        },
+        {
+          "order": 15,
+          "peak_number": 4,
+          "within_peak_order": 0,
+          "fullband_index": 724,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1539.48,
+          "measured_wavelength_nm": 1539.47946,
+          "codes": [
+            58981,
+            44580,
+            6952,
+            2867,
+            1843
+          ],
+          "measured_power_mw": 1.6659347831225721,
+          "minimum_smsr_db": 30.65310424,
+          "wavelength_error_pm": -0.5400000000008731,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 0.00023270385361799965,
+          "source_channel": 1,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.6411555056181442,
+          "selection_core_half_span_nm": 0.2411555056180532,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.7176133889509466,
+          "template_signal_v": 0.035777671856990864,
+          "template_slope_v_per_nm": 0.8298336630894381,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[15].codes",
+          "mode_index": 15,
+          "precondition_codes": [
+            58981,
+            44495,
+            7522,
+            2867,
+            1843
+          ]
+        },
+        {
+          "order": 16,
+          "peak_number": 4,
+          "within_peak_order": 1,
+          "fullband_index": 750,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1540.0,
+          "measured_wavelength_nm": 1539.999855,
+          "codes": [
+            58981,
+            42606,
+            9527,
+            1843,
+            819
+          ],
+          "measured_power_mw": 1.6692139262570116,
+          "minimum_smsr_db": 27.5687627,
+          "wavelength_error_pm": -0.1449999999749707,
+          "wavelength_span_pm": 0.10999999994965037,
+          "power_span_fraction": 0.00012695763410194573,
+          "source_channel": 1,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.6411555056181442,
+          "selection_core_half_span_nm": 0.2411555056180532,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.11938888958941768,
+          "template_signal_v": 0.16810800660811392,
+          "template_slope_v_per_nm": 1.0256796815551799,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[16].codes",
+          "mode_index": 16,
+          "precondition_codes": [
+            58981,
+            44676,
+            2080,
+            1750,
+            951
+          ]
+        },
+        {
+          "order": 17,
+          "peak_number": 4,
+          "within_peak_order": 2,
+          "fullband_index": 752,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1540.04,
+          "measured_wavelength_nm": 1540.03943,
+          "codes": [
+            58981,
+            41951,
+            1390,
+            1843,
+            819
+          ],
+          "measured_power_mw": 1.677475465084588,
+          "minimum_smsr_db": 33.13278782,
+          "wavelength_error_pm": -0.5699999999251304,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 0.00012550930808415928,
+          "source_channel": 1,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.6411555056181442,
+          "selection_core_half_span_nm": 0.2411555056180532,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.0035514565152078028,
+          "template_signal_v": 0.2537428759720204,
+          "template_slope_v_per_nm": -0.33634879153832786,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[17].codes",
+          "mode_index": 17,
+          "precondition_codes": [
+            58981,
+            43172,
+            9202,
+            1793,
+            853
+          ]
+        },
+        {
+          "order": 18,
+          "peak_number": 4,
+          "within_peak_order": 3,
+          "fullband_index": 764,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1540.28,
+          "measured_wavelength_nm": 1540.2797449999998,
+          "codes": [
+            58981,
+            45881,
+            11967,
+            1843,
+            819
+          ],
+          "measured_power_mw": 1.6750577991165811,
+          "minimum_smsr_db": 29.07004095,
+          "wavelength_error_pm": -0.25500000015199475,
+          "wavelength_span_pm": 0.11000000017702405,
+          "power_span_fraction": 7.256827175892422e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.6411555056181442,
+          "selection_core_half_span_nm": 0.2411555056180532,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.7411935331436595,
+          "template_signal_v": 0.17301931490651257,
+          "template_slope_v_per_nm": -1.101880001629455,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[18].codes",
+          "mode_index": 18,
+          "precondition_codes": [
+            58981,
+            47682,
+            12690,
+            1843,
+            860
+          ]
+        },
+        {
+          "order": 19,
+          "peak_number": 4,
+          "within_peak_order": 4,
+          "fullband_index": 784,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1540.68,
+          "measured_wavelength_nm": 1540.67903,
+          "codes": [
+            58981,
+            52431,
+            11254,
+            1229,
+            18432
+          ],
+          "measured_power_mw": 1.6780135997841201,
+          "minimum_smsr_db": 30.531174,
+          "wavelength_error_pm": -0.9700000000520959,
+          "wavelength_span_pm": 0.10000000020227162,
+          "power_span_fraction": 7.79839518900665e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.6411555056181442,
+          "selection_core_half_span_nm": 0.2411555056180532,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.970596994191312,
+          "template_signal_v": 0.06104577410816008,
+          "template_slope_v_per_nm": -0.9946370922902118,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[19].codes",
+          "mode_index": 19,
+          "precondition_codes": [
+            58981,
+            50739,
+            11787,
+            1229,
+            18432
+          ]
+        },
+        {
+          "order": 20,
+          "peak_number": 5,
+          "within_peak_order": 0,
+          "fullband_index": 943,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1543.86,
+          "measured_wavelength_nm": 1543.859115,
+          "codes": [
+            58981,
+            47846,
+            29819,
+            6144,
+            4915
+          ],
+          "measured_power_mw": 1.6728865340521408,
+          "minimum_smsr_db": 34.80591692,
+          "wavelength_error_pm": -0.8849999999256397,
+          "wavelength_span_pm": 0.07000000005064066,
+          "power_span_fraction": 0.00012216365195688326,
+          "source_channel": 1,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7537833864541881,
+          "selection_core_half_span_nm": 0.04621661354576645,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.0532080703408093,
+          "template_signal_v": 0.12372531257040942,
+          "template_slope_v_per_nm": 1.4399976105423917,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[20].codes",
+          "mode_index": 20,
+          "precondition_codes": [
+            58981,
+            51388,
+            31735,
+            6167,
+            4915
+          ]
+        },
+        {
+          "order": 21,
+          "peak_number": 5,
+          "within_peak_order": 1,
+          "fullband_index": 957,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1544.14,
+          "measured_wavelength_nm": 1544.13992,
+          "codes": [
+            58981,
+            43916,
+            6837,
+            4710,
+            3686
+          ],
+          "measured_power_mw": 1.6812653845032477,
+          "minimum_smsr_db": 34.97088418,
+          "wavelength_error_pm": -0.08000000002539309,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 0.00016048097029692894,
+          "source_channel": 1,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7537833864541881,
+          "selection_core_half_span_nm": 0.04621661354576645,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.14921284922039937,
+          "template_signal_v": 0.2553598699149102,
+          "template_slope_v_per_nm": 1.965052895992322,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[21].codes",
+          "mode_index": 21,
+          "precondition_codes": [
+            58981,
+            47950,
+            7194,
+            4751,
+            3686
+          ]
+        },
+        {
+          "order": 22,
+          "peak_number": 5,
+          "within_peak_order": 2,
+          "fullband_index": 960,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1544.2,
+          "measured_wavelength_nm": 1544.1991000000003,
+          "codes": [
+            58981,
+            45226,
+            19169,
+            4710,
+            3482
+          ],
+          "measured_power_mw": 1.6735461894147026,
+          "minimum_smsr_db": 34.90335343,
+          "wavelength_error_pm": -0.8999999997740815,
+          "wavelength_span_pm": 0.1199999999244028,
+          "power_span_fraction": 0.00011890319147694801,
+          "source_channel": 1,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7537833864541881,
+          "selection_core_half_span_nm": 0.04621661354576645,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.044500412447945316,
+          "template_signal_v": 0.30399089761926135,
+          "template_slope_v_per_nm": -0.7681848196515222,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[22].codes",
+          "mode_index": 22,
+          "precondition_codes": [
+            58981,
+            46202,
+            5001,
+            5020,
+            3684
+          ]
+        },
+        {
+          "order": 23,
+          "peak_number": 5,
+          "within_peak_order": 3,
+          "fullband_index": 961,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1544.22,
+          "measured_wavelength_nm": 1544.219495,
+          "codes": [
+            58981,
+            46536,
+            5049,
+            4710,
+            3686
+          ],
+          "measured_power_mw": 1.6832137689752473,
+          "minimum_smsr_db": 33.70830565,
+          "wavelength_error_pm": -0.5049999999755528,
+          "wavelength_span_pm": 0.030000000151630957,
+          "power_span_fraction": 4.093996294763204e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7537833864541881,
+          "selection_core_half_span_nm": 0.04621661354576645,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.10907149967072687,
+          "template_signal_v": 0.27346293131497396,
+          "template_slope_v_per_nm": -1.574399707905838,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[23].codes",
+          "mode_index": 23,
+          "precondition_codes": [
+            58981,
+            45474,
+            19348,
+            4644,
+            3522
+          ]
+        },
+        {
+          "order": 24,
+          "peak_number": 5,
+          "within_peak_order": 4,
+          "fullband_index": 997,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1544.94,
+          "measured_wavelength_nm": 1544.9395749999999,
+          "codes": [
+            58981,
+            46074,
+            13815,
+            2896,
+            2729
+          ],
+          "measured_power_mw": 1.6768888226660614,
+          "minimum_smsr_db": 32.56656199,
+          "wavelength_error_pm": -0.42500000017753337,
+          "wavelength_span_pm": 0.1300000001265289,
+          "power_span_fraction": 8.98952245549473e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7537833864541881,
+          "selection_core_half_span_nm": 0.04621661354576645,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.433630639693065,
+          "template_signal_v": 0.0454175779100673,
+          "template_slope_v_per_nm": -0.6082807913063213,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[24].codes",
+          "mode_index": 24,
+          "precondition_codes": [
+            58981,
+            46057,
+            13808,
+            2904,
+            2834
+          ]
+        },
+        {
+          "order": 25,
+          "peak_number": 6,
+          "within_peak_order": 0,
+          "fullband_index": 1110,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1547.2,
+          "measured_wavelength_nm": 1547.20025,
+          "codes": [
+            58981,
+            52950,
+            13821,
+            16056,
+            14766
+          ],
+          "measured_power_mw": 1.6663557312139414,
+          "minimum_smsr_db": 36.13803022,
+          "wavelength_error_pm": 0.2500000000509317,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 2.220843322101355e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7447081666666691,
+          "selection_core_half_span_nm": 0.4247081666667327,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.5095496238876451,
+          "template_signal_v": 0.06468028331257245,
+          "template_slope_v_per_nm": 1.4190897169184105,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[25].codes",
+          "mode_index": 25,
+          "precondition_codes": [
+            58981,
+            51141,
+            14202,
+            16022,
+            14738
+          ]
+        },
+        {
+          "order": 26,
+          "peak_number": 6,
+          "within_peak_order": 1,
+          "fullband_index": 1123,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1547.46,
+          "measured_wavelength_nm": 1547.459285,
+          "codes": [
+            58981,
+            45869,
+            13392,
+            15476,
+            0
+          ],
+          "measured_power_mw": 1.6691480353162977,
+          "minimum_smsr_db": 36.21738334,
+          "wavelength_error_pm": -0.7150000001274748,
+          "wavelength_span_pm": 0.07000000005064066,
+          "power_span_fraction": 0.00025732769823270246,
+          "source_channel": 1,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7447081666666691,
+          "selection_core_half_span_nm": 0.4247081666667327,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.7763366776583843,
+          "template_signal_v": 0.21657736710932327,
+          "template_slope_v_per_nm": 0.9373156847249551,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[26].codes",
+          "mode_index": 26,
+          "precondition_codes": [
+            58981,
+            47103,
+            13107,
+            15808,
+            0
+          ]
+        },
+        {
+          "order": 27,
+          "peak_number": 6,
+          "within_peak_order": 2,
+          "fullband_index": 1137,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1547.74,
+          "measured_wavelength_nm": 1547.740405,
+          "codes": [
+            58981,
+            50246,
+            15921,
+            12230,
+            12344
+          ],
+          "measured_power_mw": 1.676241641619602,
+          "minimum_smsr_db": 36.67036298,
+          "wavelength_error_pm": 0.40500000000065484,
+          "wavelength_span_pm": 0.02999999992425728,
+          "power_span_fraction": 0.00012192878827835543,
+          "source_channel": 1,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7447081666666691,
+          "selection_core_half_span_nm": 0.4247081666667327,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.013277264434616425,
+          "template_signal_v": 0.33684242959958055,
+          "template_slope_v_per_nm": -0.4642954802138479,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[27].codes",
+          "mode_index": 27,
+          "precondition_codes": [
+            58981,
+            52211,
+            15699,
+            12709,
+            12258
+          ]
+        },
+        {
+          "order": 28,
+          "peak_number": 6,
+          "within_peak_order": 3,
+          "fullband_index": 1158,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1548.16,
+          "measured_wavelength_nm": 1548.15974,
+          "codes": [
+            58981,
+            48209,
+            209,
+            10913,
+            12157
+          ],
+          "measured_power_mw": 1.6695093441756372,
+          "minimum_smsr_db": 34.58491146,
+          "wavelength_error_pm": -0.26000000002568413,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 4.811481809383931e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7447081666666691,
+          "selection_core_half_span_nm": 0.4247081666667327,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.1976981775744382,
+          "template_signal_v": 0.18917930609644926,
+          "template_slope_v_per_nm": -1.9071873782444229,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[28].codes",
+          "mode_index": 28,
+          "precondition_codes": [
+            58981,
+            47697,
+            15284,
+            10948,
+            12172
+          ]
+        },
+        {
+          "order": 29,
+          "peak_number": 6,
+          "within_peak_order": 4,
+          "fullband_index": 1174,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1548.48,
+          "measured_wavelength_nm": 1548.48013,
+          "codes": [
+            58981,
+            48886,
+            8977,
+            9830,
+            9830
+          ],
+          "measured_power_mw": 1.6577859010727933,
+          "minimum_smsr_db": 34.06209134,
+          "wavelength_error_pm": 0.12999999989915523,
+          "wavelength_span_pm": 0.040000000126383384,
+          "power_span_fraction": 0.0001201166538167068,
+          "source_channel": 1,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7447081666666691,
+          "selection_core_half_span_nm": 0.4247081666667327,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.1001141113949187,
+          "template_signal_v": 0.019350017543855284,
+          "template_slope_v_per_nm": -0.33809436102017876,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[29].codes",
+          "mode_index": 29,
+          "precondition_codes": [
+            58981,
+            48464,
+            9531,
+            9830,
+            9830
+          ]
+        },
+        {
+          "order": 30,
+          "peak_number": 7,
+          "within_peak_order": 0,
+          "fullband_index": 1307,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1551.14,
+          "measured_wavelength_nm": 1551.140645,
+          "codes": [
+            58981,
+            43405,
+            12432,
+            2042,
+            3065
+          ],
+          "measured_power_mw": 1.6721640250086898,
+          "minimum_smsr_db": 32.90756243,
+          "wavelength_error_pm": 0.6449999998494604,
+          "wavelength_span_pm": 0.049999999873762135,
+          "power_span_fraction": 0.00011923706631442113,
+          "source_channel": 1,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.5670305633802855,
+          "selection_core_half_span_nm": 0.4470305633801672,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.5041675385983375,
+          "template_signal_v": 0.05464020434725867,
+          "template_slope_v_per_nm": 1.087994505845695,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[30].codes",
+          "mode_index": 30,
+          "precondition_codes": [
+            58981,
+            42842,
+            13126,
+            2075,
+            3045
+          ]
+        },
+        {
+          "order": 31,
+          "peak_number": 7,
+          "within_peak_order": 1,
+          "fullband_index": 1313,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1551.26,
+          "measured_wavelength_nm": 1551.2599850000001,
+          "codes": [
+            58981,
+            40573,
+            2580,
+            1868,
+            2253
+          ],
+          "measured_power_mw": 1.669250474664974,
+          "minimum_smsr_db": 32.41371117,
+          "wavelength_error_pm": -0.014999999848441803,
+          "wavelength_span_pm": 0.009999999974752427,
+          "power_span_fraction": 0.00012880891250918158,
+          "source_channel": 1,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.5670305633802855,
+          "selection_core_half_span_nm": 0.4470305633801672,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.1654987665643082,
+          "template_signal_v": 0.09350973722838213,
+          "template_slope_v_per_nm": 1.3373394716544853,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[31].codes",
+          "mode_index": 31,
+          "precondition_codes": [
+            58981,
+            43403,
+            13107,
+            1798,
+            2263
+          ]
+        },
+        {
+          "order": 32,
+          "peak_number": 7,
+          "within_peak_order": 2,
+          "fullband_index": 1334,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1551.68,
+          "measured_wavelength_nm": 1551.680075,
+          "codes": [
+            58981,
+            41476,
+            70,
+            1099,
+            1792
+          ],
+          "measured_power_mw": 1.6570239659688386,
+          "minimum_smsr_db": 34.57455629,
+          "wavelength_error_pm": 0.07499999992433004,
+          "wavelength_span_pm": 0.030000000151630957,
+          "power_span_fraction": 0.00011978047639439258,
+          "source_channel": 1,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.5670305633802855,
+          "selection_core_half_span_nm": 0.4470305633801672,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.019841935556077803,
+          "template_signal_v": 0.2628070840762693,
+          "template_slope_v_per_nm": 0.04137743445231966,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[32].codes",
+          "mode_index": 32,
+          "precondition_codes": [
+            58981,
+            44336,
+            17941,
+            1178,
+            1832
+          ]
+        },
+        {
+          "order": 33,
+          "peak_number": 7,
+          "within_peak_order": 3,
+          "fullband_index": 1356,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1552.12,
+          "measured_wavelength_nm": 1552.1195050000001,
+          "codes": [
+            58981,
+            44985,
+            11054,
+            20686,
+            1628
+          ],
+          "measured_power_mw": 1.681362578941394,
+          "minimum_smsr_db": 30.5238887,
+          "wavelength_error_pm": -0.4949999997734267,
+          "wavelength_span_pm": 0.1700000000255386,
+          "power_span_fraction": 0.00020859118281800696,
+          "source_channel": 1,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.5670305633802855,
+          "selection_core_half_span_nm": 0.4470305633801672,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.261627433014827,
+          "template_signal_v": 0.11183685793643983,
+          "template_slope_v_per_nm": -0.7827799652437104,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[33].codes",
+          "mode_index": 33,
+          "precondition_codes": [
+            58981,
+            45639,
+            10997,
+            20724,
+            1678
+          ]
+        },
+        {
+          "order": 34,
+          "peak_number": 7,
+          "within_peak_order": 4,
+          "fullband_index": 1362,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1552.24,
+          "measured_wavelength_nm": 1552.24002,
+          "codes": [
+            58981,
+            47821,
+            9536,
+            20927,
+            1357
+          ],
+          "measured_power_mw": 1.676922501531691,
+          "minimum_smsr_db": 32.470359,
+          "wavelength_error_pm": 0.019999999949504854,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 7.19695996354228e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.5670305633802855,
+          "selection_core_half_span_nm": 0.4470305633801672,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.600296205049498,
+          "template_signal_v": 0.07555120316719616,
+          "template_slope_v_per_nm": -0.8965103494250488,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[34].codes",
+          "mode_index": 34,
+          "precondition_codes": [
+            58981,
+            48476,
+            9329,
+            20939,
+            1458
+          ]
+        },
+        {
+          "order": 35,
+          "peak_number": 8,
+          "within_peak_order": 0,
+          "fullband_index": 1503,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1555.06,
+          "measured_wavelength_nm": 1555.05993,
+          "codes": [
+            58981,
+            44600,
+            13046,
+            6037,
+            9726
+          ],
+          "measured_power_mw": 1.6747219463158667,
+          "minimum_smsr_db": 34.64401683,
+          "wavelength_error_pm": -0.07000000005064066,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 3.0078669067469605e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7169627840908106,
+          "selection_core_half_span_nm": 0.29696278409073784,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -2.3297666937283843,
+          "template_signal_v": 0.0064881100751504545,
+          "template_slope_v_per_nm": -0.11220650398373941,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[35].codes",
+          "mode_index": 35,
+          "precondition_codes": [
+            58981,
+            46986,
+            17874,
+            6022,
+            8556
+          ]
+        },
+        {
+          "order": 36,
+          "peak_number": 8,
+          "within_peak_order": 1,
+          "fullband_index": 1524,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1555.48,
+          "measured_wavelength_nm": 1555.47962,
+          "codes": [
+            58981,
+            45000,
+            4188,
+            4914,
+            8466
+          ],
+          "measured_power_mw": 1.681651987917528,
+          "minimum_smsr_db": 32.64865634,
+          "wavelength_error_pm": -0.37999999995008693,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 1.6214804224578935e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7169627840908106,
+          "selection_core_half_span_nm": 0.29696278409073784,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.9649789626511829,
+          "template_signal_v": 0.1822841286425234,
+          "template_slope_v_per_nm": 3.4974732128486252,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[36].codes",
+          "mode_index": 36,
+          "precondition_codes": [
+            58981,
+            43991,
+            4298,
+            4952,
+            8530
+          ]
+        },
+        {
+          "order": 37,
+          "peak_number": 8,
+          "within_peak_order": 2,
+          "fullband_index": 1539,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1555.78,
+          "measured_wavelength_nm": 1555.779935,
+          "codes": [
+            58981,
+            45961,
+            14789,
+            3620,
+            6067
+          ],
+          "measured_power_mw": 1.671361701785513,
+          "minimum_smsr_db": 38.431648210000006,
+          "wavelength_error_pm": -0.06499999994957761,
+          "wavelength_span_pm": 0.009999999974752427,
+          "power_span_fraction": 0.00012564976577429372,
+          "source_channel": 1,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7169627840908106,
+          "selection_core_half_span_nm": 0.29696278409073784,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.00986941668935881,
+          "template_signal_v": 0.3026972657967824,
+          "template_slope_v_per_nm": -0.471057863566986,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[37].codes",
+          "mode_index": 37,
+          "precondition_codes": [
+            58981,
+            45455,
+            15068,
+            3723,
+            6141
+          ]
+        },
+        {
+          "order": 38,
+          "peak_number": 8,
+          "within_peak_order": 3,
+          "fullband_index": 1547,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1555.94,
+          "measured_wavelength_nm": 1555.939375,
+          "codes": [
+            58981,
+            41833,
+            1632,
+            3686,
+            6144
+          ],
+          "measured_power_mw": 1.6671084779515457,
+          "minimum_smsr_db": 34.51040854,
+          "wavelength_error_pm": -0.6250000001273293,
+          "wavelength_span_pm": 0.02999999992425728,
+          "power_span_fraction": 3.880316398228281e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7169627840908106,
+          "selection_core_half_span_nm": 0.29696278409073784,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.5297885523379925,
+          "template_signal_v": 0.25903077950153813,
+          "template_slope_v_per_nm": -1.5070150869701238,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[38].codes",
+          "mode_index": 38,
+          "precondition_codes": [
+            58981,
+            45762,
+            9830,
+            3578,
+            6063
+          ]
+        },
+        {
+          "order": 39,
+          "peak_number": 8,
+          "within_peak_order": 4,
+          "fullband_index": 1569,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1556.38,
+          "measured_wavelength_nm": 1556.3802,
+          "codes": [
+            58981,
+            44097,
+            3338,
+            2431,
+            4725
+          ],
+          "measured_power_mw": 1.678739666965912,
+          "minimum_smsr_db": 34.76476393,
+          "wavelength_error_pm": 0.1999999999497959,
+          "wavelength_span_pm": 0.040000000126383384,
+          "power_span_fraction": 4.694971004635088e-06,
+          "source_channel": 1,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7169627840908106,
+          "selection_core_half_span_nm": 0.29696278409073784,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.959566175371181,
+          "template_signal_v": 0.043322764301015206,
+          "template_slope_v_per_nm": -0.45104148629304047,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[39].codes",
+          "mode_index": 39,
+          "precondition_codes": [
+            58981,
+            43828,
+            12288,
+            2770,
+            5054
+          ]
+        },
+        {
+          "order": 40,
+          "peak_number": 9,
+          "within_peak_order": 0,
+          "fullband_index": 1721,
+          "role": "left_baseline",
+          "target_wavelength_nm": 1559.42,
+          "measured_wavelength_nm": 1559.4206649999999,
+          "codes": [
+            58981,
+            51076,
+            370,
+            12323,
+            20907
+          ],
+          "measured_power_mw": 1.661129119672369,
+          "minimum_smsr_db": 35.266213210000004,
+          "wavelength_error_pm": 0.6649999997989653,
+          "wavelength_span_pm": 0.07000000005064066,
+          "power_span_fraction": 4.7456278767122055e-06,
+          "source_channel": 1,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.6415952066115551,
+          "selection_core_half_span_nm": 0.26159520661167335,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.3184623881101383,
+          "template_signal_v": 0.11820786499463645,
+          "template_slope_v_per_nm": 1.4423561007455024,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[40].codes",
+          "mode_index": 40,
+          "precondition_codes": [
+            58981,
+            51904,
+            19650,
+            12169,
+            19604
+          ]
+        },
+        {
+          "order": 41,
+          "peak_number": 9,
+          "within_peak_order": 1,
+          "fullband_index": 1735,
+          "role": "left_shift_slope",
+          "target_wavelength_nm": 1559.7,
+          "measured_wavelength_nm": 1559.70086,
+          "codes": [
+            58981,
+            52696,
+            11034,
+            11031,
+            17196
+          ],
+          "measured_power_mw": 1.6604595129658608,
+          "minimum_smsr_db": 33.37776348,
+          "wavelength_error_pm": 0.8599999998750718,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 5.223414282275699e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.6415952066115551,
+          "selection_core_half_span_nm": 0.26159520661167335,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.5131272912800148,
+          "template_signal_v": 0.25422561512707403,
+          "template_slope_v_per_nm": 1.4275446844834203,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[41].codes",
+          "mode_index": 41,
+          "precondition_codes": [
+            58981,
+            49888,
+            11409,
+            11059,
+            17203
+          ]
+        },
+        {
+          "order": 42,
+          "peak_number": 9,
+          "within_peak_order": 2,
+          "fullband_index": 1744,
+          "role": "amplitude_peak",
+          "target_wavelength_nm": 1559.88,
+          "measured_wavelength_nm": 1559.87919,
+          "codes": [
+            58981,
+            48965,
+            23179,
+            9710,
+            17133
+          ],
+          "measured_power_mw": 1.6837844372652158,
+          "minimum_smsr_db": 35.067059820000004,
+          "wavelength_error_pm": -0.8100000000013097,
+          "wavelength_span_pm": 0.040000000126383384,
+          "power_span_fraction": 5.1343042392216324e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.6415952066115551,
+          "selection_core_half_span_nm": 0.26159520661167335,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.004588128111012351,
+          "template_signal_v": 0.31340601824334374,
+          "template_slope_v_per_nm": -0.04873071426443765,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[42].codes",
+          "mode_index": 42,
+          "precondition_codes": [
+            58981,
+            53945,
+            29491,
+            9749,
+            15939
+          ]
+        },
+        {
+          "order": 43,
+          "peak_number": 9,
+          "within_peak_order": 3,
+          "fullband_index": 1757,
+          "role": "right_shift_slope",
+          "target_wavelength_nm": 1560.14,
+          "measured_wavelength_nm": 1560.13927,
+          "codes": [
+            58981,
+            38006,
+            1846,
+            8558,
+            0
+          ],
+          "measured_power_mw": 1.6699062148184902,
+          "minimum_smsr_db": 34.546876680000004,
+          "wavelength_error_pm": -0.7300000002032903,
+          "wavelength_span_pm": 0.03999999989900971,
+          "power_span_fraction": 0.0001363682993360845,
+          "source_channel": 1,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.6415952066115551,
+          "selection_core_half_span_nm": 0.26159520661167335,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.7523992894533165,
+          "template_signal_v": 0.2309186297068096,
+          "template_slope_v_per_nm": -1.0116700411578887,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[43].codes",
+          "mode_index": 43,
+          "precondition_codes": [
+            58981,
+            42014,
+            2127,
+            8573,
+            0
+          ]
+        },
+        {
+          "order": 44,
+          "peak_number": 9,
+          "within_peak_order": 4,
+          "fullband_index": 1776,
+          "role": "right_baseline",
+          "target_wavelength_nm": 1560.52,
+          "measured_wavelength_nm": 1560.51921,
+          "codes": [
+            58981,
+            47571,
+            20046,
+            7282,
+            13469
+          ],
+          "measured_power_mw": 1.671972290472116,
+          "minimum_smsr_db": 34.27971163,
+          "wavelength_error_pm": -0.7900000000518048,
+          "wavelength_span_pm": 0.0,
+          "power_span_fraction": 4.6638861050228523e-05,
+          "source_channel": 1,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.6415952066115551,
+          "selection_core_half_span_nm": 0.26159520661167335,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.845354063722536,
+          "template_signal_v": 0.038975536112798845,
+          "template_slope_v_per_nm": -0.7707921228086119,
+          "template_reliability_weight": 1.0,
+          "hardware_calibration_code_source": "calibration.rows[44].codes",
+          "mode_index": 44,
+          "precondition_codes": [
+            58981,
+            48940,
+            8647,
+            7267,
+            12272
+          ]
+        }
+      ]
+    },
+    "temperature": {
+      "summary": {
+        "point_count": 54,
+        "fullband_candidate_count": 54,
+        "detected_peak_count": 9,
+        "points_per_peak": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "power_min_mw": 0.0,
+        "power_max_mw": 0.0
+      },
+      "rows": [
+        {
+          "peak_number": 1,
+          "source_channel": 1,
+          "fullband_index": 115,
+          "target_wavelength_nm": 1527.3,
+          "measured_wavelength_nm": 1527.30002,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.4594926351351205,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.4553836063318417,
+          "template_signal_v": 0.10052739774145686,
+          "template_slope_v_per_nm": 0.9141986882012691,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 8.662619422320793,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.10301655304606318,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.10301655304606318,
+          "codes": [
+            58981,
+            50168,
+            6661,
+            5120,
+            1638
+          ],
+          "mode_index": 0,
+          "precondition_codes": [
+            58981,
+            51145,
+            53,
+            6115,
+            1803
+          ]
+        },
+        {
+          "peak_number": 1,
+          "source_channel": 1,
+          "fullband_index": 118,
+          "target_wavelength_nm": 1527.36,
+          "measured_wavelength_nm": 1527.35911,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.4594926351351205,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.2840843698266584,
+          "template_signal_v": 0.12535203004414996,
+          "template_slope_v_per_nm": 0.9400539924067957,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 8.662619422320793,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.11489800242806114,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.11489800242806114,
+          "codes": [
+            58981,
+            48616,
+            5369,
+            5091,
+            1560
+          ],
+          "mode_index": 1,
+          "precondition_codes": [
+            58981,
+            49250,
+            5577,
+            5120,
+            1638
+          ]
+        },
+        {
+          "peak_number": 1,
+          "source_channel": 1,
+          "fullband_index": 122,
+          "target_wavelength_nm": 1527.44,
+          "measured_wavelength_nm": 1527.44177,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.4594926351351205,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.0444567697346299,
+          "template_signal_v": 0.201873779296875,
+          "template_slope_v_per_nm": 1.0741010191434803,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 8.662619422320793,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2056884765625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2056884765625,
+          "codes": [
+            58981,
+            52636,
+            3386,
+            5421,
+            1383
+          ],
+          "mode_index": 2,
+          "precondition_codes": [
+            58981,
+            47224,
+            98,
+            5048,
+            1189
+          ]
+        },
+        {
+          "peak_number": 1,
+          "source_channel": 1,
+          "fullband_index": 141,
+          "target_wavelength_nm": 1527.82,
+          "measured_wavelength_nm": 1527.81949,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.4594926351351205,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.050536420526897004,
+          "template_signal_v": 0.4320526123046875,
+          "template_slope_v_per_nm": -0.3448873419440446,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 8.662619422320793,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.4498291015625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.4498291015625,
+          "codes": [
+            58981,
+            53770,
+            15888,
+            4693,
+            1211
+          ],
+          "mode_index": 3,
+          "precondition_codes": [
+            58981,
+            52531,
+            66,
+            4687,
+            1201
+          ]
+        },
+        {
+          "peak_number": 1,
+          "source_channel": 1,
+          "fullband_index": 163,
+          "target_wavelength_nm": 1528.26,
+          "measured_wavelength_nm": 1528.26155,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.4594926351351205,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.332048359758657,
+          "template_signal_v": 0.2146491746147493,
+          "template_slope_v_per_nm": -2.096907843624667,
+          "template_reliability_weight": 0.502843013023646,
+          "projected_shift_information": 8.662619422320793,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.214092829775394,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.214092829775394,
+          "codes": [
+            58981,
+            54444,
+            3230,
+            3559,
+            18469
+          ],
+          "mode_index": 4,
+          "precondition_codes": [
+            58981,
+            55499,
+            13032,
+            3673,
+            17204
+          ]
+        },
+        {
+          "peak_number": 1,
+          "source_channel": 1,
+          "fullband_index": 170,
+          "target_wavelength_nm": 1528.4,
+          "measured_wavelength_nm": 1528.39894,
+          "fitted_center_nm": 1527.8020573648648,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.4594926351351205,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.7303357536220052,
+          "template_signal_v": 0.11326691260437415,
+          "template_slope_v_per_nm": -1.8954579589809768,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 8.662619422320793,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.10990273499837636,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.10990273499837636,
+          "codes": [
+            58981,
+            56712,
+            2613,
+            3072,
+            16220
+          ],
+          "mode_index": 5,
+          "precondition_codes": [
+            58981,
+            56822,
+            2479,
+            3250,
+            16535
+          ]
+        },
+        {
+          "peak_number": 2,
+          "source_channel": 1,
+          "fullband_index": 333,
+          "target_wavelength_nm": 1531.66,
+          "measured_wavelength_nm": 1531.65958,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.30997243407705355,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.7016832207175325,
+          "template_signal_v": 0.13688711938997555,
+          "template_slope_v_per_nm": 1.814287731342498,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 17.969798010676822,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.147512723481447,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.147512723481447,
+          "codes": [
+            58981,
+            52456,
+            7339,
+            9750,
+            4784
+          ],
+          "mode_index": 6,
+          "precondition_codes": [
+            58981,
+            53617,
+            7339,
+            9844,
+            4931
+          ]
+        },
+        {
+          "peak_number": 2,
+          "source_channel": 1,
+          "fullband_index": 341,
+          "target_wavelength_nm": 1531.82,
+          "measured_wavelength_nm": 1531.82066,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.30997243407705355,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.1197795654899787,
+          "template_signal_v": 0.235748291015625,
+          "template_slope_v_per_nm": 1.9363643195932507,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 17.969798010676822,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2349853515625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2349853515625,
+          "codes": [
+            58981,
+            50176,
+            4096,
+            9754,
+            3712
+          ],
+          "mode_index": 7,
+          "precondition_codes": [
+            58981,
+            50202,
+            22118,
+            8541,
+            3766
+          ]
+        },
+        {
+          "peak_number": 2,
+          "source_channel": 1,
+          "fullband_index": 357,
+          "target_wavelength_nm": 1532.14,
+          "measured_wavelength_nm": 1532.1385,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.30997243407705355,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.028421687163302876,
+          "template_signal_v": 0.37200927734375,
+          "template_slope_v_per_nm": -0.5766967517674457,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 17.969798010676822,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.3900146484375,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.3900146484375,
+          "codes": [
+            58981,
+            51833,
+            29491,
+            7957,
+            3346
+          ],
+          "mode_index": 8,
+          "precondition_codes": [
+            58981,
+            52182,
+            29491,
+            8135,
+            3444
+          ]
+        },
+        {
+          "peak_number": 2,
+          "source_channel": 1,
+          "fullband_index": 365,
+          "target_wavelength_nm": 1532.3,
+          "measured_wavelength_nm": 1532.29958,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.30997243407705355,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.6103253423908567,
+          "template_signal_v": 0.28350830078125,
+          "template_slope_v_per_nm": -3.2288581624550092,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 17.969798010676822,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.286865234375,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.286865234375,
+          "codes": [
+            58981,
+            49407,
+            6554,
+            7109,
+            3203
+          ],
+          "mode_index": 9,
+          "precondition_codes": [
+            58981,
+            50942,
+            22938,
+            7306,
+            2903
+          ]
+        },
+        {
+          "peak_number": 2,
+          "source_channel": 1,
+          "fullband_index": 372,
+          "target_wavelength_nm": 1532.44,
+          "measured_wavelength_nm": 1532.43875,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.30997243407705355,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.1130788294651748,
+          "template_signal_v": 0.183868408203125,
+          "template_slope_v_per_nm": -2.379022235784374,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 17.969798010676822,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.1934814453125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.1934814453125,
+          "codes": [
+            58981,
+            48938,
+            4559,
+            6509,
+            2898
+          ],
+          "mode_index": 10,
+          "precondition_codes": [
+            58981,
+            48639,
+            4559,
+            6621,
+            3045
+          ]
+        },
+        {
+          "peak_number": 2,
+          "source_channel": 1,
+          "fullband_index": 386,
+          "target_wavelength_nm": 1532.72,
+          "measured_wavelength_nm": 1532.71994,
+          "fitted_center_nm": 1532.1306324340771,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.30997243407705355,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.1288814667466918,
+          "template_signal_v": 0.03487877009375136,
+          "template_slope_v_per_nm": -1.0645054169367334,
+          "template_reliability_weight": 0.6490026785573649,
+          "projected_shift_information": 17.969798010676822,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.03026727138346467,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.03026727138346467,
+          "codes": [
+            58981,
+            48324,
+            1430,
+            5726,
+            2649
+          ],
+          "mode_index": 11,
+          "precondition_codes": [
+            58981,
+            47092,
+            1651,
+            5734,
+            2662
+          ]
+        },
+        {
+          "peak_number": 3,
+          "source_channel": 1,
+          "fullband_index": 538,
+          "target_wavelength_nm": 1535.76,
+          "measured_wavelength_nm": 1535.7602,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.3366352577320413,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.787523900278774,
+          "template_signal_v": 0.10082907260701936,
+          "template_slope_v_per_nm": 2.1189852081371736,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 16.41915162689428,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.09464394593587636,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.09464394593587636,
+          "codes": [
+            58981,
+            54702,
+            5642,
+            17893,
+            10229
+          ],
+          "mode_index": 12,
+          "precondition_codes": [
+            58981,
+            55481,
+            5995,
+            18022,
+            10240
+          ]
+        },
+        {
+          "peak_number": 3,
+          "source_channel": 1,
+          "fullband_index": 551,
+          "target_wavelength_nm": 1536.02,
+          "measured_wavelength_nm": 1536.02085,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.3366352577320413,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.9876984666089947,
+          "template_signal_v": 0.298919677734375,
+          "template_slope_v_per_nm": 2.984878954833013,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 16.41915162689428,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.29541015625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.29541015625,
+          "codes": [
+            58981,
+            54389,
+            12452,
+            15264,
+            9552
+          ],
+          "mode_index": 13,
+          "precondition_codes": [
+            58981,
+            54120,
+            12885,
+            15401,
+            9626
+          ]
+        },
+        {
+          "peak_number": 3,
+          "source_channel": 1,
+          "fullband_index": 567,
+          "target_wavelength_nm": 1536.34,
+          "measured_wavelength_nm": 1536.34019,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.3366352577320413,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.007778059980301622,
+          "template_signal_v": 0.420379638671875,
+          "template_slope_v_per_nm": -0.12179798832859667,
+          "template_reliability_weight": 0.11373444615482856,
+          "projected_shift_information": 16.41915162689428,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.430908203125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.430908203125,
+          "codes": [
+            58981,
+            53728,
+            5501,
+            13763,
+            7782
+          ],
+          "mode_index": 14,
+          "precondition_codes": [
+            58981,
+            53598,
+            20229,
+            13671,
+            7832
+          ]
+        },
+        {
+          "peak_number": 3,
+          "source_channel": 1,
+          "fullband_index": 583,
+          "target_wavelength_nm": 1536.66,
+          "measured_wavelength_nm": 1536.66042,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.3366352577320413,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.9748733830426706,
+          "template_signal_v": 0.254669189453125,
+          "template_slope_v_per_nm": -2.5416425989121967,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 16.41915162689428,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2642822265625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2642822265625,
+          "codes": [
+            58981,
+            53457,
+            1913,
+            12288,
+            7373
+          ],
+          "mode_index": 15,
+          "precondition_codes": [
+            58981,
+            52312,
+            2132,
+            12288,
+            7373
+          ]
+        },
+        {
+          "peak_number": 3,
+          "source_channel": 1,
+          "fullband_index": 584,
+          "target_wavelength_nm": 1536.68,
+          "measured_wavelength_nm": 1536.67936,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.3366352577320413,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.0329922923609953,
+          "template_signal_v": 0.189361572265625,
+          "template_slope_v_per_nm": -3.1180495465960947,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 16.41915162689428,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.1861572265625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.1861572265625,
+          "codes": [
+            58981,
+            51823,
+            1672,
+            12288,
+            7373
+          ],
+          "mode_index": 16,
+          "precondition_codes": [
+            58981,
+            53457,
+            1913,
+            12288,
+            7373
+          ]
+        },
+        {
+          "peak_number": 3,
+          "source_channel": 1,
+          "fullband_index": 597,
+          "target_wavelength_nm": 1536.94,
+          "measured_wavelength_nm": 1536.94085,
+          "fitted_center_nm": 1536.342724742268,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.3366352577320413,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.835395333412477,
+          "template_signal_v": 0.04488562246362466,
+          "template_slope_v_per_nm": -0.9469361824174727,
+          "template_reliability_weight": 0.6244874968110617,
+          "projected_shift_information": 16.41915162689428,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.05249744591211141,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.05249744591211141,
+          "codes": [
+            58981,
+            51329,
+            3282,
+            11004,
+            7299
+          ],
+          "mode_index": 17,
+          "precondition_codes": [
+            58981,
+            53142,
+            17203,
+            10994,
+            6158
+          ]
+        },
+        {
+          "peak_number": 4,
+          "source_channel": 1,
+          "fullband_index": 725,
+          "target_wavelength_nm": 1539.5,
+          "measured_wavelength_nm": 1539.49924,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.23996550561810182,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.658479082474317,
+          "template_signal_v": 0.054035069390871264,
+          "template_slope_v_per_nm": 0.6442765965046691,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 4.489547500662146,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.05949540358154551,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.05949540358154551,
+          "codes": [
+            58981,
+            43500,
+            792,
+            2816,
+            1781
+          ],
+          "mode_index": 18,
+          "precondition_codes": [
+            58981,
+            44512,
+            7373,
+            2822,
+            1777
+          ]
+        },
+        {
+          "peak_number": 4,
+          "source_channel": 1,
+          "fullband_index": 750,
+          "target_wavelength_nm": 1540.0,
+          "measured_wavelength_nm": 1539.99942,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.23996550561810182,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.12117152460762866,
+          "template_signal_v": 0.166473388671875,
+          "template_slope_v_per_nm": 1.0045922724342544,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 4.489547500662146,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.133056640625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.133056640625,
+          "codes": [
+            58981,
+            43403,
+            9255,
+            1860,
+            808
+          ],
+          "mode_index": 19,
+          "precondition_codes": [
+            58981,
+            44676,
+            2080,
+            1750,
+            951
+          ]
+        },
+        {
+          "peak_number": 4,
+          "source_channel": 1,
+          "fullband_index": 751,
+          "target_wavelength_nm": 1540.02,
+          "measured_wavelength_nm": 1540.01929,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.23996550561810182,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.0601009076805452,
+          "template_signal_v": 0.22247314453125,
+          "template_slope_v_per_nm": 2.3366632690075324,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 4.489547500662146,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2264404296875,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2264404296875,
+          "codes": [
+            58981,
+            43172,
+            9202,
+            1793,
+            853
+          ],
+          "mode_index": 20,
+          "precondition_codes": [
+            58981,
+            43403,
+            9255,
+            1860,
+            808
+          ]
+        },
+        {
+          "peak_number": 4,
+          "source_channel": 1,
+          "fullband_index": 752,
+          "target_wavelength_nm": 1540.04,
+          "measured_wavelength_nm": 1540.03801,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.23996550561810182,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.0025648257034351185,
+          "template_signal_v": 0.257720947265625,
+          "template_slope_v_per_nm": 0.06342475603214837,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 4.489547500662146,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.303955078125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.303955078125,
+          "codes": [
+            58981,
+            42089,
+            1490,
+            1750,
+            813
+          ],
+          "mode_index": 21,
+          "precondition_codes": [
+            58981,
+            43172,
+            9202,
+            1793,
+            853
+          ]
+        },
+        {
+          "peak_number": 4,
+          "source_channel": 1,
+          "fullband_index": 764,
+          "target_wavelength_nm": 1540.28,
+          "measured_wavelength_nm": 1540.27881,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.23996550561810182,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.7375360578471929,
+          "template_signal_v": 0.17333984375,
+          "template_slope_v_per_nm": -1.489855934786835,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 4.489547500662146,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.15625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.15625,
+          "codes": [
+            58981,
+            47174,
+            12690,
+            1796,
+            851
+          ],
+          "mode_index": 22,
+          "precondition_codes": [
+            58981,
+            47682,
+            12690,
+            1843,
+            860
+          ]
+        },
+        {
+          "peak_number": 4,
+          "source_channel": 1,
+          "fullband_index": 785,
+          "target_wavelength_nm": 1540.7,
+          "measured_wavelength_nm": 1540.69941,
+          "fitted_center_nm": 1540.038844494382,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.23996550561810182,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.030253797138266,
+          "template_signal_v": 0.030711748953695987,
+          "template_slope_v_per_nm": -1.1030593042005108,
+          "template_reliability_weight": 0.674990282834826,
+          "projected_shift_information": 4.489547500662146,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.01844753637028057,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.01844753637028057,
+          "codes": [
+            58981,
+            51063,
+            10240,
+            1202,
+            18430
+          ],
+          "mode_index": 23,
+          "precondition_codes": [
+            58981,
+            50396,
+            10751,
+            1229,
+            18432
+          ]
+        },
+        {
+          "peak_number": 5,
+          "source_channel": 1,
+          "fullband_index": 936,
+          "target_wavelength_nm": 1543.72,
+          "measured_wavelength_nm": 1543.71913,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.535763386454164,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.508014523194723,
+          "template_signal_v": 0.05365282889974184,
+          "template_slope_v_per_nm": 1.463262773280586,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.448158892417356,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.05648667868424728,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.05648667868424728,
+          "codes": [
+            58981,
+            48152,
+            15864,
+            6174,
+            4911
+          ],
+          "mode_index": 24,
+          "precondition_codes": [
+            58981,
+            47844,
+            16674,
+            6185,
+            4915
+          ]
+        },
+        {
+          "peak_number": 5,
+          "source_channel": 1,
+          "fullband_index": 943,
+          "target_wavelength_nm": 1543.86,
+          "measured_wavelength_nm": 1543.86033,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.535763386454164,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.0521426474013862,
+          "template_signal_v": 0.12417324946350289,
+          "template_slope_v_per_nm": 1.4522288711489995,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.448158892417356,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.11727529046354347,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.11727529046354347,
+          "codes": [
+            58981,
+            50616,
+            30474,
+            6091,
+            4876
+          ],
+          "mode_index": 25,
+          "precondition_codes": [
+            58981,
+            51388,
+            31735,
+            6167,
+            4915
+          ]
+        },
+        {
+          "peak_number": 5,
+          "source_channel": 1,
+          "fullband_index": 957,
+          "target_wavelength_nm": 1544.14,
+          "measured_wavelength_nm": 1544.13875,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.535763386454164,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.15324854217191497,
+          "template_signal_v": 0.25299072265625,
+          "template_slope_v_per_nm": 2.018180593506486,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 6.448158892417356,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.24658203125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.24658203125,
+          "codes": [
+            58981,
+            46778,
+            7032,
+            4583,
+            3713
+          ],
+          "mode_index": 26,
+          "precondition_codes": [
+            58981,
+            47950,
+            7194,
+            4751,
+            3686
+          ]
+        },
+        {
+          "peak_number": 5,
+          "source_channel": 1,
+          "fullband_index": 960,
+          "target_wavelength_nm": 1544.2,
+          "measured_wavelength_nm": 1544.19952,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.535763386454164,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.04295070635410525,
+          "template_signal_v": 0.304718017578125,
+          "template_slope_v_per_nm": -0.7605639212665061,
+          "template_reliability_weight": 0.11373444615482856,
+          "projected_shift_information": 6.448158892417356,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.3271484375,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.3271484375,
+          "codes": [
+            58981,
+            45474,
+            19348,
+            4644,
+            3522
+          ],
+          "mode_index": 27,
+          "precondition_codes": [
+            58981,
+            46202,
+            5001,
+            5020,
+            3684
+          ]
+        },
+        {
+          "peak_number": 5,
+          "source_channel": 1,
+          "fullband_index": 986,
+          "target_wavelength_nm": 1544.72,
+          "measured_wavelength_nm": 1544.72198,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.535763386454164,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.7297412178768055,
+          "template_signal_v": 0.12115478515625,
+          "template_slope_v_per_nm": -0.8750205378427274,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.448158892417356,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.1275634765625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.1275634765625,
+          "codes": [
+            58981,
+            47270,
+            4401,
+            3764,
+            3101
+          ],
+          "mode_index": 28,
+          "precondition_codes": [
+            58981,
+            47975,
+            4442,
+            3860,
+            3154
+          ]
+        },
+        {
+          "peak_number": 5,
+          "source_channel": 1,
+          "fullband_index": 991,
+          "target_wavelength_nm": 1544.82,
+          "measured_wavelength_nm": 1544.82032,
+          "fitted_center_nm": 1544.1862166135459,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.535763386454164,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.0472372537515353,
+          "template_signal_v": 0.09923584179911431,
+          "template_slope_v_per_nm": -1.2155491614541476,
+          "template_reliability_weight": 0.5205032024421739,
+          "projected_shift_information": 6.448158892417356,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.09711174128515761,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.09711174128515761,
+          "codes": [
+            58981,
+            43124,
+            4324,
+            2867,
+            3072
+          ],
+          "mode_index": 29,
+          "precondition_codes": [
+            58981,
+            44450,
+            4760,
+            2908,
+            3038
+          ]
+        },
+        {
+          "peak_number": 6,
+          "source_channel": 1,
+          "fullband_index": 1110,
+          "target_wavelength_nm": 1547.2,
+          "measured_wavelength_nm": 1547.19991,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.515341833333423,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.5098034283690325,
+          "template_signal_v": 0.06455179771948336,
+          "template_slope_v_per_nm": 1.4192890693126174,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.721194735547391,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.07709221003515761,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.07709221003515761,
+          "codes": [
+            58981,
+            51673,
+            13577,
+            16056,
+            14766
+          ],
+          "mode_index": 30,
+          "precondition_codes": [
+            58981,
+            51141,
+            14202,
+            16022,
+            14738
+          ]
+        },
+        {
+          "peak_number": 6,
+          "source_channel": 1,
+          "fullband_index": 1111,
+          "target_wavelength_nm": 1547.22,
+          "measured_wavelength_nm": 1547.21995,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.515341833333423,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.4532896305138499,
+          "template_signal_v": 0.09316125644710394,
+          "template_slope_v_per_nm": 1.3556735981460866,
+          "template_reliability_weight": 0.502843013023646,
+          "projected_shift_information": 6.721194735547391,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.08342340557324321,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.08342340557324321,
+          "codes": [
+            58981,
+            50236,
+            13258,
+            15896,
+            14788
+          ],
+          "mode_index": 31,
+          "precondition_codes": [
+            58981,
+            51673,
+            13577,
+            16056,
+            14766
+          ]
+        },
+        {
+          "peak_number": 6,
+          "source_channel": 1,
+          "fullband_index": 1123,
+          "target_wavelength_nm": 1547.46,
+          "measured_wavelength_nm": 1547.45983,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.515341833333423,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.7768160861232986,
+          "template_signal_v": 0.21636962890625,
+          "template_slope_v_per_nm": 0.9478213723160867,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 6.721194735547391,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2130126953125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2130126953125,
+          "codes": [
+            58981,
+            47103,
+            13107,
+            15476,
+            0
+          ],
+          "mode_index": 32,
+          "precondition_codes": [
+            58981,
+            47103,
+            13107,
+            15808,
+            0
+          ]
+        },
+        {
+          "peak_number": 6,
+          "source_channel": 1,
+          "fullband_index": 1137,
+          "target_wavelength_nm": 1547.74,
+          "measured_wavelength_nm": 1547.74146,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.515341833333423,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.017394537132537354,
+          "template_signal_v": 0.3369140625,
+          "template_slope_v_per_nm": -0.6098171508711712,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 6.721194735547391,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.352783203125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.352783203125,
+          "codes": [
+            58981,
+            52211,
+            15699,
+            12230,
+            12344
+          ],
+          "mode_index": 33,
+          "precondition_codes": [
+            58981,
+            52211,
+            15699,
+            12709,
+            12258
+          ]
+        },
+        {
+          "peak_number": 6,
+          "source_channel": 1,
+          "fullband_index": 1158,
+          "target_wavelength_nm": 1548.16,
+          "measured_wavelength_nm": 1548.16002,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.515341833333423,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.1977545785701595,
+          "template_signal_v": 0.18914273697078768,
+          "template_slope_v_per_nm": -1.916134826909862,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.721194735547391,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.17239484424870108,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.17239484424870108,
+          "codes": [
+            58981,
+            46940,
+            0,
+            10913,
+            12157
+          ],
+          "mode_index": 34,
+          "precondition_codes": [
+            58981,
+            47697,
+            15284,
+            10948,
+            12172
+          ]
+        },
+        {
+          "peak_number": 6,
+          "source_channel": 1,
+          "fullband_index": 1176,
+          "target_wavelength_nm": 1548.52,
+          "measured_wavelength_nm": 1548.51908,
+          "fitted_center_nm": 1547.7352918333333,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.515341833333423,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 2.210321657312803,
+          "template_signal_v": 0.003141769017741168,
+          "template_slope_v_per_nm": -0.5215723434238279,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.721194735547391,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.0,
+          "codes": [
+            58981,
+            50226,
+            7220,
+            9830,
+            9830
+          ],
+          "mode_index": 35,
+          "precondition_codes": [
+            58981,
+            49146,
+            7974,
+            9830,
+            9830
+          ]
+        },
+        {
+          "peak_number": 7,
+          "source_channel": 1,
+          "fullband_index": 1307,
+          "target_wavelength_nm": 1551.14,
+          "measured_wavelength_nm": 1551.13922,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.5680505633802113,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.506368885616778,
+          "template_signal_v": 0.053679185523886716,
+          "template_slope_v_per_nm": 1.1116223279567186,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 5.4916080680359345,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.04913810847265761,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.04913810847265761,
+          "codes": [
+            58981,
+            42095,
+            12097,
+            2042,
+            3065
+          ],
+          "mode_index": 36,
+          "precondition_codes": [
+            58981,
+            42842,
+            13126,
+            2075,
+            3045
+          ]
+        },
+        {
+          "peak_number": 7,
+          "source_channel": 1,
+          "fullband_index": 1313,
+          "target_wavelength_nm": 1551.26,
+          "measured_wavelength_nm": 1551.2609,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.5680505633802113,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.1629587507740464,
+          "template_signal_v": 0.09419353700252345,
+          "template_slope_v_per_nm": 1.5542253622980562,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 5.4916080680359345,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.07259274839713586,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.07259274839713586,
+          "codes": [
+            58981,
+            43848,
+            2515,
+            1868,
+            2253
+          ],
+          "mode_index": 37,
+          "precondition_codes": [
+            58981,
+            43403,
+            13107,
+            1798,
+            2263
+          ]
+        },
+        {
+          "peak_number": 7,
+          "source_channel": 1,
+          "fullband_index": 1334,
+          "target_wavelength_nm": 1551.68,
+          "measured_wavelength_nm": 1551.67943,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.5680505633802113,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.0182332588884843,
+          "template_signal_v": 0.263519287109375,
+          "template_slope_v_per_nm": 0.033581936574409,
+          "template_reliability_weight": 0.11373444615482856,
+          "projected_shift_information": 5.4916080680359345,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.3179931640625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.3179931640625,
+          "codes": [
+            58981,
+            41476,
+            0,
+            1099,
+            1792
+          ],
+          "mode_index": 38,
+          "precondition_codes": [
+            58981,
+            44336,
+            17941,
+            1178,
+            1832
+          ]
+        },
+        {
+          "peak_number": 7,
+          "source_channel": 1,
+          "fullband_index": 1356,
+          "target_wavelength_nm": 1552.12,
+          "measured_wavelength_nm": 1552.1192,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.5680505633802113,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.2593696412018314,
+          "template_signal_v": 0.11208875215942427,
+          "template_slope_v_per_nm": -0.7863075335068204,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 5.4916080680359345,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.08320737868066441,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.08320737868066441,
+          "codes": [
+            58981,
+            46950,
+            10997,
+            20686,
+            1628
+          ],
+          "mode_index": 39,
+          "precondition_codes": [
+            58981,
+            45639,
+            10997,
+            20724,
+            1678
+          ]
+        },
+        {
+          "peak_number": 7,
+          "source_channel": 1,
+          "fullband_index": 1362,
+          "target_wavelength_nm": 1552.24,
+          "measured_wavelength_nm": 1552.24102,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.5680505633802113,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.6031748896115805,
+          "template_signal_v": 0.07455462646338111,
+          "template_slope_v_per_nm": -0.8944840850646172,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 5.4916080680359345,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.05928486359293818,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.05928486359293818,
+          "codes": [
+            58981,
+            48476,
+            9329,
+            20927,
+            1357
+          ],
+          "mode_index": 40,
+          "precondition_codes": [
+            58981,
+            48476,
+            9329,
+            20939,
+            1458
+          ]
+        },
+        {
+          "peak_number": 7,
+          "source_channel": 1,
+          "fullband_index": 1363,
+          "target_wavelength_nm": 1552.26,
+          "measured_wavelength_nm": 1552.25915,
+          "fitted_center_nm": 1551.6729694366197,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.5680505633802113,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.6543420965868743,
+          "template_signal_v": 0.05955990717834664,
+          "template_slope_v_per_nm": -0.6858102738806557,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 5.4916080680359345,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.06624989983854347,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.06624989983854347,
+          "codes": [
+            58981,
+            47428,
+            9329,
+            20890,
+            1229
+          ],
+          "mode_index": 41,
+          "precondition_codes": [
+            58981,
+            48476,
+            9329,
+            20927,
+            1357
+          ]
+        },
+        {
+          "peak_number": 8,
+          "source_channel": 1,
+          "fullband_index": 1503,
+          "target_wavelength_nm": 1555.06,
+          "measured_wavelength_nm": 1555.06077,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.33704278409072685,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -2.3272645828877443,
+          "template_signal_v": 0.006286836672892492,
+          "template_slope_v_per_nm": -0.0898985371229579,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 18.45936881075919,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.003173828125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.003173828125,
+          "codes": [
+            58981,
+            45255,
+            12737,
+            6037,
+            9726
+          ],
+          "mode_index": 42,
+          "precondition_codes": [
+            58981,
+            46986,
+            17874,
+            6022,
+            8556
+          ]
+        },
+        {
+          "peak_number": 8,
+          "source_channel": 1,
+          "fullband_index": 1522,
+          "target_wavelength_nm": 1555.44,
+          "measured_wavelength_nm": 1555.43992,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.33704278409072685,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.0952187061310632,
+          "template_signal_v": 0.133209228515625,
+          "template_slope_v_per_nm": -1.5723251705603332,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 18.45936881075919,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.1800537109375,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.1800537109375,
+          "codes": [
+            58981,
+            43422,
+            4874,
+            4914,
+            8560
+          ],
+          "mode_index": 43,
+          "precondition_codes": [
+            58981,
+            42814,
+            929,
+            4785,
+            8455
+          ]
+        },
+        {
+          "peak_number": 8,
+          "source_channel": 1,
+          "fullband_index": 1524,
+          "target_wavelength_nm": 1555.48,
+          "measured_wavelength_nm": 1555.47861,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.33704278409072685,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.9694957601425458,
+          "template_signal_v": 0.177764892578125,
+          "template_slope_v_per_nm": 3.683876858907242,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 18.45936881075919,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.21728515625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.21728515625,
+          "codes": [
+            58981,
+            46965,
+            4188,
+            4914,
+            8466
+          ],
+          "mode_index": 44,
+          "precondition_codes": [
+            58981,
+            43991,
+            4298,
+            4952,
+            8530
+          ]
+        },
+        {
+          "peak_number": 8,
+          "source_channel": 1,
+          "fullband_index": 1539,
+          "target_wavelength_nm": 1555.78,
+          "measured_wavelength_nm": 1555.78093,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.33704278409072685,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.01289144666507355,
+          "template_signal_v": 0.302886962890625,
+          "template_slope_v_per_nm": -0.6460136658608624,
+          "template_reliability_weight": 0.11373444615482856,
+          "projected_shift_information": 18.45936881075919,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.330810546875,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.330810546875,
+          "codes": [
+            58981,
+            46487,
+            14625,
+            3620,
+            6067
+          ],
+          "mode_index": 45,
+          "precondition_codes": [
+            58981,
+            45455,
+            15068,
+            3723,
+            6141
+          ]
+        },
+        {
+          "peak_number": 8,
+          "source_channel": 1,
+          "fullband_index": 1547,
+          "target_wavelength_nm": 1555.94,
+          "measured_wavelength_nm": 1555.93865,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.33704278409072685,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.5254017346309523,
+          "template_signal_v": 0.261383056640625,
+          "template_slope_v_per_nm": -1.4808222041173398,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 18.45936881075919,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2886962890625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2886962890625,
+          "codes": [
+            58981,
+            44453,
+            1604,
+            3686,
+            6144
+          ],
+          "mode_index": 46,
+          "precondition_codes": [
+            58981,
+            45762,
+            9830,
+            3578,
+            6063
+          ]
+        },
+        {
+          "peak_number": 8,
+          "source_channel": 1,
+          "fullband_index": 1565,
+          "target_wavelength_nm": 1556.3,
+          "measured_wavelength_nm": 1556.29937,
+          "fitted_center_nm": 1555.7769627840908,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.33704278409072685,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.6975594259498759,
+          "template_signal_v": 0.06915082686869481,
+          "template_slope_v_per_nm": -0.4104511908115649,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 18.45936881075919,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.06919056114648642,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.06919056114648642,
+          "codes": [
+            58981,
+            42865,
+            14849,
+            2908,
+            4558
+          ],
+          "mode_index": 47,
+          "precondition_codes": [
+            58981,
+            43807,
+            15672,
+            2867,
+            4915
+          ]
+        },
+        {
+          "peak_number": 9,
+          "source_channel": 1,
+          "fullband_index": 1721,
+          "target_wavelength_nm": 1559.42,
+          "measured_wavelength_nm": 1559.42111,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.2605052066114695,
+          "selection_role": "left_guard",
+          "template_role": "left_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -1.3152698096907742,
+          "template_signal_v": 0.1197100078867201,
+          "template_slope_v_per_nm": 1.49709264583774,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.024311226374338,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.1255846416757826,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.1255846416757826,
+          "codes": [
+            58981,
+            49926,
+            165,
+            12323,
+            20907
+          ],
+          "mode_index": 48,
+          "precondition_codes": [
+            58981,
+            51904,
+            19650,
+            12169,
+            19604
+          ]
+        },
+        {
+          "peak_number": 9,
+          "source_channel": 1,
+          "fullband_index": 1732,
+          "target_wavelength_nm": 1559.64,
+          "measured_wavelength_nm": 1559.64076,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.2605052066114695,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.6835131881952206,
+          "template_signal_v": 0.240020751953125,
+          "template_slope_v_per_nm": -0.9324546066086414,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.024311226374338,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.238037109375,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.238037109375,
+          "codes": [
+            58981,
+            49475,
+            12909,
+            11103,
+            17210
+          ],
+          "mode_index": 49,
+          "precondition_codes": [
+            58981,
+            50600,
+            16384,
+            9907,
+            17205
+          ]
+        },
+        {
+          "peak_number": 9,
+          "source_channel": 1,
+          "fullband_index": 1735,
+          "target_wavelength_nm": 1559.7,
+          "measured_wavelength_nm": 1559.70011,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.2605052066114695,
+          "selection_role": "peak_body",
+          "template_role": "left_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": -0.5128109096349763,
+          "template_signal_v": 0.254364013671875,
+          "template_slope_v_per_nm": 1.4594955141024126,
+          "template_reliability_weight": 1.0,
+          "projected_shift_information": 6.024311226374338,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2557373046875,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2557373046875,
+          "codes": [
+            58981,
+            50076,
+            10604,
+            11031,
+            17196
+          ],
+          "mode_index": 50,
+          "precondition_codes": [
+            58981,
+            49888,
+            11409,
+            11059,
+            17203
+          ]
+        },
+        {
+          "peak_number": 9,
+          "source_channel": 1,
+          "fullband_index": 1744,
+          "target_wavelength_nm": 1559.88,
+          "measured_wavelength_nm": 1559.88003,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.2605052066114695,
+          "selection_role": "peak_body",
+          "template_role": "peak_amplitude_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.004674414014026307,
+          "template_signal_v": 0.31341552734375,
+          "template_slope_v_per_nm": -0.08190238396124805,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 6.024311226374338,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.3106689453125,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.3106689453125,
+          "codes": [
+            58981,
+            52240,
+            22929,
+            9710,
+            17133
+          ],
+          "mode_index": 51,
+          "precondition_codes": [
+            58981,
+            53945,
+            29491,
+            9749,
+            15939
+          ]
+        },
+        {
+          "peak_number": 9,
+          "source_channel": 1,
+          "fullband_index": 1757,
+          "target_wavelength_nm": 1560.14,
+          "measured_wavelength_nm": 1560.13891,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.2605052066114695,
+          "selection_role": "peak_body",
+          "template_role": "right_shift_sensitive",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 0.7492642349686411,
+          "template_signal_v": 0.23223876953125,
+          "template_slope_v_per_nm": -1.031479177232093,
+          "template_reliability_weight": 0.4549377846193142,
+          "projected_shift_information": 6.024311226374338,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.2349853515625,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.2349853515625,
+          "codes": [
+            58981,
+            41936,
+            1841,
+            8558,
+            0
+          ],
+          "mode_index": 52,
+          "precondition_codes": [
+            58981,
+            42014,
+            2127,
+            8573,
+            0
+          ]
+        },
+        {
+          "peak_number": 9,
+          "source_channel": 1,
+          "fullband_index": 1770,
+          "target_wavelength_nm": 1560.4,
+          "measured_wavelength_nm": 1560.39805,
+          "fitted_center_nm": 1559.8784047933884,
+          "selection_half_span_nm": 0.7999999999999545,
+          "selection_core_half_span_nm": 0.2605052066114695,
+          "selection_role": "right_guard",
+          "template_role": "right_baseline_anchor",
+          "selection_method": "measured_template_fisher_v1",
+          "offset_sigma": 1.494601867085326,
+          "template_signal_v": 0.08283037703922758,
+          "template_slope_v_per_nm": -0.995598820625017,
+          "template_reliability_weight": 0.5587333975703758,
+          "projected_shift_information": 6.024311226374338,
+          "source_adc_v_by_channel": [
+            0.0,
+            0.07936937537402582,
+            0.0,
+            0.0
+          ],
+          "source_adc_v": 0.07936937537402582,
+          "codes": [
+            58981,
+            52344,
+            32753,
+            7238,
+            13404
+          ],
+          "mode_index": 53,
+          "precondition_codes": [
+            58981,
+            49676,
+            9784,
+            7217,
+            14552
+          ]
+        }
+      ]
+    }
+  }
+}

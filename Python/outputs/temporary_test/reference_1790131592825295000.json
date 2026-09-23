@@ -1,0 +1,4208 @@
+{
+  "schema": "temporary_dense_reference_v1",
+  "rows": [
+    {
+      "index": 0,
+      "target_wavelength_nm": 1525.0,
+      "measured_wavelength_nm": 1524.99891,
+      "dac_codes": [
+        63351,
+        53412,
+        11662,
+        41,
+        6185
+      ],
+      "ch1_adc_code": 11.0,
+      "ch1_voltage_v": 0.0067138671875,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5630000000819564,
+      "captured": "2026-09-23T10:46:34+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          454,
+          580,
+          1,
+          11,
+          0,
+          0
+        ],
+        [
+          455,
+          579,
+          0,
+          11,
+          0,
+          0
+        ],
+        [
+          455,
+          579,
+          1,
+          11,
+          0,
+          0
+        ],
+        [
+          455,
+          578,
+          0,
+          10,
+          1,
+          0
+        ],
+        [
+          456,
+          578,
+          0,
+          11,
+          0,
+          0
+        ],
+        [
+          457,
+          578,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          457,
+          577,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          457,
+          576,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          457,
+          577,
+          1,
+          9,
+          0,
+          0
+        ],
+        [
+          458,
+          576,
+          1,
+          10,
+          0,
+          0
+        ],
+        [
+          458,
+          576,
+          0,
+          11,
+          0,
+          0
+        ],
+        [
+          458,
+          576,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          459,
+          576,
+          0,
+          11,
+          0,
+          0
+        ],
+        [
+          458,
+          576,
+          1,
+          11,
+          0,
+          0
+        ],
+        [
+          460,
+          575,
+          0,
+          11,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 11.0,
+      "signal_voltage_v": 0.0067138671875,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 457.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 3.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 577.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 3.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 11.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 0,
+          "target_wavelength_nm": 1525.0,
+          "measured_wavelength_nm": 1524.99891,
+          "dac_codes": [
+            63351,
+            53412,
+            11662,
+            41,
+            6185
+          ],
+          "ch1_adc_code": 11.0,
+          "ch1_voltage_v": 0.0067138671875,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5630000000819564,
+          "captured": "2026-09-23T10:46:34+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              454,
+              580,
+              1,
+              11,
+              0,
+              0
+            ],
+            [
+              455,
+              579,
+              0,
+              11,
+              0,
+              0
+            ],
+            [
+              455,
+              579,
+              1,
+              11,
+              0,
+              0
+            ],
+            [
+              455,
+              578,
+              0,
+              10,
+              1,
+              0
+            ],
+            [
+              456,
+              578,
+              0,
+              11,
+              0,
+              0
+            ],
+            [
+              457,
+              578,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              457,
+              577,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              457,
+              576,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              457,
+              577,
+              1,
+              9,
+              0,
+              0
+            ],
+            [
+              458,
+              576,
+              1,
+              10,
+              0,
+              0
+            ],
+            [
+              458,
+              576,
+              0,
+              11,
+              0,
+              0
+            ],
+            [
+              458,
+              576,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              459,
+              576,
+              0,
+              11,
+              0,
+              0
+            ],
+            [
+              458,
+              576,
+              1,
+              11,
+              0,
+              0
+            ],
+            [
+              460,
+              575,
+              0,
+              11,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 11.0,
+          "signal_voltage_v": 0.0067138671875,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 457.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 3.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 577.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 3.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 11.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 1,
+      "target_wavelength_nm": 1525.02,
+      "measured_wavelength_nm": 1525.01875,
+      "dac_codes": [
+        63351,
+        52923,
+        10676,
+        28,
+        6130
+      ],
+      "ch1_adc_code": 8.0,
+      "ch1_voltage_v": 0.0048828125,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 1.0,
+      "ch1_drift_v": 0.0006103515625,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5619999999180436,
+      "captured": "2026-09-23T10:46:34+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          375,
+          689,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          375,
+          689,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          376,
+          689,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          376,
+          688,
+          0,
+          8,
+          1,
+          0
+        ],
+        [
+          376,
+          688,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          376,
+          688,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          376,
+          689,
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          688,
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          688,
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          688,
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          689,
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          688,
+          1,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          687,
+          1,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          688,
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          377,
+          688,
+          0,
+          8,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 8.0,
+      "signal_voltage_v": 0.0048828125,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 1.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 377.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 688.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 8.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 1,
+          "target_wavelength_nm": 1525.02,
+          "measured_wavelength_nm": 1525.01875,
+          "dac_codes": [
+            63351,
+            52923,
+            10676,
+            28,
+            6130
+          ],
+          "ch1_adc_code": 8.0,
+          "ch1_voltage_v": 0.0048828125,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 1.0,
+          "ch1_drift_v": 0.0006103515625,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5619999999180436,
+          "captured": "2026-09-23T10:46:34+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              375,
+              689,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              375,
+              689,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              376,
+              689,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              376,
+              688,
+              0,
+              8,
+              1,
+              0
+            ],
+            [
+              376,
+              688,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              376,
+              688,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              376,
+              689,
+              0,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              688,
+              0,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              688,
+              0,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              688,
+              0,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              689,
+              0,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              688,
+              1,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              687,
+              1,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              688,
+              0,
+              8,
+              0,
+              0
+            ],
+            [
+              377,
+              688,
+              0,
+              8,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 8.0,
+          "signal_voltage_v": 0.0048828125,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 1.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 377.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 688.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 8.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 2,
+      "target_wavelength_nm": 1525.04,
+      "measured_wavelength_nm": 1525.03804,
+      "dac_codes": [
+        63351,
+        54553,
+        9510,
+        0,
+        6220
+      ],
+      "ch1_adc_code": 10.0,
+      "ch1_voltage_v": 0.006103515625,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5309999999590218,
+      "captured": "2026-09-23T10:46:35+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          211,
+          778,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          211,
+          778,
+          1,
+          10,
+          0,
+          0
+        ],
+        [
+          211,
+          778,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          212,
+          778,
+          1,
+          10,
+          0,
+          0
+        ],
+        [
+          212,
+          777,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          212,
+          776,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          212,
+          777,
+          1,
+          10,
+          0,
+          0
+        ],
+        [
+          212,
+          776,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          213,
+          777,
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          213,
+          776,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          214,
+          776,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          213,
+          776,
+          1,
+          10,
+          0,
+          0
+        ],
+        [
+          213,
+          775,
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          215,
+          775,
+          1,
+          10,
+          0,
+          0
+        ],
+        [
+          214,
+          776,
+          0,
+          10,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 10.0,
+      "signal_voltage_v": 0.006103515625,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 212.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 3.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 776.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 2.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 10.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 2,
+          "target_wavelength_nm": 1525.04,
+          "measured_wavelength_nm": 1525.03804,
+          "dac_codes": [
+            63351,
+            54553,
+            9510,
+            0,
+            6220
+          ],
+          "ch1_adc_code": 10.0,
+          "ch1_voltage_v": 0.006103515625,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5309999999590218,
+          "captured": "2026-09-23T10:46:35+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              211,
+              778,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              211,
+              778,
+              1,
+              10,
+              0,
+              0
+            ],
+            [
+              211,
+              778,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              212,
+              778,
+              1,
+              10,
+              0,
+              0
+            ],
+            [
+              212,
+              777,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              212,
+              776,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              212,
+              777,
+              1,
+              10,
+              0,
+              0
+            ],
+            [
+              212,
+              776,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              213,
+              777,
+              0,
+              9,
+              0,
+              0
+            ],
+            [
+              213,
+              776,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              214,
+              776,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              213,
+              776,
+              1,
+              10,
+              0,
+              0
+            ],
+            [
+              213,
+              775,
+              0,
+              10,
+              0,
+              0
+            ],
+            [
+              215,
+              775,
+              1,
+              10,
+              0,
+              0
+            ],
+            [
+              214,
+              776,
+              0,
+              10,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 10.0,
+          "signal_voltage_v": 0.006103515625,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 212.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 3.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 776.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 2.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 10.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 3,
+      "target_wavelength_nm": 1525.06,
+      "measured_wavelength_nm": 1525.05961,
+      "dac_codes": [
+        63351,
+        55994,
+        8504,
+        0,
+        6102
+      ],
+      "ch1_adc_code": 3.0,
+      "ch1_voltage_v": 0.0018310546875,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 1.0,
+      "ch1_drift_v": 0.0006103515625,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5630000000819564,
+      "captured": "2026-09-23T10:46:36+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          38,
+          898,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          37,
+          898,
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          37,
+          898,
+          0,
+          3,
+          1,
+          0
+        ],
+        [
+          38,
+          898,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          37,
+          898,
+          1,
+          3,
+          0,
+          0
+        ],
+        [
+          38,
+          898,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          39,
+          897,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          39,
+          897,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          39,
+          897,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          38,
+          898,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          39,
+          897,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          40,
+          896,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          38,
+          897,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          39,
+          897,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          39,
+          896,
+          0,
+          2,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 3.0,
+      "signal_voltage_v": 0.0018310546875,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 1.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 38.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 2.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 897.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 3.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 3,
+          "target_wavelength_nm": 1525.06,
+          "measured_wavelength_nm": 1525.05961,
+          "dac_codes": [
+            63351,
+            55994,
+            8504,
+            0,
+            6102
+          ],
+          "ch1_adc_code": 3.0,
+          "ch1_voltage_v": 0.0018310546875,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 1.0,
+          "ch1_drift_v": 0.0006103515625,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5630000000819564,
+          "captured": "2026-09-23T10:46:36+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              38,
+              898,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              37,
+              898,
+              1,
+              2,
+              0,
+              0
+            ],
+            [
+              37,
+              898,
+              0,
+              3,
+              1,
+              0
+            ],
+            [
+              38,
+              898,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              37,
+              898,
+              1,
+              3,
+              0,
+              0
+            ],
+            [
+              38,
+              898,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              39,
+              897,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              39,
+              897,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              39,
+              897,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              38,
+              898,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              39,
+              897,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              40,
+              896,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              38,
+              897,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              39,
+              897,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              39,
+              896,
+              0,
+              2,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 3.0,
+          "signal_voltage_v": 0.0018310546875,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 1.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 38.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 2.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 897.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 3.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 4,
+      "target_wavelength_nm": 1525.08,
+      "measured_wavelength_nm": 1525.07876,
+      "dac_codes": [
+        63351,
+        57543,
+        7574,
+        0,
+        5871
+      ],
+      "ch1_adc_code": 7.0,
+      "ch1_voltage_v": 0.0042724609375,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5779999997466803,
+      "captured": "2026-09-23T10:46:36+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          34,
+          1032,
+          1,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1032,
+          0,
+          7,
+          1,
+          0
+        ],
+        [
+          34,
+          1032,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1032,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          1,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          1,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1030,
+          1,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          6,
+          0,
+          0
+        ],
+        [
+          34,
+          1030,
+          1,
+          7,
+          0,
+          0
+        ],
+        [
+          34,
+          1031,
+          0,
+          6,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 7.0,
+      "signal_voltage_v": 0.0042724609375,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 34.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 1031.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 7.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 4,
+          "target_wavelength_nm": 1525.08,
+          "measured_wavelength_nm": 1525.07876,
+          "dac_codes": [
+            63351,
+            57543,
+            7574,
+            0,
+            5871
+          ],
+          "ch1_adc_code": 7.0,
+          "ch1_voltage_v": 0.0042724609375,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5779999997466803,
+          "captured": "2026-09-23T10:46:36+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              34,
+              1032,
+              1,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1032,
+              0,
+              7,
+              1,
+              0
+            ],
+            [
+              34,
+              1032,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1032,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              1,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              1,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1030,
+              1,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              6,
+              0,
+              0
+            ],
+            [
+              34,
+              1030,
+              1,
+              7,
+              0,
+              0
+            ],
+            [
+              34,
+              1031,
+              0,
+              6,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 7.0,
+          "signal_voltage_v": 0.0042724609375,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 34.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 1031.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 7.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 5,
+      "target_wavelength_nm": 1525.1,
+      "measured_wavelength_nm": 1525.09936,
+      "dac_codes": [
+        63351,
+        58745,
+        6554,
+        15905,
+        6040
+      ],
+      "ch1_adc_code": 0.0,
+      "ch1_voltage_v": 0.0,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5630000000819564,
+      "captured": "2026-09-23T10:46:37+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          37,
+          1192,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1192,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1192,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          36,
+          1192,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          37,
+          1192,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          37,
+          1191,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1190,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1190,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1190,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1189,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          37,
+          1189,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1188,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1188,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1187,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          37,
+          1188,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 0.0,
+      "signal_voltage_v": 0.0,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 37.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 1190.0,
+          "noise_adc": 2.9652,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 4.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 5,
+          "target_wavelength_nm": 1525.1,
+          "measured_wavelength_nm": 1525.09936,
+          "dac_codes": [
+            63351,
+            58745,
+            6554,
+            15905,
+            6040
+          ],
+          "ch1_adc_code": 0.0,
+          "ch1_voltage_v": 0.0,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5630000000819564,
+          "captured": "2026-09-23T10:46:37+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              37,
+              1192,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1192,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1192,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              36,
+              1192,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              37,
+              1192,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              37,
+              1191,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1190,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1190,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1190,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1189,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              37,
+              1189,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1188,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1188,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1187,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              37,
+              1188,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 0.0,
+          "signal_voltage_v": 0.0,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 37.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 1190.0,
+              "noise_adc": 2.9652,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 4.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 6,
+      "target_wavelength_nm": 1525.12,
+      "measured_wavelength_nm": 1525.11933,
+      "dac_codes": [
+        63351,
+        59903,
+        19661,
+        15937,
+        6017
+      ],
+      "ch1_adc_code": 1.0,
+      "ch1_voltage_v": 0.0006103515625,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.546000000089407,
+      "captured": "2026-09-23T10:46:37+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          40,
+          1344,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          40,
+          1345,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1345,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1345,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          40,
+          1345,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          40,
+          1345,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1345,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          40,
+          1344,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1343,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1343,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1345,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1344,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1343,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1343,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          39,
+          1343,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 1.0,
+      "signal_voltage_v": 0.0006103515625,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 39.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 1344.0,
+          "noise_adc": 1.4826,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 2.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 1.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 6,
+          "target_wavelength_nm": 1525.12,
+          "measured_wavelength_nm": 1525.11933,
+          "dac_codes": [
+            63351,
+            59903,
+            19661,
+            15937,
+            6017
+          ],
+          "ch1_adc_code": 1.0,
+          "ch1_voltage_v": 0.0006103515625,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.546000000089407,
+          "captured": "2026-09-23T10:46:37+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              40,
+              1344,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              40,
+              1345,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1345,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1345,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              40,
+              1345,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              40,
+              1345,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1345,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              40,
+              1344,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1343,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1343,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1345,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1344,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1343,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1343,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              39,
+              1343,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 1.0,
+          "signal_voltage_v": 0.0006103515625,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 39.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 1344.0,
+              "noise_adc": 1.4826,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 2.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 1.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 7,
+      "target_wavelength_nm": 1525.14,
+      "measured_wavelength_nm": 1525.13815,
+      "dac_codes": [
+        63351,
+        61082,
+        19661,
+        15880,
+        5806
+      ],
+      "ch1_adc_code": 2.0,
+      "ch1_voltage_v": 0.001220703125,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5320000001229346,
+      "captured": "2026-09-23T10:46:38+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          42,
+          1491,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          42,
+          1491,
+          0,
+          2,
+          1,
+          0
+        ],
+        [
+          43,
+          1491,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          42,
+          1491,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          42,
+          1490,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          42,
+          1491,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          0,
+          2,
+          1,
+          0
+        ],
+        [
+          42,
+          1490,
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1489,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          43,
+          1490,
+          0,
+          2,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 2.0,
+      "signal_voltage_v": 0.001220703125,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 43.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 1490.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 2.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 7,
+          "target_wavelength_nm": 1525.14,
+          "measured_wavelength_nm": 1525.13815,
+          "dac_codes": [
+            63351,
+            61082,
+            19661,
+            15880,
+            5806
+          ],
+          "ch1_adc_code": 2.0,
+          "ch1_voltage_v": 0.001220703125,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5320000001229346,
+          "captured": "2026-09-23T10:46:38+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              42,
+              1491,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              42,
+              1491,
+              0,
+              2,
+              1,
+              0
+            ],
+            [
+              43,
+              1491,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              42,
+              1491,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              42,
+              1490,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              42,
+              1491,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              1,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              0,
+              2,
+              1,
+              0
+            ],
+            [
+              42,
+              1490,
+              1,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1489,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              43,
+              1490,
+              0,
+              2,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 2.0,
+          "signal_voltage_v": 0.001220703125,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 43.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 1490.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 2.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    },
+    {
+      "index": 8,
+      "target_wavelength_nm": 1525.16,
+      "measured_wavelength_nm": 1525.15972,
+      "dac_codes": [
+        63351,
+        59951,
+        19661,
+        15621,
+        5630
+      ],
+      "ch1_adc_code": 2.0,
+      "ch1_voltage_v": 0.001220703125,
+      "ch1_sigma_codes": 0.0,
+      "ch1_sigma_v": 0.0,
+      "ch1_drift_codes": 0.0,
+      "ch1_drift_v": 0.0,
+      "ch1_saturated": false,
+      "stable": true,
+      "window_stable": true,
+      "repeatability_verified": false,
+      "stability_scope": "within_window_only_not_cross_scan_repeatability",
+      "all_monitor_channels_stable": true,
+      "sample_count": 15,
+      "sample_limit": 150,
+      "point_timeout_s": 3.25,
+      "settle_s": 0.2,
+      "elapsed_s": 0.5469999997876585,
+      "captured": "2026-09-23T10:46:38+08:00",
+      "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+      "adc_samples_are_uniform_raw_stream": false,
+      "firmware_window_selected_samples": true,
+      "monitor_channels": [
+        "PDT",
+        "PDR",
+        "CH0",
+        "CH1",
+        "CH2",
+        "CH3"
+      ],
+      "monitor_samples": [
+        [
+          44,
+          1661,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          44,
+          1661,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          44,
+          1661,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          44,
+          1661,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1661,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          44,
+          1662,
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          45,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          44,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          44,
+          1662,
+          0,
+          2,
+          0,
+          0
+        ]
+      ],
+      "adc_value_kind": "window_selected_adc",
+      "signal_channel": 1,
+      "signal_channel_name": "CH1",
+      "signal_adc_code": 2.0,
+      "signal_voltage_v": 0.001220703125,
+      "signal_sigma_codes": 0.0,
+      "signal_drift_codes": 0.0,
+      "signal_saturated": false,
+      "retry_strategy": "initial_write",
+      "replayed_indices": [],
+      "channel_checks": [
+        {
+          "channel": "PDT",
+          "median_adc": 45.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "PDR",
+          "median_adc": 1662.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 1.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH0",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH1",
+          "median_adc": 2.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH2",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        },
+        {
+          "channel": "CH3",
+          "median_adc": 0.0,
+          "noise_adc": 0.0,
+          "noise_limit_adc": 6.0,
+          "drift_adc": 0.0,
+          "drift_limit_adc": 8.0,
+          "passed": true
+        }
+      ],
+      "failed_channels": [],
+      "attempts": [
+        {
+          "index": 8,
+          "target_wavelength_nm": 1525.16,
+          "measured_wavelength_nm": 1525.15972,
+          "dac_codes": [
+            63351,
+            59951,
+            19661,
+            15621,
+            5630
+          ],
+          "ch1_adc_code": 2.0,
+          "ch1_voltage_v": 0.001220703125,
+          "ch1_sigma_codes": 0.0,
+          "ch1_sigma_v": 0.0,
+          "ch1_drift_codes": 0.0,
+          "ch1_drift_v": 0.0,
+          "ch1_saturated": false,
+          "stable": true,
+          "window_stable": true,
+          "repeatability_verified": false,
+          "stability_scope": "within_window_only_not_cross_scan_repeatability",
+          "all_monitor_channels_stable": true,
+          "sample_count": 15,
+          "sample_limit": 150,
+          "point_timeout_s": 3.25,
+          "settle_s": 0.2,
+          "elapsed_s": 0.5469999997876585,
+          "captured": "2026-09-23T10:46:38+08:00",
+          "adc_acquisition_method": "checkRT/ADC_Write_Read_Stable",
+          "adc_samples_are_uniform_raw_stream": false,
+          "firmware_window_selected_samples": true,
+          "monitor_channels": [
+            "PDT",
+            "PDR",
+            "CH0",
+            "CH1",
+            "CH2",
+            "CH3"
+          ],
+          "monitor_samples": [
+            [
+              44,
+              1661,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              44,
+              1661,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              44,
+              1661,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              44,
+              1661,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1661,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              44,
+              1662,
+              1,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              1,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              1,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              45,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              44,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              44,
+              1662,
+              0,
+              2,
+              0,
+              0
+            ]
+          ],
+          "adc_value_kind": "window_selected_adc",
+          "signal_channel": 1,
+          "signal_channel_name": "CH1",
+          "signal_adc_code": 2.0,
+          "signal_voltage_v": 0.001220703125,
+          "signal_sigma_codes": 0.0,
+          "signal_drift_codes": 0.0,
+          "signal_saturated": false,
+          "retry_strategy": "initial_write",
+          "replayed_indices": [],
+          "channel_checks": [
+            {
+              "channel": "PDT",
+              "median_adc": 45.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "PDR",
+              "median_adc": 1662.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 1.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH0",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH1",
+              "median_adc": 2.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH2",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            },
+            {
+              "channel": "CH3",
+              "median_adc": 0.0,
+              "noise_adc": 0.0,
+              "noise_limit_adc": 6.0,
+              "drift_adc": 0.0,
+              "drift_limit_adc": 8.0,
+              "passed": true
+            }
+          ],
+          "failed_channels": []
+        }
+      ],
+      "optical_stability_verified": false,
+      "retry_method": "hold_then_replay_forward_predecessors_without_relaxing_gate",
+      "point_passed": true
+    }
+  ],
+  "complete": false,
+  "feedback_selector": 2,
+  "ch1_feedback_selector": 2,
+  "signal_channel": 1,
+  "signal_channel_name": "CH1",
+  "acquisition_method": "stable_window",
+  "requested_point_count": 2001,
+  "dense_indices": null,
+  "settle_s": 0.2,
+  "started_s": 1790131592.849636,
+  "stability_filter_applied": true,
+  "stopped_early": true,
+  "partial": true,
+  "failed_point_count": 0,
+  "all_points_passed": false,
+  "disarm_ack": true,
+  "shutter_ack": true,
+  "cleanup_errors": []
+}

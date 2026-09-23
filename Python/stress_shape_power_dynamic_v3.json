@@ -1,0 +1,2147 @@
+{
+  "created": "2026-08-14T16:34:31",
+  "purpose": "63-point stress table with symmetric replay-qualified FBG 3 and 7",
+  "point_count": 63,
+  "limits_ma": {
+    "gain": 135.0,
+    "soa": 135.0,
+    "phase": 10.0,
+    "wave_a": 30.0,
+    "wave_b": 30.0
+  },
+  "power_summary_mw": {
+    "minimum": 1.464137501938097,
+    "mean": 1.505717078356089,
+    "maximum": 1.5509154522615103,
+    "coefficient_of_variation_percent": 0.7501755876379906
+  },
+  "segments": [
+    {
+      "segment": 0,
+      "candidate_count": 7,
+      "selection": {
+        "method": "retained_all_seven_no_alternative_candidates"
+      },
+      "settled_fit": {
+        "center_nm": 1527.8866248,
+        "center_error_from_broadband_reference_pm": -24.07519999997021,
+        "amplitude_v": 0.21675107123113033,
+        "r_squared": 0.9741193771983101,
+        "center_std_pm": 2.2654450135780015,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1527.9171815,
+        "center_error_from_broadband_reference_pm": 6.481500000063534,
+        "amplitude_v": 0.17620427232519192,
+        "r_squared": 0.9692145582125177,
+        "center_std_pm": 3.704304904884026,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.026593889508928572,
+      "selected_wavelengths_nm": [
+        1527.675685,
+        1527.70007,
+        1527.72903,
+        1527.78409,
+        1527.802865,
+        1528.02142,
+        1528.267105
+      ]
+    },
+    {
+      "segment": 1,
+      "candidate_count": 7,
+      "selection": {
+        "method": "retained_all_seven_no_alternative_candidates"
+      },
+      "settled_fit": {
+        "center_nm": 1532.1190006,
+        "center_error_from_broadband_reference_pm": -24.09940000006827,
+        "amplitude_v": 0.17621864012373584,
+        "r_squared": 0.9338381183524858,
+        "center_std_pm": 13.580702722921233,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1532.113711425,
+        "center_error_from_broadband_reference_pm": -29.388574999984485,
+        "amplitude_v": 0.2939536486193398,
+        "r_squared": 0.8944221567126822,
+        "center_std_pm": 17.543030378984742,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.022757393973214284,
+      "selected_wavelengths_nm": [
+        1531.73818,
+        1531.837195,
+        1531.9958350000002,
+        1532.1439449999998,
+        1532.2967700000002,
+        1532.55401,
+        1532.796015
+      ]
+    },
+    {
+      "segment": 2,
+      "candidate_count": 30,
+      "selection": {
+        "reference_center_nm": 1536.3851,
+        "quick_center_nm": 1536.3852034166666,
+        "quick_sigma_nm": 0.2683548277778462,
+        "official_center_nm": 1536.4124104416665,
+        "official_center_error_pm": 27.31044166648644,
+        "official_r_squared": 0.9983917478705037,
+        "official_center_std_pm": 1.3813910909868072,
+        "official_valid": true,
+        "wavelength_coverage_percent": 90.05759346384507,
+        "selected_monotonic": true
+      },
+      "settled_fit": {
+        "center_nm": 1536.3111049999998,
+        "center_error_from_broadband_reference_pm": -73.99500000019543,
+        "amplitude_v": 0.21032798344848128,
+        "r_squared": 0.9713290149177536,
+        "center_std_pm": 7.502767040711375,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1536.4124104416665,
+        "center_error_from_broadband_reference_pm": 27.31044166648644,
+        "amplitude_v": 0.22349462919285307,
+        "r_squared": 0.9983917478705037,
+        "center_std_pm": 1.3813910909868072,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.021275111607142856,
+      "selected_wavelengths_nm": [
+        1536.3111049999998,
+        1536.3429350000001,
+        1536.36408,
+        1536.40331,
+        1536.5357099999999,
+        1536.659885,
+        1536.84901
+      ]
+    },
+    {
+      "segment": 3,
+      "candidate_count": 20,
+      "selection": {
+        "reference_center_nm": 1540.1685,
+        "quick_center_nm": 1540.1578333333334,
+        "quick_sigma_nm": 0.5393602500000839,
+        "official_center_nm": 1540.14343545,
+        "official_center_error_pm": -25.06455000002461,
+        "official_r_squared": 0.9873673125336621,
+        "official_center_std_pm": 3.81455155424009,
+        "official_valid": true,
+        "wavelength_coverage_percent": 94.90578446231436,
+        "selected_monotonic": false
+      },
+      "settled_fit": {
+        "center_nm": 1540.111627025,
+        "center_error_from_broadband_reference_pm": -56.872975000032966,
+        "amplitude_v": 0.32508657290779464,
+        "r_squared": 0.8474931397059482,
+        "center_std_pm": 15.413558302249976,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1540.14343545,
+        "center_error_from_broadband_reference_pm": -25.06455000002461,
+        "amplitude_v": 0.31227852733845407,
+        "r_squared": 0.9873673125336621,
+        "center_std_pm": 3.81455155424009,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.012425013950892858,
+      "selected_wavelengths_nm": [
+        1539.836415,
+        1539.88668,
+        1540.245845,
+        1540.30279,
+        1540.41622,
+        1540.53529,
+        1540.6662000000001
+      ]
+    },
+    {
+      "segment": 4,
+      "candidate_count": 29,
+      "selection": {
+        "reference_center_nm": 1544.4552,
+        "quick_center_nm": 1544.4445333333335,
+        "quick_sigma_nm": 0.2558675666666447,
+        "official_center_nm": 1544.433767625,
+        "official_center_error_pm": -21.432375000131287,
+        "official_r_squared": 0.9909661459707563,
+        "official_center_std_pm": 2.050566718624327,
+        "official_valid": true,
+        "wavelength_coverage_percent": 74.84767732171761,
+        "selected_monotonic": true
+      },
+      "settled_fit": {
+        "center_nm": 1544.4704119749997,
+        "center_error_from_broadband_reference_pm": 15.211974999601807,
+        "amplitude_v": 0.24240894543440314,
+        "r_squared": 0.792154738554715,
+        "center_std_pm": 9.961750260437029,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1544.433767625,
+        "center_error_from_broadband_reference_pm": -21.432375000131287,
+        "amplitude_v": 0.3091402975102878,
+        "r_squared": 0.9909661459707563,
+        "center_std_pm": 2.050566718624327,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.020228794642857144,
+      "selected_wavelengths_nm": [
+        1544.158935,
+        1544.284235,
+        1544.362485,
+        1544.386945,
+        1544.56855,
+        1544.675935,
+        1544.7375299999999
+      ]
+    },
+    {
+      "segment": 5,
+      "candidate_count": 7,
+      "selection": {
+        "method": "retained_all_seven_no_alternative_candidates"
+      },
+      "settled_fit": {
+        "center_nm": 1547.86380225,
+        "center_error_from_broadband_reference_pm": -27.097750000166343,
+        "amplitude_v": 0.2987794412341481,
+        "r_squared": 0.9985532350805071,
+        "center_std_pm": 1.9132982430364038,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1547.8492882499997,
+        "center_error_from_broadband_reference_pm": -41.61175000035655,
+        "amplitude_v": 0.3447061581138193,
+        "r_squared": 0.9754650528829873,
+        "center_std_pm": 8.222847203595707,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.019313267299107144,
+      "selected_wavelengths_nm": [
+        1547.39754,
+        1547.62948,
+        1547.847285,
+        1547.8958,
+        1548.049315,
+        1548.13043,
+        1548.4860899999999
+      ]
+    },
+    {
+      "segment": 6,
+      "candidate_count": 30,
+      "selection": {
+        "reference_center_nm": 1551.7849,
+        "quick_center_nm": 1551.7849,
+        "quick_sigma_nm": 0.28120400000001006,
+        "official_center_nm": 1551.7797918,
+        "official_center_error_pm": -5.108199999995122,
+        "official_r_squared": 0.9478868803632375,
+        "official_center_std_pm": 9.783846563911508,
+        "official_valid": true,
+        "wavelength_coverage_percent": 96.73745088516256,
+        "selected_monotonic": true
+      },
+      "settled_fit": {
+        "center_nm": 1551.7478368,
+        "center_error_from_broadband_reference_pm": -37.063200000147845,
+        "amplitude_v": 0.24899361106136628,
+        "r_squared": 0.9525993714703987,
+        "center_std_pm": 7.966217710929771,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1551.7797918,
+        "center_error_from_broadband_reference_pm": -5.108199999995122,
+        "amplitude_v": 0.26885152066239776,
+        "r_squared": 0.9478868803632375,
+        "center_std_pm": 9.783846563911508,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.020315987723214284,
+      "selected_wavelengths_nm": [
+        1551.557385,
+        1551.7259199999999,
+        1551.83376,
+        1551.8458500000002,
+        1551.86486,
+        1551.90783,
+        1552.324305
+      ]
+    },
+    {
+      "segment": 7,
+      "candidate_count": 24,
+      "selection": {
+        "reference_center_nm": 1555.8094,
+        "quick_center_nm": 1555.8147333333334,
+        "quick_sigma_nm": 0.298300477777773,
+        "official_center_nm": 1555.8219782499998,
+        "official_center_error_pm": 12.578249999705804,
+        "official_r_squared": 0.9318753442205447,
+        "official_center_std_pm": 8.095637361419033,
+        "official_valid": true,
+        "wavelength_coverage_percent": 80.91679696284666,
+        "selected_monotonic": true
+      },
+      "settled_fit": {
+        "center_nm": 1555.8284256666666,
+        "center_error_from_broadband_reference_pm": 19.025666666493635,
+        "amplitude_v": 0.5347490782471407,
+        "r_squared": 0.7051030858763809,
+        "center_std_pm": 18.23815912207493,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1555.8219782499998,
+        "center_error_from_broadband_reference_pm": 12.578249999705804,
+        "amplitude_v": 0.5491844763740334,
+        "r_squared": 0.9318753442205447,
+        "center_std_pm": 8.095637361419033,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.028512137276785716,
+      "selected_wavelengths_nm": [
+        1555.49316,
+        1555.58897,
+        1555.6610249999999,
+        1555.832175,
+        1555.942935,
+        1556.123585,
+        1556.26685
+      ]
+    },
+    {
+      "segment": 8,
+      "candidate_count": 29,
+      "selection": {
+        "reference_center_nm": 1559.9161,
+        "quick_center_nm": 1559.9054333333333,
+        "quick_sigma_nm": 0.630782749999969,
+        "official_center_nm": 1559.8797576916666,
+        "official_center_error_pm": -36.34230833336005,
+        "official_r_squared": 0.9884228248644679,
+        "official_center_std_pm": 4.4082749262564205,
+        "official_valid": true,
+        "wavelength_coverage_percent": 92.19759443640969,
+        "selected_monotonic": true
+      },
+      "settled_fit": {
+        "center_nm": 1559.8166794166668,
+        "center_error_from_broadband_reference_pm": -99.42058333308523,
+        "amplitude_v": 0.7152156085320177,
+        "r_squared": 0.9611621030992062,
+        "center_std_pm": 9.385198074323494,
+        "valid": true
+      },
+      "training_dynamic_fit": {
+        "center_nm": 1559.8797576916666,
+        "center_error_from_broadband_reference_pm": -36.34230833336005,
+        "amplitude_v": 0.6096750687755433,
+        "r_squared": 0.9884228248644679,
+        "center_std_pm": 4.4082749262564205,
+        "valid": true
+      },
+      "dynamic_vs_settled_mae_v": 0.028294154575892856,
+      "selected_wavelengths_nm": [
+        1559.509375,
+        1559.653325,
+        1559.70053,
+        1560.004125,
+        1560.143635,
+        1560.296745,
+        1560.47981
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "index": 0,
+      "segment": 0,
+      "wavelength_nm": 1527.675685,
+      "power_mw": 1.4920744427329473,
+      "ch1_v": 0.28900146484375,
+      "training_dynamic_ch1_v": 0.27557373046875,
+      "training_dynamic_std_v": 0.01461482164523292,
+      "training_abs_error_v": 0.013427734375,
+      "codes": [
+        58982,
+        54741,
+        32540,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.29220581054688,
+        9.930419921875,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 28.88812244,
+      "wavelength_span_pm": 0.12999999989915523,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 0
+    },
+    {
+      "index": 1,
+      "segment": 0,
+      "wavelength_nm": 1527.70007,
+      "power_mw": 1.501525392519711,
+      "ch1_v": 0.28961181640625,
+      "training_dynamic_ch1_v": 0.3045654296875,
+      "training_dynamic_std_v": 0.020474783220173435,
+      "training_abs_error_v": 0.01495361328125,
+      "codes": [
+        58982,
+        54974,
+        30645,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.82550048828125,
+        9.35211181640625,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 31.10635904,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 1
+    },
+    {
+      "index": 2,
+      "segment": 0,
+      "wavelength_nm": 1527.72903,
+      "power_mw": 1.5004026760979148,
+      "ch1_v": 0.4290771484375,
+      "training_dynamic_ch1_v": 0.3338623046875,
+      "training_dynamic_std_v": 0.023102106752830108,
+      "training_abs_error_v": 0.09521484375,
+      "codes": [
+        58982,
+        56517,
+        28478,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.35714721679688,
+        8.6907958984375,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 30.07521035,
+      "wavelength_span_pm": 0.1199999999244028,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 2
+    },
+    {
+      "index": 3,
+      "segment": 0,
+      "wavelength_nm": 1527.78409,
+      "power_mw": 1.5088511269775293,
+      "ch1_v": 0.347900390625,
+      "training_dynamic_ch1_v": 0.35003662109375,
+      "training_dynamic_std_v": 0.025874022956773435,
+      "training_abs_error_v": 0.00213623046875,
+      "codes": [
+        58982,
+        56893,
+        24097,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        130.21774291992188,
+        7.35382080078125,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 28.977766170000002,
+      "wavelength_span_pm": 0.040000000126383384,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 3
+    },
+    {
+      "index": 4,
+      "segment": 0,
+      "wavelength_nm": 1527.802865,
+      "power_mw": 1.5042067867779563,
+      "ch1_v": 0.39947509765625,
+      "training_dynamic_ch1_v": 0.3717041015625,
+      "training_dynamic_std_v": 0.016067117652360793,
+      "training_abs_error_v": 0.02777099609375,
+      "codes": [
+        58982,
+        56363,
+        22572,
+        4096,
+        1229
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.00466918945312,
+        6.888427734375,
+        5.0,
+        1.500244140625
+      ],
+      "smsr_min_db": 28.53776868,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 4
+    },
+    {
+      "index": 5,
+      "segment": 0,
+      "wavelength_nm": 1528.02142,
+      "power_mw": 1.5038910174780227,
+      "ch1_v": 0.40771484375,
+      "training_dynamic_ch1_v": 0.3753662109375,
+      "training_dynamic_std_v": 0.013003710574776818,
+      "training_abs_error_v": 0.0323486328125,
+      "codes": [
+        58982,
+        54935,
+        14707,
+        3686,
+        819
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        125.73623657226562,
+        4.48822021484375,
+        4.49951171875,
+        0.999755859375
+      ],
+      "smsr_min_db": 30.02321516,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 5
+    },
+    {
+      "index": 6,
+      "segment": 0,
+      "wavelength_nm": 1528.267105,
+      "power_mw": 1.5131724997854024,
+      "ch1_v": 0.25146484375,
+      "training_dynamic_ch1_v": 0.25177001953125,
+      "training_dynamic_std_v": 0.01401316231640402,
+      "training_abs_error_v": 0.00030517578125,
+      "codes": [
+        58982,
+        58982,
+        15171,
+        3277,
+        16794
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        134.99908447265625,
+        4.62982177734375,
+        4.000244140625,
+        20.50048828125
+      ],
+      "smsr_min_db": 28.943882340000002,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 6
+    },
+    {
+      "index": 7,
+      "segment": 1,
+      "wavelength_nm": 1531.73818,
+      "power_mw": 1.5001551483526425,
+      "ch1_v": 0.1104736328125,
+      "training_dynamic_ch1_v": 0.1556396484375,
+      "training_dynamic_std_v": 0.007406234713921776,
+      "training_abs_error_v": 0.045166015625,
+      "codes": [
+        58982,
+        53509,
+        25826,
+        8602,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        122.47238159179688,
+        7.8814697265625,
+        10.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 33.98663595,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 7
+    },
+    {
+      "index": 8,
+      "segment": 1,
+      "wavelength_nm": 1531.837195,
+      "power_mw": 1.5079160311716957,
+      "ch1_v": 0.11962890625,
+      "training_dynamic_ch1_v": 0.145263671875,
+      "training_dynamic_std_v": 0.007378018550700913,
+      "training_abs_error_v": 0.025634765625,
+      "codes": [
+        58982,
+        56411,
+        19591,
+        8602,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        129.11453247070312,
+        5.97869873046875,
+        10.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 31.915187380000003,
+      "wavelength_span_pm": 0.09000000000014552,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 8
+    },
+    {
+      "index": 9,
+      "segment": 1,
+      "wavelength_nm": 1531.9958350000002,
+      "power_mw": 1.503285294032855,
+      "ch1_v": 0.1885986328125,
+      "training_dynamic_ch1_v": 0.19287109375,
+      "training_dynamic_std_v": 0.007960895329722367,
+      "training_abs_error_v": 0.0042724609375,
+      "codes": [
+        58982,
+        54403,
+        32434,
+        8602,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        124.51858520507812,
+        9.8980712890625,
+        10.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 29.60740541,
+      "wavelength_span_pm": 0.08999999977277184,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 9
+    },
+    {
+      "index": 10,
+      "segment": 1,
+      "wavelength_nm": 1532.1439449999998,
+      "power_mw": 1.511084112796771,
+      "ch1_v": 0.20751953125,
+      "training_dynamic_ch1_v": 0.22857666015625,
+      "training_dynamic_std_v": 0.012039706722873605,
+      "training_abs_error_v": 0.02105712890625,
+      "codes": [
+        58982,
+        57702,
+        31131,
+        7782,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        132.06939697265625,
+        9.50042724609375,
+        9.49951171875,
+        4.000244140625
+      ],
+      "smsr_min_db": 29.85283197,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 10
+    },
+    {
+      "index": 11,
+      "segment": 1,
+      "wavelength_nm": 1532.2967700000002,
+      "power_mw": 1.5019850310101799,
+      "ch1_v": 0.2239990234375,
+      "training_dynamic_ch1_v": 0.24444580078125,
+      "training_dynamic_std_v": 0.014648238816503331,
+      "training_abs_error_v": 0.02044677734375,
+      "codes": [
+        58982,
+        54091,
+        17711,
+        7782,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        123.80447387695312,
+        5.40496826171875,
+        9.49951171875,
+        4.000244140625
+      ],
+      "smsr_min_db": 28.798098340000003,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 11
+    },
+    {
+      "index": 12,
+      "segment": 1,
+      "wavelength_nm": 1532.55401,
+      "power_mw": 1.5096118004745214,
+      "ch1_v": 0.101318359375,
+      "training_dynamic_ch1_v": 0.1312255859375,
+      "training_dynamic_std_v": 0.006140227640505578,
+      "training_abs_error_v": 0.0299072265625,
+      "codes": [
+        58982,
+        52624,
+        13676,
+        6144,
+        2458
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        120.44677734375,
+        4.173583984375,
+        7.5,
+        3.00048828125
+      ],
+      "smsr_min_db": 30.167858690000003,
+      "wavelength_span_pm": 0.05999999984851456,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 12
+    },
+    {
+      "index": 13,
+      "segment": 1,
+      "wavelength_nm": 1532.796015,
+      "power_mw": 1.500779706033759,
+      "ch1_v": 0.030517578125,
+      "training_dynamic_ch1_v": 0.0433349609375,
+      "training_dynamic_std_v": 0.004627101812965561,
+      "training_abs_error_v": 0.0128173828125,
+      "codes": [
+        58982,
+        55258,
+        5492,
+        6144,
+        2458
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        126.47552490234375,
+        1.676025390625,
+        7.5,
+        3.00048828125
+      ],
+      "smsr_min_db": 30.54448051,
+      "wavelength_span_pm": 0.049999999873762135,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 13
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.136055,
+      "power_mw": 1.4851193865783672,
+      "ch1_v": 0.247955322265625,
+      "training_dynamic_ch1_v": 0.247955322265625,
+      "training_dynamic_std_v": 0.007993974592142239,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        39322,
+        58982,
+        17171,
+        14746,
+        7782
+      ],
+      "currents_ma": [
+        90.00091552734375,
+        134.99908447265625,
+        5.24017333984375,
+        18.00048828125,
+        9.49951171875
+      ],
+      "smsr_min_db": 32.08479796,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.1351,
+      "index": 14
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.25448,
+      "power_mw": 1.464137501938097,
+      "ch1_v": 0.31036376953125,
+      "training_dynamic_ch1_v": 0.31036376953125,
+      "training_dynamic_std_v": 0.0040320177160433944,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        39322,
+        58982,
+        329,
+        13107,
+        8192
+      ],
+      "currents_ma": [
+        90.00091552734375,
+        134.99908447265625,
+        0.10040283203125,
+        15.999755859375,
+        10.0
+      ],
+      "smsr_min_db": 27.813552750000003,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.2550999999999,
+      "index": 15
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.3177050000002,
+      "power_mw": 1.4816341750118807,
+      "ch1_v": 0.338592529296875,
+      "training_dynamic_ch1_v": 0.338592529296875,
+      "training_dynamic_std_v": 0.005570691115899567,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        45875,
+        58982,
+        254,
+        13107,
+        8192
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        134.99908447265625,
+        0.0775146484375,
+        15.999755859375,
+        10.0
+      ],
+      "smsr_min_db": 32.68177747,
+      "wavelength_span_pm": 0.10999999994965037,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.3201,
+      "index": 16
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.38651,
+      "power_mw": 1.5047578583828263,
+      "ch1_v": 0.30181884765625,
+      "training_dynamic_ch1_v": 0.30181884765625,
+      "training_dynamic_std_v": 0.009692154120142241,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        53601,
+        5222,
+        13107,
+        7782
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        122.68295288085938,
+        1.5936279296875,
+        15.999755859375,
+        9.49951171875
+      ],
+      "smsr_min_db": 28.65964588,
+      "wavelength_span_pm": 0.12000000015177648,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.3851,
+      "index": 17
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.4497000000001,
+      "power_mw": 1.5052261459789273,
+      "ch1_v": 0.33294677734375,
+      "training_dynamic_ch1_v": 0.33294677734375,
+      "training_dynamic_std_v": 0.005927327627590221,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        52416,
+        16117,
+        12698,
+        7782
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        119.970703125,
+        4.91851806640625,
+        15.50048828125,
+        9.49951171875
+      ],
+      "smsr_min_db": 28.29885046,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.4501,
+      "index": 18
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.5149649999998,
+      "power_mw": 1.5039932475505988,
+      "ch1_v": 0.2569580078125,
+      "training_dynamic_ch1_v": 0.2569580078125,
+      "training_dynamic_std_v": 0.0076137534983978725,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        54426,
+        2175,
+        13926,
+        8192
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        124.57122802734375,
+        0.66375732421875,
+        16.99951171875,
+        10.0
+      ],
+      "smsr_min_db": 30.6846757,
+      "wavelength_span_pm": 0.049999999873762135,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.5151,
+      "index": 19
+    },
+    {
+      "segment": 2,
+      "wavelength_nm": 1536.63568,
+      "power_mw": 1.5094905264666518,
+      "ch1_v": 0.22918701171875,
+      "training_dynamic_ch1_v": 0.22918701171875,
+      "training_dynamic_std_v": 0.008005616421908982,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        58982,
+        27787,
+        12698,
+        7782
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        134.99908447265625,
+        8.47991943359375,
+        15.50048828125,
+        9.49951171875
+      ],
+      "smsr_min_db": 29.98630547,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_symmetric_fbg3_wide_proposal.json",
+      "symmetry_target_nm": 1536.6351,
+      "index": 20
+    },
+    {
+      "index": 21,
+      "segment": 3,
+      "wavelength_nm": 1539.836415,
+      "power_mw": 1.494587789603997,
+      "ch1_v": 0.198974609375,
+      "training_dynamic_ch1_v": 0.15869140625,
+      "training_dynamic_std_v": 0.018166434111550295,
+      "training_abs_error_v": 0.040283203125,
+      "codes": [
+        58982,
+        57967,
+        24317,
+        2048,
+        22528
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        132.67593383789062,
+        7.42095947265625,
+        2.5,
+        27.5
+      ],
+      "smsr_min_db": 29.10162595,
+      "wavelength_span_pm": 0.12999999989915523,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 44
+    },
+    {
+      "index": 22,
+      "segment": 3,
+      "wavelength_nm": 1539.88668,
+      "power_mw": 1.5133593096970348,
+      "ch1_v": 0.1629638671875,
+      "training_dynamic_ch1_v": 0.1605224609375,
+      "training_dynamic_std_v": 0.016242549132577673,
+      "training_abs_error_v": 0.00244140625,
+      "codes": [
+        58982,
+        58982,
+        21696,
+        2048,
+        22528
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        134.99908447265625,
+        6.62109375,
+        2.5,
+        27.5
+      ],
+      "smsr_min_db": 31.12528081,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 45
+    },
+    {
+      "index": 23,
+      "segment": 3,
+      "wavelength_nm": 1540.245845,
+      "power_mw": 1.5181349066953018,
+      "ch1_v": 0.19287109375,
+      "training_dynamic_ch1_v": 0.1947021484375,
+      "training_dynamic_std_v": 0.023074598932758705,
+      "training_abs_error_v": 0.0018310546875,
+      "codes": [
+        58982,
+        55545,
+        10026,
+        1638,
+        19251
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        127.13241577148438,
+        3.0596923828125,
+        1.99951171875,
+        23.499755859375
+      ],
+      "smsr_min_db": 26.68484052,
+      "wavelength_span_pm": 0.2699999997730629,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 54
+    },
+    {
+      "index": 24,
+      "segment": 3,
+      "wavelength_nm": 1540.30279,
+      "power_mw": 1.504679121345086,
+      "ch1_v": 0.18798828125,
+      "training_dynamic_ch1_v": 0.1904296875,
+      "training_dynamic_std_v": 0.010457930691378563,
+      "training_abs_error_v": 0.00244140625,
+      "codes": [
+        58982,
+        52779,
+        1687,
+        1638,
+        20070
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        120.80154418945312,
+        0.51483154296875,
+        1.99951171875,
+        24.49951171875
+      ],
+      "smsr_min_db": 28.381611340000003,
+      "wavelength_span_pm": 0.05999999984851456,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 56
+    },
+    {
+      "index": 25,
+      "segment": 3,
+      "wavelength_nm": 1540.41622,
+      "power_mw": 1.5095824208973199,
+      "ch1_v": 0.1885986328125,
+      "training_dynamic_ch1_v": 0.167236328125,
+      "training_dynamic_std_v": 0.009747295927686875,
+      "training_abs_error_v": 0.0213623046875,
+      "codes": [
+        58982,
+        57560,
+        17890,
+        1638,
+        19251
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        131.744384765625,
+        5.4595947265625,
+        1.99951171875,
+        23.499755859375
+      ],
+      "smsr_min_db": 25.21218938,
+      "wavelength_span_pm": 0.01999999972213118,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 58
+    },
+    {
+      "index": 26,
+      "segment": 3,
+      "wavelength_nm": 1540.53529,
+      "power_mw": 1.5184077332991186,
+      "ch1_v": 0.1324462890625,
+      "training_dynamic_ch1_v": 0.12420654296875,
+      "training_dynamic_std_v": 0.007565891041105451,
+      "training_abs_error_v": 0.00823974609375,
+      "codes": [
+        58982,
+        52935,
+        18022,
+        24576,
+        819
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        121.15859985351562,
+        5.4998779296875,
+        30.0,
+        0.999755859375
+      ],
+      "smsr_min_db": 24.14918448,
+      "wavelength_span_pm": 0.2399999998488056,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 61
+    },
+    {
+      "index": 27,
+      "segment": 3,
+      "wavelength_nm": 1540.6662000000001,
+      "power_mw": 1.507533590458241,
+      "ch1_v": 0.06103515625,
+      "training_dynamic_ch1_v": 0.0714111328125,
+      "training_dynamic_std_v": 0.007157548646380719,
+      "training_abs_error_v": 0.0103759765625,
+      "codes": [
+        58982,
+        57839,
+        27787,
+        22528,
+        16794
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        132.38296508789062,
+        8.47991943359375,
+        27.5,
+        20.50048828125
+      ],
+      "smsr_min_db": 32.25523856,
+      "wavelength_span_pm": 0.13999999987390765,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 62
+    },
+    {
+      "index": 28,
+      "segment": 4,
+      "wavelength_nm": 1544.158935,
+      "power_mw": 1.5035493676205631,
+      "ch1_v": 0.2001953125,
+      "training_dynamic_ch1_v": 0.18951416015625,
+      "training_dynamic_std_v": 0.00751597552981196,
+      "training_abs_error_v": 0.01068115234375,
+      "codes": [
+        58982,
+        48519,
+        21495,
+        4506,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        111.05117797851562,
+        6.55975341796875,
+        5.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 32.0052119,
+      "wavelength_span_pm": 0.14999999984866008,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 68
+    },
+    {
+      "index": 29,
+      "segment": 4,
+      "wavelength_nm": 1544.284235,
+      "power_mw": 1.5124382305425894,
+      "ch1_v": 0.272216796875,
+      "training_dynamic_ch1_v": 0.2386474609375,
+      "training_dynamic_std_v": 0.010469303654189948,
+      "training_abs_error_v": 0.0335693359375,
+      "codes": [
+        58982,
+        49243,
+        3628,
+        4506,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        112.70828247070312,
+        1.107177734375,
+        5.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 30.588637430000002,
+      "wavelength_span_pm": 0.15000000007603376,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 70
+    },
+    {
+      "index": 30,
+      "segment": 4,
+      "wavelength_nm": 1544.362485,
+      "power_mw": 1.5044923575478215,
+      "ch1_v": 0.2679443359375,
+      "training_dynamic_ch1_v": 0.25970458984375,
+      "training_dynamic_std_v": 0.008599207270015131,
+      "training_abs_error_v": 0.00823974609375,
+      "codes": [
+        58982,
+        52081,
+        32768,
+        4506,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        119.20394897460938,
+        10.0,
+        5.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 29.79426567,
+      "wavelength_span_pm": 0.0900000002275192,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 71
+    },
+    {
+      "index": 31,
+      "segment": 4,
+      "wavelength_nm": 1544.386945,
+      "power_mw": 1.503756893611099,
+      "ch1_v": 0.2655029296875,
+      "training_dynamic_ch1_v": 0.27191162109375,
+      "training_dynamic_std_v": 0.014868752819890994,
+      "training_abs_error_v": 0.00640869140625,
+      "codes": [
+        58982,
+        51928,
+        29687,
+        4506,
+        4096
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        118.853759765625,
+        9.05975341796875,
+        5.50048828125,
+        5.0
+      ],
+      "smsr_min_db": 29.857482689999998,
+      "wavelength_span_pm": 0.07000000005064066,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 73
+    },
+    {
+      "index": 32,
+      "segment": 4,
+      "wavelength_nm": 1544.56855,
+      "power_mw": 1.5146046768069616,
+      "ch1_v": 0.264892578125,
+      "training_dynamic_ch1_v": 0.25115966796875,
+      "training_dynamic_std_v": 0.011733706740080065,
+      "training_abs_error_v": 0.01373291015625,
+      "codes": [
+        58982,
+        47803,
+        1638,
+        3686,
+        3277
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        109.41238403320312,
+        0.4998779296875,
+        4.49951171875,
+        4.000244140625
+      ],
+      "smsr_min_db": 29.598634519999997,
+      "wavelength_span_pm": 0.18000000000029104,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 82
+    },
+    {
+      "index": 33,
+      "segment": 4,
+      "wavelength_nm": 1544.675935,
+      "power_mw": 1.5054834680411733,
+      "ch1_v": 0.181884765625,
+      "training_dynamic_ch1_v": 0.20355224609375,
+      "training_dynamic_std_v": 0.012057662083460928,
+      "training_abs_error_v": 0.02166748046875,
+      "codes": [
+        58982,
+        49700,
+        6488,
+        3686,
+        2867
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        113.7542724609375,
+        1.97998046875,
+        4.49951171875,
+        3.499755859375
+      ],
+      "smsr_min_db": 29.30116261,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 85
+    },
+    {
+      "index": 34,
+      "segment": 4,
+      "wavelength_nm": 1544.7375299999999,
+      "power_mw": 1.50534698143903,
+      "ch1_v": 0.2154541015625,
+      "training_dynamic_ch1_v": 0.16815185546875,
+      "training_dynamic_std_v": 0.014097300783991816,
+      "training_abs_error_v": 0.04730224609375,
+      "codes": [
+        58982,
+        48544,
+        18022,
+        3686,
+        2867
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        111.1083984375,
+        5.4998779296875,
+        4.49951171875,
+        3.499755859375
+      ],
+      "smsr_min_db": 28.258218069999998,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 89
+    },
+    {
+      "index": 35,
+      "segment": 5,
+      "wavelength_nm": 1547.39754,
+      "power_mw": 1.5073211357102365,
+      "ch1_v": 0.111083984375,
+      "training_dynamic_ch1_v": 0.15960693359375,
+      "training_dynamic_std_v": 0.007361168728396508,
+      "training_abs_error_v": 0.04852294921875,
+      "codes": [
+        58982,
+        49936,
+        18249,
+        14336,
+        0
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.29443359375,
+        5.56915283203125,
+        17.5,
+        0.0
+      ],
+      "smsr_min_db": 31.79448682,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 93
+    },
+    {
+      "index": 36,
+      "segment": 5,
+      "wavelength_nm": 1547.62948,
+      "power_mw": 1.4976373456942307,
+      "ch1_v": 0.2423095703125,
+      "training_dynamic_ch1_v": 0.2447509765625,
+      "training_dynamic_std_v": 0.0073056515484193505,
+      "training_abs_error_v": 0.00244140625,
+      "codes": [
+        58982,
+        50202,
+        26809,
+        14336,
+        0
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.90325927734375,
+        8.18145751953125,
+        17.5,
+        0.0
+      ],
+      "smsr_min_db": 31.57523914,
+      "wavelength_span_pm": 0.019999999949504854,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 94
+    },
+    {
+      "index": 37,
+      "segment": 5,
+      "wavelength_nm": 1547.847285,
+      "power_mw": 1.5007007368157903,
+      "ch1_v": 0.3131103515625,
+      "training_dynamic_ch1_v": 0.28656005859375,
+      "training_dynamic_std_v": 0.007154656561350732,
+      "training_abs_error_v": 0.02655029296875,
+      "codes": [
+        45875,
+        55865,
+        8355,
+        11878,
+        12288
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        127.86483764648438,
+        2.54974365234375,
+        14.49951171875,
+        15.0
+      ],
+      "smsr_min_db": 31.39877889,
+      "wavelength_span_pm": 0.010000000202126103,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 95
+    },
+    {
+      "index": 38,
+      "segment": 5,
+      "wavelength_nm": 1547.8958,
+      "power_mw": 1.5034743480677337,
+      "ch1_v": 0.323486328125,
+      "training_dynamic_ch1_v": 0.2960205078125,
+      "training_dynamic_std_v": 0.005279678215542269,
+      "training_abs_error_v": 0.0274658203125,
+      "codes": [
+        58982,
+        54166,
+        11237,
+        11878,
+        12288
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        123.97613525390625,
+        3.42926025390625,
+        14.49951171875,
+        15.0
+      ],
+      "smsr_min_db": 29.90857093,
+      "wavelength_span_pm": 0.14000000010128133,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 96
+    },
+    {
+      "index": 39,
+      "segment": 5,
+      "wavelength_nm": 1548.049315,
+      "power_mw": 1.5081210864812513,
+      "ch1_v": 0.27130126953125,
+      "training_dynamic_ch1_v": 0.28289794921875,
+      "training_dynamic_std_v": 0.010572945002813843,
+      "training_abs_error_v": 0.0115966796875,
+      "codes": [
+        45875,
+        56287,
+        17998,
+        11059,
+        10240
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        128.83071899414062,
+        5.4925537109375,
+        13.499755859375,
+        12.5
+      ],
+      "smsr_min_db": 31.292558860000003,
+      "wavelength_span_pm": 0.030000000151630957,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 97
+    },
+    {
+      "index": 40,
+      "segment": 5,
+      "wavelength_nm": 1548.13043,
+      "power_mw": 1.502770849151775,
+      "ch1_v": 0.2197265625,
+      "training_dynamic_ch1_v": 0.2130126953125,
+      "training_dynamic_std_v": 0.0037062597350685476,
+      "training_abs_error_v": 0.0067138671875,
+      "codes": [
+        45875,
+        53740,
+        3768,
+        11059,
+        9830
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        123.0010986328125,
+        1.14990234375,
+        13.499755859375,
+        11.99951171875
+      ],
+      "smsr_min_db": 29.84252721,
+      "wavelength_span_pm": 0.2500000000509317,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 98
+    },
+    {
+      "index": 41,
+      "segment": 5,
+      "wavelength_nm": 1548.4860899999999,
+      "power_mw": 1.4984283447369924,
+      "ch1_v": 0.0567626953125,
+      "training_dynamic_ch1_v": 0.06866455078125,
+      "training_dynamic_std_v": 0.010215667795106093,
+      "training_abs_error_v": 0.01190185546875,
+      "codes": [
+        45875,
+        55883,
+        20131,
+        9011,
+        9830
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        127.90603637695312,
+        6.14349365234375,
+        10.999755859375,
+        11.99951171875
+      ],
+      "smsr_min_db": 29.25659241,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "stress_shape_power_final_v2.json",
+      "training_pool_index": 99
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1551.3944000000001,
+      "power_mw": 1.4981523913379373,
+      "ch1_v": 0.166168212890625,
+      "training_dynamic_ch1_v": 0.166168212890625,
+      "training_dynamic_std_v": 0.0027098853298328047,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        39322,
+        49196,
+        16745,
+        1638,
+        2048
+      ],
+      "currents_ma": [
+        90.00091552734375,
+        112.6007080078125,
+        5.11016845703125,
+        1.99951171875,
+        2.5
+      ],
+      "smsr_min_db": 29.00218972,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1551.3949,
+      "index": 42
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1551.5238250000002,
+      "power_mw": 1.499967893929865,
+      "ch1_v": 0.242767333984375,
+      "training_dynamic_ch1_v": 0.242767333984375,
+      "training_dynamic_std_v": 0.007942840960703364,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        46277,
+        23524,
+        1228,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        105.91964721679688,
+        7.178955078125,
+        1.4990234375,
+        2.5
+      ],
+      "smsr_min_db": 32.83938347,
+      "wavelength_span_pm": 0.02999999992425728,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1551.5249000000001,
+      "index": 43
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1551.65458,
+      "power_mw": 1.500032590170707,
+      "ch1_v": 0.26031494140625,
+      "training_dynamic_ch1_v": 0.26031494140625,
+      "training_dynamic_std_v": 0.007509122803636531,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        45129,
+        16861,
+        1228,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        103.29208374023438,
+        5.14556884765625,
+        1.4990234375,
+        2.5
+      ],
+      "smsr_min_db": 29.840442609999997,
+      "wavelength_span_pm": 0.01999999972213118,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1551.6549,
+      "index": 44
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1551.78356,
+      "power_mw": 1.5060206073652704,
+      "ch1_v": 0.269775390625,
+      "training_dynamic_ch1_v": 0.269775390625,
+      "training_dynamic_std_v": 0.011288369233383016,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        48066,
+        20419,
+        24576,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        110.01434326171875,
+        6.23138427734375,
+        30.0,
+        2.5
+      ],
+      "smsr_min_db": 30.274970850000003,
+      "wavelength_span_pm": 0.05999999984851456,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1551.7849,
+      "index": 45
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1551.914225,
+      "power_mw": 1.4981661315264991,
+      "ch1_v": 0.265655517578125,
+      "training_dynamic_ch1_v": 0.265655517578125,
+      "training_dynamic_std_v": 0.009231453886989566,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        58982,
+        48557,
+        11623,
+        24576,
+        2048
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        111.13815307617188,
+        3.54705810546875,
+        30.0,
+        2.5
+      ],
+      "smsr_min_db": 28.73616333,
+      "wavelength_span_pm": 0.05000000010113581,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1551.9149000000002,
+      "index": 46
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1552.04539,
+      "power_mw": 1.4917246442566783,
+      "ch1_v": 0.2105712890625,
+      "training_dynamic_ch1_v": 0.2105712890625,
+      "training_dynamic_std_v": 0.006203706478663383,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        45875,
+        55889,
+        27939,
+        819,
+        24166
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        127.91976928710938,
+        8.52630615234375,
+        0.999755859375,
+        29.49951171875
+      ],
+      "smsr_min_db": 31.485949159999997,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1552.0449,
+      "index": 47
+    },
+    {
+      "segment": 6,
+      "wavelength_nm": 1552.175895,
+      "power_mw": 1.498551302250632,
+      "ch1_v": 0.177459716796875,
+      "training_dynamic_ch1_v": 0.177459716796875,
+      "training_dynamic_std_v": 0.012758574223014357,
+      "training_abs_error_v": 0.0,
+      "codes": [
+        45875,
+        57923,
+        6970,
+        410,
+        22938
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        132.57522583007812,
+        2.1270751953125,
+        0.50048828125,
+        28.00048828125
+      ],
+      "smsr_min_db": 33.56089821,
+      "wavelength_span_pm": 0.05000000010113581,
+      "source_pool": "stress_symmetric_segments_3_7_proposal.json",
+      "symmetry_target_nm": 1552.1749000000002,
+      "index": 48
+    },
+    {
+      "index": 49,
+      "segment": 7,
+      "wavelength_nm": 1555.49316,
+      "power_mw": 1.509150393363752,
+      "ch1_v": 0.216064453125,
+      "training_dynamic_ch1_v": 0.2276611328125,
+      "training_dynamic_std_v": 0.007625282026917984,
+      "training_abs_error_v": 0.0115966796875,
+      "codes": [
+        58982,
+        49943,
+        7056,
+        4506,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        114.31045532226562,
+        2.1533203125,
+        5.50048828125,
+        9.000244140625
+      ],
+      "smsr_min_db": 31.01017705,
+      "wavelength_span_pm": 0.06000000007588824,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 131
+    },
+    {
+      "index": 50,
+      "segment": 7,
+      "wavelength_nm": 1555.58897,
+      "power_mw": 1.5080797705172628,
+      "ch1_v": 0.36865234375,
+      "training_dynamic_ch1_v": 0.3076171875,
+      "training_dynamic_std_v": 0.013498830902630857,
+      "training_abs_error_v": 0.06103515625,
+      "codes": [
+        58982,
+        46738,
+        338,
+        4506,
+        7373
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        106.97479248046875,
+        0.1031494140625,
+        5.50048828125,
+        9.000244140625
+      ],
+      "smsr_min_db": 29.694718169999998,
+      "wavelength_span_pm": 0.0,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 134
+    },
+    {
+      "index": 51,
+      "segment": 7,
+      "wavelength_nm": 1555.6610249999999,
+      "power_mw": 1.5259514033033361,
+      "ch1_v": 0.3009033203125,
+      "training_dynamic_ch1_v": 0.34393310546875,
+      "training_dynamic_std_v": 0.009251932008179772,
+      "training_abs_error_v": 0.04302978515625,
+      "codes": [
+        58982,
+        45971,
+        3671,
+        4506,
+        6963
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        105.21926879882812,
+        1.12030029296875,
+        5.50048828125,
+        8.499755859375
+      ],
+      "smsr_min_db": 26.418035340000003,
+      "wavelength_span_pm": 0.009999999974752427,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 137
+    },
+    {
+      "index": 52,
+      "segment": 7,
+      "wavelength_nm": 1555.832175,
+      "power_mw": 1.5077541174523579,
+      "ch1_v": 0.4180908203125,
+      "training_dynamic_ch1_v": 0.40924072265625,
+      "training_dynamic_std_v": 0.015639555793821553,
+      "training_abs_error_v": 0.00885009765625,
+      "codes": [
+        58982,
+        49569,
+        11567,
+        4096,
+        5734
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        113.45443725585938,
+        3.52996826171875,
+        5.0,
+        6.99951171875
+      ],
+      "smsr_min_db": 32.03717976,
+      "wavelength_span_pm": 0.2500000000509317,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 138
+    },
+    {
+      "index": 53,
+      "segment": 7,
+      "wavelength_nm": 1555.942935,
+      "power_mw": 1.5138936587888212,
+      "ch1_v": 0.341796875,
+      "training_dynamic_ch1_v": 0.36224365234375,
+      "training_dynamic_std_v": 0.015052223742522044,
+      "training_abs_error_v": 0.02044677734375,
+      "codes": [
+        58982,
+        46978,
+        7143,
+        4096,
+        5734
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        107.52410888671875,
+        2.17987060546875,
+        5.0,
+        6.99951171875
+      ],
+      "smsr_min_db": 30.684702129999998,
+      "wavelength_span_pm": 0.009999999747378752,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 142
+    },
+    {
+      "index": 54,
+      "segment": 7,
+      "wavelength_nm": 1556.123585,
+      "power_mw": 1.5059284151454095,
+      "ch1_v": 0.30853271484375,
+      "training_dynamic_ch1_v": 0.26641845703125,
+      "training_dynamic_std_v": 0.006432061751113784,
+      "training_abs_error_v": 0.0421142578125,
+      "codes": [
+        58982,
+        48607,
+        6488,
+        2867,
+        5325
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        111.25259399414062,
+        1.97998046875,
+        3.499755859375,
+        6.500244140625
+      ],
+      "smsr_min_db": 31.78831637,
+      "wavelength_span_pm": 0.010000000202126103,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 144
+    },
+    {
+      "index": 55,
+      "segment": 7,
+      "wavelength_nm": 1556.26685,
+      "power_mw": 1.5319610593165054,
+      "ch1_v": 0.15869140625,
+      "training_dynamic_ch1_v": 0.14617919921875,
+      "training_dynamic_std_v": 0.008638864642562721,
+      "training_abs_error_v": 0.01251220703125,
+      "codes": [
+        58982,
+        45070,
+        3867,
+        2867,
+        5325
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        103.15704345703125,
+        1.18011474609375,
+        3.499755859375,
+        6.500244140625
+      ],
+      "smsr_min_db": 29.354787639999998,
+      "wavelength_span_pm": 0.03999999989900971,
+      "source_pool": "uniform_power_candidate_pool.json",
+      "training_pool_index": 149
+    },
+    {
+      "index": 56,
+      "segment": 8,
+      "wavelength_nm": 1559.509375,
+      "power_mw": 1.5073394204828814,
+      "ch1_v": 0.3173828125,
+      "training_dynamic_ch1_v": 0.2642822265625,
+      "training_dynamic_std_v": 0.005914079530333917,
+      "training_abs_error_v": 0.0531005859375,
+      "codes": [
+        45875,
+        48478,
+        18022,
+        11059,
+        819
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        110.95733642578125,
+        5.4998779296875,
+        13.499755859375,
+        0.999755859375
+      ],
+      "smsr_min_db": 24.056667429999997,
+      "wavelength_span_pm": 0.27000000022781023,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 154
+    },
+    {
+      "index": 57,
+      "segment": 8,
+      "wavelength_nm": 1559.653325,
+      "power_mw": 1.5120296271919473,
+      "ch1_v": 0.3875732421875,
+      "training_dynamic_ch1_v": 0.328369140625,
+      "training_dynamic_std_v": 0.019982929937878105,
+      "training_abs_error_v": 0.0592041015625,
+      "codes": [
+        45875,
+        56641,
+        1900,
+        11059,
+        17203
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        129.64096069335938,
+        0.579833984375,
+        13.499755859375,
+        20.999755859375
+      ],
+      "smsr_min_db": 28.89288477,
+      "wavelength_span_pm": 0.10999999994965037,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 155
+    },
+    {
+      "index": 58,
+      "segment": 8,
+      "wavelength_nm": 1559.70053,
+      "power_mw": 1.505903490645745,
+      "ch1_v": 0.34912109375,
+      "training_dynamic_ch1_v": 0.33172607421875,
+      "training_dynamic_std_v": 0.007165495861416826,
+      "training_abs_error_v": 0.01739501953125,
+      "codes": [
+        52429,
+        55575,
+        1900,
+        11059,
+        17203
+      ],
+      "currents_ma": [
+        120.00045776367188,
+        127.20108032226562,
+        0.579833984375,
+        13.499755859375,
+        20.999755859375
+      ],
+      "smsr_min_db": 29.07670084,
+      "wavelength_span_pm": 0.08000000002539309,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 156
+    },
+    {
+      "index": 59,
+      "segment": 8,
+      "wavelength_nm": 1560.004125,
+      "power_mw": 1.5045845464185827,
+      "ch1_v": 0.3466796875,
+      "training_dynamic_ch1_v": 0.3631591796875,
+      "training_dynamic_std_v": 0.010946224154409809,
+      "training_abs_error_v": 0.0164794921875,
+      "codes": [
+        58982,
+        51512,
+        524,
+        9420,
+        16793
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        117.901611328125,
+        0.159912109375,
+        11.4990234375,
+        20.499267578125
+      ],
+      "smsr_min_db": 29.5058984,
+      "wavelength_span_pm": 0.05000000010113581,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 169
+    },
+    {
+      "index": 60,
+      "segment": 8,
+      "wavelength_nm": 1560.143635,
+      "power_mw": 1.522184997184368,
+      "ch1_v": 0.302734375,
+      "training_dynamic_ch1_v": 0.31768798828125,
+      "training_dynamic_std_v": 0.006184308124526762,
+      "training_abs_error_v": 0.01495361328125,
+      "codes": [
+        58982,
+        43361,
+        2064,
+        8192,
+        0
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        99.24545288085938,
+        0.6298828125,
+        10.0,
+        0.0
+      ],
+      "smsr_min_db": 31.667588610000003,
+      "wavelength_span_pm": 0.08999999977277184,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 173
+    },
+    {
+      "index": 61,
+      "segment": 8,
+      "wavelength_nm": 1560.296745,
+      "power_mw": 1.5509154522615103,
+      "ch1_v": 0.2325439453125,
+      "training_dynamic_ch1_v": 0.22918701171875,
+      "training_dynamic_std_v": 0.007932450753142695,
+      "training_abs_error_v": 0.00335693359375,
+      "codes": [
+        58982,
+        43355,
+        18546,
+        7782,
+        0
+      ],
+      "currents_ma": [
+        134.99908447265625,
+        99.23171997070312,
+        5.6597900390625,
+        9.49951171875,
+        0.0
+      ],
+      "smsr_min_db": 33.34403438,
+      "wavelength_span_pm": 0.05000000010113581,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 179
+    },
+    {
+      "index": 62,
+      "segment": 8,
+      "wavelength_nm": 1560.47981,
+      "power_mw": 1.5141734211109186,
+      "ch1_v": 0.0537109375,
+      "training_dynamic_ch1_v": 0.0872802734375,
+      "training_dynamic_std_v": 0.008703307957441177,
+      "training_abs_error_v": 0.0335693359375,
+      "codes": [
+        45875,
+        55550,
+        21299,
+        6963,
+        11878
+      ],
+      "currents_ma": [
+        104.99954223632812,
+        127.14385986328125,
+        6.49993896484375,
+        8.499755859375,
+        14.49951171875
+      ],
+      "smsr_min_db": 30.15725459,
+      "wavelength_span_pm": 0.18000000000029104,
+      "source_pool": "uniform_power_candidate_pool_extra.json",
+      "training_pool_index": 180
+    }
+  ],
+  "symmetric_replacements": {
+    "2": {
+      "proposal": "stress_symmetric_fbg3_wide_proposal.json",
+      "replay": "stress_symmetric_fbg3_wide_replay_validation.json"
+    },
+    "6": {
+      "proposal": "stress_symmetric_segments_3_7_proposal.json",
+      "replay": "stress_symmetric_fbg7_replay_validation.json"
+    }
+  }
+}
