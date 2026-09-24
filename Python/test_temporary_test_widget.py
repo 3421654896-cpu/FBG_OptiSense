@@ -1,6 +1,7 @@
 import os
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 import json
+from pathlib import Path
 import unittest
 from unittest.mock import Mock, patch
 import numpy as np
@@ -58,6 +59,43 @@ class WidgetTests(unittest.TestCase):
                 runtime_machine_label(), runtime_parameter_note()
             )
             self.assertEqual(window.point_count(), 45)
+        finally:
+            window.close()
+            set_runtime_machine_id(previous)
+
+    def test_machine_two_finger_six_is_seeded_for_source_and_installer(self):
+        root = Path(__file__).resolve().parent
+        relative = Path(
+            'outputs/machines/machine_2/temporary_test/'
+            'finger_captures/6号手指.json'
+        )
+        source_path = root / relative
+        installer_path = root / 'client_seed' / relative
+        source_payload = json.loads(source_path.read_text(encoding='utf-8'))
+        installer_payload = json.loads(installer_path.read_text(encoding='utf-8'))
+
+        self.assertEqual(source_payload, installer_payload)
+        self.assertEqual(source_payload['machine_id'], 'machine_2')
+        self.assertEqual(source_payload['finger_label'], '6号手指')
+        self.assertEqual(source_payload['peak_count'], 9)
+        self.assertEqual(source_payload['point_count'], 45)
+        self.assertTrue(source_payload['ready'])
+        self.assertEqual(len(source_payload['plan']['rows']), 45)
+        self.assertEqual(len(source_payload['dense_wavelengths_nm']), 2001)
+        self.assertEqual(len(source_payload['dense_values']), 2001)
+        self.assertEqual(len(source_payload['reference_wavelengths_nm']), 45)
+        self.assertEqual(len(source_payload['reference_values']), 45)
+        self.assertNotIn('C:\\\\Users\\\\', json.dumps(source_payload))
+
+        previous = get_runtime_machine_id()
+        set_runtime_machine_id('machine_2')
+        window = TemporaryTestWindow(None)
+        try:
+            self.assertTrue(window._load_saved_finger_capture(source_path))
+            self.assertEqual(window.point_count(), 45)
+            self.assertEqual(window.finger_record_name, '6号手指')
+            self.assertTrue(window.plan_ready)
+            self.assertTrue(window.start_button.isEnabled())
         finally:
             window.close()
             set_runtime_machine_id(previous)

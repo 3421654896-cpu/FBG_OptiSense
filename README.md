@@ -45,7 +45,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 程序默认选择一号机，可在软件左下角切换机号。切换后会同时切换 2001 点数据、临时模式记录和 OTA 参数，不共用现场采集记录。
 
 - 一号机：`192.168.3.46`，正式 2001 点（2001/2001），带 9 峰/45 点默认记录
-- 二号机：`192.168.3.26`，第一次校准数据（1716/2001，285 点待复测），9 峰/3 峰路线为空，需在二号机实物上采集
+- 二号机：`192.168.3.26`，第一次校准数据（1716/2001，285 点待复测），内置“6号手指”9 峰/45 点记录（含 2001 点密集谱和 45 点参考线）；3 峰/15 点路线仍需在二号机实物上采集
 - 设备注册表：`Python\machine_registry.json`
 - 分机临时模式默认值：`Python\machine_defaults\<machine_id>\temporary_test_defaults.json`
 - OTA 固件：`Python\firmware\JDSU_F205RE_v1.0.87.fbgfw`
@@ -54,7 +54,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 ## 安全与隐私
 
-本包不含 OTA 密码、DPAPI 密文、现场日志或未筛选的历史输出。随包的一号机临时模式记录仅是正式通用版需要的已筛选默认种子。首次在另一台电脑使用 OTA 时，需要按机号重新输入密码。MQTT 用户名和密码应通过环境变量 `FBG_MQTT_USERNAME`、`FBG_MQTT_PASSWORD` 提供。
+本包不含 OTA 密码、DPAPI 密文、现场日志或未筛选的历史输出。随包的一号机临时模式记录和二号机“6号手指”记录是正式通用版需要的已筛选默认种子。首次在另一台电脑使用 OTA 时，需要按机号重新输入密码。MQTT 用户名和密码应通过环境变量 `FBG_MQTT_USERNAME`、`FBG_MQTT_PASSWORD` 提供。
 
 ## 有意排除的内容
 
