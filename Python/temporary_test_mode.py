@@ -108,6 +108,137 @@ def _validate_group_count(groups):
     return len(groups) * POINTS_PER_PEAK
 
 
+AUTO_SELECTION_FRACTIONS = (-0.10, 0.11, 0.48, 0.86, 1.06)
+"""Target five-point positions as fractions of the half-height envelope.
+
+Reverse-engineered from operator manual selections on unit 3: the outer two
+points sit ~10% beyond each half-height crossing so the route covers the full
+rise and fall envelope, the second/fourth points sit near the flanks' quarter
+positions and the middle point lands on the summit.
+"""
+
+
+def auto_select_dense_plan(table, wavelengths, values, *, feedback_selector=2,
+                           source='auto_dense_selection'):
+    """Place five points per detected peak covering rise and fall automatically.
+
+    Detection reuses the dBm log-compression scheme of :func:`select_points`
+    (including the second-highest-score reference that keeps weak gratings
+    alive beside one saturated peak).  For every selected peak the apex and
+    the half-height crossings are measured on the smoothed linear ADC
+    envelope, and the five points are placed at :data:`AUTO_SELECTION_FRACTIONS`
+    of that envelope, snapped to the nearest calibrated 0.02 nm rows.  The
+    result is the manual-selection workflow without 45 clicks.
+    """
+
+    table = tuple(table)
+    x = np.asarray(wavelengths, dtype=float)
+    y = np.asarray(values, dtype=float)
+    if (len(table) != 2001 or x.ndim != 1 or y.shape != x.shape or len(x) < 45
+            or not np.all(np.isfinite(x)) or not np.all(np.isfinite(y))
+            or np.any(np.diff(x) <= 0)):
+        raise ValueError('自动选点需要完整2001点表和有序密集光谱')
+    step = float(np.median(np.diff(x)))
+    smooth_sigma = max(.5, SELECTION_CENTER_SMOOTH_SIGMA_NM / step)
+    center_curve = gaussian_filter1d(y, sigma=smooth_sigma, mode='nearest')
+    from temporary_optical_units import adc_code_to_dbm
+    if type(feedback_selector) is not int or feedback_selector not in range(4):
+        raise ValueError('Invalid analog feedback selector')
+    detection_floor_code = (
+        .5 if float(np.max(y)) >= 50.0
+        else max(float(np.max(y)) * 1e-4, np.finfo(float).tiny)
+    )
+    detection_curve = gaussian_filter1d(
+        np.asarray(adc_code_to_dbm(
+            np.maximum(y, detection_floor_code), feedback_selector
+        ), dtype=float),
+        sigma=smooth_sigma, mode='nearest',
+    )
+    detection_prominence = max(float(np.ptp(detection_curve)) * .08, 1e-9)
+    detected_peaks, properties = find_peaks(
+        detection_curve,
+        prominence=detection_prominence,
+        distance=max(1, round(1.0 / step)),
+    )
+    if not len(detected_peaks):
+        raise ValueError('dBm光强谱未识别到有效峰，无法自动选点')
+    detection_width_samples = peak_widths(
+        detection_curve, detected_peaks, rel_height=.5
+    )[0]
+    detection_width_nm = np.maximum(detection_width_samples * step, step)
+    detection_scores = (
+        np.asarray(properties['prominences'], dtype=float)
+        * np.sqrt(detection_width_nm)
+    )
+    # Second-highest score reference: one clipped (saturated) giant must not
+    # raise the keep threshold and starve the weakest real gratings.
+    if len(detection_scores) >= 2:
+        detection_score_reference = float(np.sort(detection_scores)[-2])
+    else:
+        detection_score_reference = float(np.max(detection_scores))
+    dominant = np.flatnonzero(
+        detection_scores >= detection_score_reference * SELECTION_DBM_SCORE_FRACTION
+    )
+    if not len(dominant):
+        dominant = np.asarray([int(np.argmax(detection_scores))], dtype=int)
+    rank = dominant[np.argsort(detection_scores[dominant])[::-1]]
+    if len(rank) > MAX_PEAKS:
+        if (detection_scores[rank[MAX_PEAKS]]
+                >= SELECTION_DBM_AMBIGUITY_RATIO
+                * detection_scores[rank[MAX_PEAKS - 1]]):
+            raise ValueError('主峰与次峰无法可靠区分，无法自动选点')
+        rank = rank[:MAX_PEAKS]
+    selected_peaks = np.sort(detected_peaks[rank])
+
+    groups = []
+    for detected_peak in selected_peaks:
+        # Apex: centroid of the smoothed-linear samples tied at the local
+        # maximum (within 99.5%) over a +-0.35 nm window.  Averaging the tie
+        # set keeps a noise-flat summit from biasing the route to one side.
+        refinement_radius = max(1, round(.35 / step))
+        left = max(0, int(detected_peak) - refinement_radius)
+        right = min(len(center_curve), int(detected_peak) + refinement_radius + 1)
+        local_maximum = float(np.max(center_curve[left:right]))
+        tie_set = np.flatnonzero(
+            center_curve[left:right] >= 0.995 * local_maximum
+        )
+        apex = int(left + int(np.mean(tie_set)))
+        # Half-height crossings by walking the smoothed linear envelope.
+        walk_left = max(0, apex - 40)
+        walk_right = min(len(center_curve), apex + 41)
+        base = float(np.min(center_curve[walk_left:walk_right]))
+        half_level = base + (center_curve[apex] - base) / 2.0
+        crossing_left = apex
+        while crossing_left > walk_left and center_curve[crossing_left] > half_level:
+            crossing_left -= 1
+        crossing_right = apex
+        while (crossing_right < walk_right - 1
+               and center_curve[crossing_right] > half_level):
+            crossing_right += 1
+        left_nm = float(x[crossing_left])
+        right_nm = float(x[crossing_right])
+        if right_nm - left_nm < 3.0 * step:
+            raise ValueError('自动选点遇到无法测量的峰形（半高宽过窄）')
+        indices = []
+        for fraction in AUTO_SELECTION_FRACTIONS:
+            target_nm = left_nm + fraction * (right_nm - left_nm)
+            indices.append(int(np.argmin(np.abs(x - target_nm))))
+        for position in range(1, 5):
+            if indices[position] <= indices[position - 1]:
+                indices[position] = indices[position - 1] + 1
+        if indices[0] < 0 or indices[-1] >= len(table):
+            raise ValueError('自动选点的五点窗口超出密集光谱范围')
+        groups.append(indices)
+
+    plan = build_manual_dense_plan(
+        table, groups, wavelengths, values,
+        source=source,
+    )
+    plan['manual_selection_method'] = 'auto_envelope_5point_cover'
+    plan['auto_selection_fractions'] = list(AUTO_SELECTION_FRACTIONS)
+    return plan
+
+
 def build_selected_plan(table, groups, reference_values, *, source='validated_live_reference'):
     """Build a fixed route from explicitly validated peak×5 physical indices."""
 

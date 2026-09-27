@@ -1137,6 +1137,7 @@ class MechanicalFinger3DWindow(QtWidgets.QMainWindow):
     press_target_requested = QtCore.pyqtSignal(dict)
     coverage_run_requested = QtCore.pyqtSignal(dict)
     coverage_stop_requested = QtCore.pyqtSignal()
+    stress_sequence_requested = QtCore.pyqtSignal(dict)
     fast_flank_start_requested = QtCore.pyqtSignal()
     fast_flank_stop_requested = QtCore.pyqtSignal()
 
@@ -1442,6 +1443,70 @@ class MechanicalFinger3DWindow(QtWidgets.QMainWindow):
         self.press_speed_spin.valueChanged.connect(self._refresh_coverage_summary)
         self.press_depth_spin.valueChanged.connect(self._refresh_coverage_summary)
         outer.addWidget(coverage_card)
+
+        stress_card = QtWidgets.QFrame()
+        stress_card.setObjectName("controlGroup")
+        stress = FlowLayout(
+            stress_card,
+            margin=10,
+            horizontal_spacing=9,
+            vertical_spacing=8,
+        )
+        stress_title = QtWidgets.QLabel("接触应力序列采集（时序训练数据）")
+        stress_title.setObjectName("sectionCaption")
+        stress.addWidget(stress_title)
+        stress_contract = QtWidgets.QLabel(
+            "单点定位 · 由浅到深5档压入 · 每档完全释放 · 记录全程45点光谱帧"
+        )
+        stress_contract.setObjectName("statusPill")
+        stress_contract.setProperty("statusKind", "info")
+        stress.addWidget(stress_contract)
+
+        self.stress_location_combo = QtWidgets.QComboBox()
+        self.stress_location_combo.addItem("手动点选位置（3D点选后启用）", None)
+        stress.addWidget(compact_field("按压位置：", self.stress_location_combo))
+
+        self.stress_depth_edit = QtWidgets.QLineEdit("0.10, 0.20, 0.35, 0.50, 0.65")
+        self.stress_depth_edit.setToolTip(
+            "逗号分隔的压入深度阶梯（mm），由浅到深；"
+            "每一档都是一次独立受监护按压，帧数据带 stress_depth_mm 标签。"
+        )
+        stress.addWidget(compact_field("深度阶梯：", self.stress_depth_edit))
+
+        self.stress_dwell_spin = QtWidgets.QDoubleSpinBox()
+        self.stress_dwell_spin.setRange(0.3, 5.0)
+        self.stress_dwell_spin.setDecimals(1)
+        self.stress_dwell_spin.setSingleStep(0.1)
+        self.stress_dwell_spin.setSuffix(" s")
+        self.stress_dwell_spin.setValue(0.4)
+        self.stress_dwell_spin.setToolTip("每档接触后的保持时间")
+        stress.addWidget(compact_field("每档保持：", self.stress_dwell_spin))
+
+        self.stress_repeats_spin = QtWidgets.QSpinBox()
+        self.stress_repeats_spin.setRange(1, 10)
+        self.stress_repeats_spin.setValue(3)
+        self.stress_repeats_spin.setSuffix(" 轮")
+        self.stress_repeats_spin.setToolTip("整条深度阶梯的重复轮数；训练建议≥3轮")
+        stress.addWidget(compact_field("阶梯重复：", self.stress_repeats_spin))
+
+        self.stress_sequence_start_button = QtWidgets.QPushButton(
+            "开始应力序列采集"
+        )
+        self.stress_sequence_start_button.setProperty("role", "primary")
+        self.stress_sequence_start_button.setToolTip(
+            "在当前位置执行完整深度阶梯；每次按压全程记录45点原始光谱帧"
+        )
+        self.stress_sequence_start_button.clicked.connect(
+            self._request_stress_sequence
+        )
+        stress.addWidget(self.stress_sequence_start_button)
+        self.stress_sequence_status_label = QtWidgets.QLabel(
+            "待机；先用3D点选把压头定位到目标位置，再启动应力序列"
+        )
+        self.stress_sequence_status_label.setObjectName("softHint")
+        self.stress_sequence_status_label.setWordWrap(True)
+        stress.addWidget(self.stress_sequence_status_label)
+        outer.addWidget(stress_card)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.view = gl.GLViewWidget()
@@ -2343,6 +2408,68 @@ class MechanicalFinger3DWindow(QtWidgets.QMainWindow):
             return
         self.coverage_run_requested.emit(payload)
 
+    def remember_click_press_location(self, request: dict):
+        """Offer the last 3-D-clicked location to the stress-sequence card."""
+
+        label = (
+            f"3D点选 ({float(request['model_x']):+.2f}, "
+            f"{float(request['model_y']):+.2f}) · "
+            f"X {float(request['work_x']):+.3f} Y {float(request['work_y']):+.3f}"
+        )
+        combo = self.stress_location_combo
+        combo.blockSignals(True)
+        while combo.count() > 1:
+            combo.removeItem(combo.count() - 1)
+        combo.addItem(label, dict(request))
+        combo.setCurrentIndex(combo.count() - 1)
+        combo.blockSignals(False)
+        self.stress_sequence_status_label.setText(
+            "已记住3D点选位置；配置深度阶梯后可开始应力序列采集"
+        )
+
+    def _request_stress_sequence(self):
+        from contact_stress_sequence import stress_sequence_request_payload
+
+        location = self.stress_location_combo.currentData()
+        if not location:
+            self.stress_sequence_status_label.setText(
+                "尚未选择按压位置：请先解锁并用3D点选执行一次定位"
+            )
+            return
+        raw_steps = [
+            part.strip() for part in self.stress_depth_edit.text().split(",")
+        ]
+        try:
+            depth_steps = [float(part) for part in raw_steps if part]
+        except ValueError:
+            self.stress_sequence_status_label.setText(
+                "深度阶梯格式无效：请输入逗号分隔的数字，如 0.10, 0.20, 0.35"
+            )
+            return
+        depth_steps = sorted(depth_steps)
+        calibration_offset = self._calibrated_machine_work_offset()
+        point = dict(location)
+        if calibration_offset is not None:
+            point["target_machine_x"] = (
+                float(point["work_x"]) + calibration_offset[0]
+            )
+            point["target_machine_y"] = (
+                float(point["work_y"]) + calibration_offset[1]
+            )
+            point["contact_machine_z"] = (
+                float(point["contact_z"]) + calibration_offset[2]
+            )
+        payload = stress_sequence_request_payload(
+            [point],
+            depth_steps_mm=depth_steps,
+            dwell_seconds=float(self.stress_dwell_spin.value()),
+            repeats=int(self.stress_repeats_spin.value()),
+            xy_feed_mm_min=float(self.xy_speed_spin.value()),
+            press_feed_mm_min=float(self.press_speed_spin.value()),
+            calibration_machine_minus_work=calibration_offset,
+        )
+        self.stress_sequence_requested.emit(payload)
+
     def _request_coverage_motion_test(self):
         payload = self._coverage_request_payload(
             repeats=1,
@@ -2362,6 +2489,11 @@ class MechanicalFinger3DWindow(QtWidgets.QMainWindow):
             self.coverage_dwell_spin,
             self.coverage_preview_button,
             self.click_press_arm,
+            self.stress_sequence_start_button,
+            self.stress_depth_edit,
+            self.stress_dwell_spin,
+            self.stress_repeats_spin,
+            self.stress_location_combo,
         ):
             widget.setEnabled(controls_enabled)
         self.coverage_start_button.setEnabled(

@@ -147,6 +147,58 @@ class WidgetTests(unittest.TestCase):
         self.assertFalse(window.plot.getViewBox().autoRangeEnabled()[1])
         window.close()
 
+    def test_fit_current_curve_updates_both_x_and_y_ranges(self):
+        window = TemporaryTestWindow(None)
+        try:
+            window._set_display_mode('adc')
+            for curve in window.plot.listDataItems():
+                curve.clear()
+            window.dense_wavelengths = np.asarray([1540.0, 1541.0, 1543.0])
+            window.dense_values = np.asarray([100.0, 240.0, 400.0])
+            window.dense_feedback_selector = 2
+            window.dense_curve.setData(
+                window.dense_wavelengths,
+                window.dense_values,
+            )
+            window.latest_values = [100.0, 240.0, 400.0]
+            window.plot.setXRange(0.0, 1.0, padding=0)
+            window.plot.setYRange(0.0, 1.0, padding=0)
+
+            window.fit_values()
+
+            x_range, y_range = window.plot.getViewBox().viewRange()
+            self.assertLess(x_range[0], 1540.0)
+            self.assertGreater(x_range[1], 1543.0)
+            self.assertLess(x_range[1] - x_range[0], 4.0)
+            self.assertLessEqual(y_range[0], 0.0)
+            self.assertGreaterEqual(y_range[1], 400.0)
+            self.assertFalse(window.plot.getViewBox().autoRangeEnabled()[0])
+            self.assertFalse(window.plot.getViewBox().autoRangeEnabled()[1])
+        finally:
+            window.close()
+
+    def test_plot_reserves_axis_space_and_expands_with_page(self):
+        window = TemporaryTestWindow(None)
+        try:
+            policy = window.plot.sizePolicy()
+            self.assertEqual(policy.horizontalPolicy(), QtWidgets.QSizePolicy.Expanding)
+            self.assertEqual(policy.verticalPolicy(), QtWidgets.QSizePolicy.Expanding)
+            self.assertEqual(
+                window.main_layout.sizeConstraint(),
+                QtWidgets.QLayout.SetNoConstraint,
+            )
+            self.assertGreaterEqual(window.plot.getAxis('left').minimumWidth(), 90)
+            self.assertGreaterEqual(window.plot.getAxis('bottom').minimumHeight(), 60)
+            self.assertFalse(window.plot.getAxis('left').autoSIPrefix)
+            self.assertFalse(window.plot.getAxis('bottom').autoSIPrefix)
+            self.assertTrue(window.plot.getAxis('bottom').labelText)
+            self.assertTrue(window.plot.getAxis('left').labelText)
+            self.assertEqual(window.fit_button.text(), '适合当前曲线（横纵轴）')
+            self.assertIn('横轴', window.fit_button.toolTip())
+            self.assertIn('纵轴', window.fit_button.toolTip())
+        finally:
+            window.close()
+
     def test_display_button_switches_adc_voltage_and_estimated_dbm(self):
         window = TemporaryTestWindow(None)
         self.assertEqual(window.display_mode, 'dbm')
@@ -463,6 +515,20 @@ class WidgetTests(unittest.TestCase):
         self.assertLess(lower, float(np.min(expected)))
         self.assertGreater(upper, float(np.max(expected)))
         self.assertEqual(window.selection_markers, [])
+        window.close()
+
+    def test_auto_selection_button_reenables_when_dense_worker_finishes(self):
+        window = TemporaryTestWindow(None)
+        _, x, y = reference()
+        window.dense_wavelengths = x
+        window.dense_values = y
+        worker = Mock()
+        window.worker = worker
+        window.begin_manual_selection()
+        self.assertFalse(window.auto_select_button.isEnabled())
+        window.finished()
+        worker.deleteLater.assert_called_once_with()
+        self.assertTrue(window.auto_select_button.isEnabled())
         window.close()
 
     def test_early_stopped_dense_scan_keeps_curve_for_manual_selection(self):

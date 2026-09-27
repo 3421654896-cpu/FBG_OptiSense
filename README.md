@@ -61,7 +61,6 @@ Set-ExecutionPolicy -Scope Process Bypass
 - `.venv`、第三方库二进制副本、PyInstaller 构建缓存、EXE/安装包、测试缓存和历史备份
 - 现场 `outputs` 日志和未筛选的实验数据
 - 约 330 MiB 的 `fullband_equal_power_surrogate.joblib`（校准训练产物，可由校准工具重新生成，主程序运行不依赖）
-- STM32/BW20 完整固件工程和编译工具链
 
 桌面程序可以使用本包内现成的 OTA 固件进行 OTA 调试；若要修改并重新编译板卡固件、重建模式表固件，需要完整的原始固件仓库和对应工具链。
 

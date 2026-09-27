@@ -19,6 +19,7 @@ from machine_profile import (
 )
 from temporary_test_mode import (
     assess_five_point_shape,
+    auto_select_dense_plan,
     build_manual_dense_plan,
     build_selected_plan,
     command,
@@ -448,6 +449,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.worker = None
         self.plan = None
         self.plan_ready = False
+        # Downstream pages (e.g. the 25-point stress grid) register callables
+        # here to receive every decoded temporary-mode frame as it arrives.
+        self.frame_listeners = []
         self.demo = False
         self.frame_times = []
         self.latest_values = None
@@ -503,6 +507,11 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.runtime_parameter_note = runtime_parameter_note()
         self._set_machine_storage_paths(get_runtime_machine_id())
         layout = QtWidgets.QVBoxLayout(self)
+        # Do not let the many control rows impose a desktop-sized minimum width
+        # on the whole page.  The host can now shrink/grow the page with the
+        # window, and the plot receives the actual remaining viewport width.
+        layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+        self.main_layout = layout
         self.title_label = QtWidgets.QLabel(
             f"临时测试模式 · {self.runtime_machine_label} · CH1 · 9峰×5点 · 仅扫描选定的45点"
         )
@@ -693,8 +702,12 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         point_settings.addWidget(self.edit_point_waits)
         point_settings.addWidget(self.test_switch_timing)
         layout.addLayout(point_settings)
-        self.fit_button = QtWidgets.QPushButton('适合当前幅值（只调整显示范围）')
-        self.fit_button.setToolTip('每次开始扫描在预热后适配一次，随后锁定纵轴；按压时不自动缩放，保留真实高度变化。')
+        self.fit_button = QtWidgets.QPushButton('适合当前曲线（横纵轴）')
+        self.fit_button.setToolTip(
+            '同时按当前可见曲线的波长范围调整横轴、按当前幅值调整纵轴。'
+            '每次开始扫描在预热后适配一次，随后锁定坐标轴；按压时不自动缩放，'
+            '保留真实波长位置和高度变化。'
+        )
         self.fit_button.clicked.connect(self.fit_values)
         fit_controls = QtWidgets.QHBoxLayout()
         fit_controls.addWidget(self.fit_button)
@@ -726,11 +739,19 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.manual_selection_label = QtWidgets.QLabel('手动选点 0/45')
         self.manual_undo_button = QtWidgets.QPushButton('撤销上一个点')
         self.manual_clear_button = QtWidgets.QPushButton('清空手动点')
+        self.auto_select_button = QtWidgets.QPushButton('自动选点（覆盖峰包络）')
+        self.auto_select_button.setToolTip(
+            '在当前密集光谱上自动识别各峰，把每峰5点铺在峰的上升沿、峰顶与下降沿，\n'
+            '首末两点略超出半高宽以覆盖整个包络。生成后仍可撤销单点再手动微调。'
+        )
+        self.auto_select_button.setEnabled(False)
+        self.auto_select_button.clicked.connect(self.auto_select_points)
         self.manual_undo_button.setEnabled(False)
         self.manual_clear_button.setEnabled(False)
         self.manual_undo_button.clicked.connect(self.undo_manual_selection)
         self.manual_clear_button.clicked.connect(self.clear_manual_selection)
         fit_controls.addWidget(self.manual_selection_label)
+        fit_controls.addWidget(self.auto_select_button)
         fit_controls.addWidget(self.manual_undo_button)
         fit_controls.addWidget(self.manual_clear_button)
         layout.addLayout(fit_controls)
@@ -740,28 +761,66 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.finger_record_label = QtWidgets.QLabel('当前手指记录：未命名（未载入保存记录）')
         self.finger_record_label.setStyleSheet('color: #2563eb;')
         layout.addWidget(self.finger_record_label)
-        self.show_peak_fits = QtWidgets.QCheckBox('实时峰形拟合与中心波长（高斯＋基线，五点估计）')
+        self.show_peak_fits = QtWidgets.QCheckBox(
+            '实时峰形拟合与中心波长（Makima三次样条，五点估计）'
+        )
         self.show_peak_fits.setChecked(True)
         self.show_peak_fits.setToolTip(
-            '使用原始CH1 ADC和旧标定波长坐标；所有有限五点排布都会尝试拟合。'
-            '不满足先升后降、R²偏低或中心/峰宽约束不足时仍显示结果，并用⚠标记。'
-            '不修改采样点、不补偿原始幅值；显示位数不代表精度。'
+            '使用原始CH1 ADC和旧标定波长坐标；仅使用当前峰的5个实测点。'
+            'Makima分段三次样条穿过五点并允许左右峰形不对称，不再用高斯尾部平台。'
+            '不满足先升后降、中心/半高宽或样条单峰约束时仍显示结果，并用⚠标记；'
+            '显示位数不代表光学精度。'
         )
         layout.addWidget(self.show_peak_fits)
         self.peak_fit_status = QtWidgets.QLabel('等待实时帧；拟合波长不是波长计实测值。')
         layout.addWidget(self.peak_fit_status)
         self.peak_fit_table = QtWidgets.QTableWidget(3, 9)
         self.peak_fit_table.setHorizontalHeaderLabels([f'峰{i+1}' for i in range(9)])
-        self.peak_fit_table.setVerticalHeaderLabels(['中心 nm（估计）', 'R²', '状态'])
+        self.peak_fit_table.setVerticalHeaderLabels(
+            ['中心 nm（估计）', '拟合方法', '状态']
+        )
         self.peak_fit_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.peak_fit_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.peak_fit_table.setMaximumHeight(124)
         self.peak_fits = []
         self.plot = pg.PlotWidget()
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.plot.setMinimumHeight(220)
+        # The graph must remain usable inside the original application's much
+        # shorter central viewport on low-resolution displays.
+        self.plot.setMinimumHeight(170)
+        self.plot.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Expanding,
+        )
         self.plot.setLabel('bottom', '标定实测波长', units='nm')
         self.plot.setLabel('left', 'CH1 ADC × 数字显示倍数', units='code')
+        # Keep the full tick values and both axis labels visible when the page
+        # is resized.  PlotWidget expands with the available screen area while
+        # the reserved axis bands prevent labels from being clipped.
+        plot_item = self.plot.getPlotItem()
+        plot_item.layout.setContentsMargins(10, 8, 16, 10)
+        left_axis = self.plot.getAxis('left')
+        bottom_axis = self.plot.getAxis('bottom')
+        # Wavelength values must remain literal nanometres (for example
+        # 1548.20), not pyqtgraph's abbreviated 1.548 knm representation.
+        left_axis.enableAutoSIPrefix(False)
+        bottom_axis.enableAutoSIPrefix(False)
+        axis_font = QtGui.QFont('Microsoft YaHei UI', 9)
+        left_axis.setStyle(
+            tickFont=axis_font,
+            tickTextOffset=8,
+            autoExpandTextSpace=True,
+            autoReduceTextSpace=False,
+        )
+        bottom_axis.setStyle(
+            tickFont=axis_font,
+            tickTextOffset=8,
+            autoExpandTextSpace=True,
+            autoReduceTextSpace=False,
+        )
+        left_axis.setWidth(92)
+        bottom_axis.setHeight(62)
+        self.plot.getViewBox().setDefaultPadding(0.035)
         self.plot.setYRange(0, 4095, padding=0)
         self.plot.enableAutoRange(axis='y', enable=False)
         self.curves = [self.plot.plot(pen=pg.intColor(i, 9), symbol='o', symbolSize=6) for i in range(9)]
@@ -801,7 +860,6 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.fit_labels.append(label)
         self.show_peak_fits.toggled.connect(self.redraw_peak_fits)
         self.plot.scene().sigMouseClicked.connect(self.handle_dense_plot_click)
-        layout.addWidget(self.plot, 1)
         self.table = QtWidgets.QTableWidget(45, 6)
         self.table.setHorizontalHeaderLabels(['峰', '物理索引', '目标nm', '实测标定nm', 'CH1 ADC', '慢速参考ADC'])
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -809,8 +867,16 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.data_tabs = QtWidgets.QTabWidget()
         self.data_tabs.addTab(self.peak_fit_table, '9峰波长与拟合质量')
         self.data_tabs.addTab(self.table, '45点原始ADC')
-        self.data_tabs.setFixedHeight(140)
-        layout.addWidget(self.data_tabs)
+        self.data_tabs.setMinimumHeight(72)
+        self.data_tabs.setMaximumHeight(150)
+        self.plot_data_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.plot_data_splitter.setChildrenCollapsible(False)
+        self.plot_data_splitter.addWidget(self.plot)
+        self.plot_data_splitter.addWidget(self.data_tabs)
+        self.plot_data_splitter.setStretchFactor(0, 5)
+        self.plot_data_splitter.setStretchFactor(1, 1)
+        self.plot_data_splitter.setSizes([420, 110])
+        layout.addWidget(self.plot_data_splitter, 1)
         self.save_finger_button.clicked.connect(self.save_finger_capture)
         self.load_finger_button.clicked.connect(self.load_finger_capture)
         self.start_button.clicked.connect(self.start_scan)
@@ -873,9 +939,10 @@ class TemporaryTestWindow(QtWidgets.QWidget):
              f'{name}硬件跨阻固定为2 kΩ，不使用CH0/CH1可选模拟档位。')
         )
         self.show_peak_fits.setToolTip(
-            f'使用原始{name} ADC和旧标定波长坐标；所有有限五点排布都会尝试拟合。'
-            '不满足先升后降、R²偏低或中心/峰宽约束不足时仍显示结果，并用⚠标记。'
-            '不修改采样点、不补偿原始幅值；显示位数不代表精度。'
+            f'使用原始{name} ADC和旧标定波长坐标；每个峰仅使用5个实测点。'
+            'Makima分段三次样条穿过五点并允许左右不对称，不再使用高斯尾部平台。'
+            '不满足先升后降、中心/半高宽或样条单峰约束时仍显示结果并用⚠标记；'
+            '显示位数不代表精度。'
         )
         if self.plan is not None:
             self._sync_dynamic_ui()
@@ -2424,6 +2491,9 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.start_button.setEnabled(False)
         self.reference_line_button.setEnabled(False)
         self.save_finger_button.setEnabled(True)
+        self.auto_select_button.setEnabled(
+            self.dense_wavelengths is not None and self.worker is None
+        )
         self.show_dense_selection.setChecked(True)
         self._clear_selection_markers()
         self._sync_manual_selection_controls()
@@ -2434,6 +2504,61 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             margin = max(.04, (right - left) * .02)
             self.plot.setXRange(left - margin, right + margin, padding=0)
             self.fit_values()
+
+    def auto_select_points(self):
+        """Automatically place 5 points per detected peak over its envelope.
+
+        Keeps the manual-click workflow fully available: the generated route
+        is a normal plan and the operator can regenerate it manually at any
+        time, or start a fresh manual pass afterwards.
+        """
+
+        import app_JDSU as app
+        if self.worker is not None:
+            self.status.setText('采集进行中，停止后才能自动选点。')
+            return False
+        if self.dense_wavelengths is None or self.dense_values is None:
+            self.status.setText('请先采集或导入一条密集光谱，再自动选点。')
+            return False
+        try:
+            plan = auto_select_dense_plan(
+                app.load_fullband_accuracy_table(),
+                self.dense_wavelengths, self.dense_values,
+                feedback_selector=int(self.effective_feedback_selector()),
+                source=self.dense_source or 'auto dense-spectrum selection',
+            )
+        except Exception as exc:
+            self.status.setText(f'自动选点失败：{exc}；可继续手动点击45点。')
+            return False
+        plan['signal_channel'] = self.selected_channel()
+        plan['signal_channel_name'] = self.channel_name()
+        plan['dense_acquisition_method'] = self.dense_acquisition_method
+        plan['dense_point_count'] = int(len(self.dense_wavelengths))
+        plan['dense_failed_points'] = list(self.dense_failed_points)
+        plan['dense_scan_range_nm'] = list(self.dense_scan_range_nm)
+        self.plan = plan
+        self.finger_record_name = None
+        self.finger_record_label.setText(
+            '当前手指记录：未命名（自动选点，尚未保存）'
+        )
+        self.point_waits = None
+        self.point_wait_route = None
+        self.use_point_waits.setChecked(False)
+        self.manual_selection_active = False
+        self.manual_selection_indices = []
+        self.manual_selection_history = []
+        self._sync_manual_selection_controls()
+        self.auto_select_button.setEnabled(False)
+        self.render_plan(ready=False)
+        peak_count = self.peak_count()
+        self.status.setText(
+            f'自动选点完成：识别{peak_count}峰，每峰5点覆盖上升沿-峰顶-下降沿；'
+            '请点击“采集并绘制参考线（当前'
+            f'{self.point_count()}点）”验证稀疏路径，或切换手动选点重新放置。'
+        )
+        self.save_finger_button.setEnabled(True)
+        self._save_last_route_session(ready=False)
+        return True
 
     def add_manual_selection_at(self, wavelength_nm):
         """Snap one spectrum click to the calibrated 0.02-nm route table."""
@@ -3082,6 +3207,7 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 float(self.dense_wavelengths[-1]),
             )
             self.begin_manual_selection()
+            self.auto_select_button.setEnabled(self.worker is None)
             total = self.dense_expected_points
             completion = (
                 f'完成{len(rows)}/{total}点' if report.get('complete')
@@ -3099,8 +3225,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             self.status.setText(
                 f'{self.channel_name(signal_channel)}密集光谱·{method}{completion}{quality}；'
                 f'扫描范围{self.dense_scan_range_nm[0]:.3f}～'
-                f'{self.dense_scan_range_nm[1]:.3f} nm。现在请直接在谱线上点击45个点；'
-                '不再自动识别9峰，也不会自动放置点。'
+                f'{self.dense_scan_range_nm[1]:.3f} nm。点击“自动选点”一键铺满各峰包络，'
+                '或直接在谱线上手动点击45个点。'
             )
         except Exception as exc:
             self.redraw_dense_selection()
@@ -3674,6 +3800,41 @@ class TemporaryTestWindow(QtWidgets.QWidget):
             label.show()
 
     def fit_values(self, _checked=False):
+        # Fit X to the data that the operator can currently inspect.  A
+        # selected single-peak view stays on that peak; the all-peaks view uses
+        # every non-empty visible PlotDataItem (live, reference, dense and fit).
+        x_values = []
+        peak_index = self.peak_view.currentIndex()
+        if self.plan is not None and peak_index > 0:
+            rows = self.plan['rows'][(peak_index - 1) * 5:peak_index * 5]
+            x_values.extend(float(row['measured_nm']) for row in rows)
+            for curve in (
+                self.curves[peak_index - 1],
+                self.reference_curves[peak_index - 1],
+                self.fitted_curves[peak_index - 1],
+            ):
+                x_data, _y_data = curve.getData()
+                if x_data is not None:
+                    x_values.extend(float(value) for value in x_data if np.isfinite(value))
+        else:
+            for curve in self.plot.listDataItems():
+                if not curve.isVisible():
+                    continue
+                x_data, y_data = curve.getData()
+                if x_data is None or y_data is None:
+                    continue
+                for x_value, y_value in zip(x_data, y_data):
+                    if np.isfinite(x_value) and np.isfinite(y_value):
+                        x_values.append(float(x_value))
+        if not x_values and self.plan is not None:
+            x_values = [float(row['measured_nm']) for row in self.plan['rows']]
+        if x_values:
+            left, right = min(x_values), max(x_values)
+            span = right - left
+            margin = max(0.04, span * 0.045) if span > 0 else 0.08
+            self.plot.setXRange(left - margin, right + margin, padding=0)
+            self.plot.enableAutoRange(axis='x', enable=False)
+
         values = self._plot_display_values(
             self.latest_values or [], selector=self.latest_feedback_selector
         ).tolist()
@@ -3726,6 +3887,11 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.latest_feedback_selector = int(frame.get(
             'feedback_selector', self.effective_feedback_selector(self.latest_channel)
         ))
+        for listener in tuple(self.frame_listeners):
+            try:
+                listener(frame)
+            except Exception:
+                pass
         from temporary_peak_fit import fit_temporary_frame
         if self.plan is None:
             self.clear_peak_fits('点表无效')
@@ -3748,12 +3914,12 @@ class TemporaryTestWindow(QtWidgets.QWidget):
                 f"{result['center_nm']:.4f}" + (' ⚠' if warning else '')
                 if available else '—'
             )
-            r_squared = result.get('r_squared')
-            r2_text = (
-                f'{float(r_squared):.3f}'
-                if r_squared is not None and np.isfinite(r_squared) else '—'
+            method_text = (
+                'Makima三次样条'
+                if result.get('fit_method') == 'makima_piecewise_cubic_5point'
+                else str(result.get('fit_method') or '—')
             )
-            texts = (center_text, r2_text, result['reason'])
+            texts = (center_text, method_text, result['reason'])
             for row, text in enumerate(texts):
                 item = QtWidgets.QTableWidgetItem(text)
                 item.setToolTip(result['reason'])
@@ -3769,7 +3935,8 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.peak_fit_status.setText(
             f"第{frame['sequence']+1}帧：{available_count}/{self.peak_count()}峰已给出拟合，"
             f"质量通过{valid_count}峰、⚠可能有问题{warning_count}峰；"
-            '点线为高斯拟合，圆点/实线仍是原始值；波长精度未验证。'
+            '点线为Makima三次样条（仅使用当前5个实测点），圆点/实线仍是原始值；'
+            '中心波长为样条内部极大值，光学精度未验证。'
         )
         self.redraw_values()
         if self.fit_pending and frame['sequence'] >= 16:
@@ -3828,6 +3995,16 @@ class TemporaryTestWindow(QtWidgets.QWidget):
         self.cycles.setEnabled(not self.continuous.isChecked())
         self.stop_button.setEnabled(False)
         self.stop_dense_button.setEnabled(False)
+        # ``reference_ready`` runs before QThread.finished, so the automatic
+        # selection button is still disabled there while ``self.worker`` is
+        # non-null. Re-enable it now that the dense acquisition has actually
+        # released the worker; otherwise the feature appears to do nothing.
+        self.auto_select_button.setEnabled(bool(
+            self.manual_selection_active
+            and self._valid_dense_spectrum(
+                self.dense_wavelengths, self.dense_values
+            )
+        ))
         self._sync_manual_selection_controls()
         self.redraw_dense_selection()
         self._redraw_reference_failures()

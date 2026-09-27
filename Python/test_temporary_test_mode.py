@@ -136,6 +136,27 @@ class TemporaryTests(unittest.TestCase):
             self.assertGreaterEqual(rows[0]['measured_nm'], check['fwhm_left_nm'])
             self.assertLessEqual(rows[-1]['measured_nm'], check['fwhm_right_nm'])
 
+    def test_auto_selection_uses_top_nine_5db_peaks_and_fixed_1nm_envelopes(self):
+        table, x, _ = reference()
+        y = np.ones_like(x)
+        true_centers = np.linspace(1528.5, 1551.0, 9)
+        for center in true_centers:
+            y += 1000.0 * np.exp(-.5 * ((x - center) / .30) ** 2)
+        y += 700.0 * np.exp(-.5 * ((x - 1526.0) / .22) ** 2)
+        plan = t.auto_select_dense_plan(table, x, y, source='ten-candidate-test')
+        self.assertEqual(plan['peak_count'], 9)
+        self.assertEqual(plan['selection_prominence_db'], 5.0)
+        self.assertEqual(plan['selection_envelope_width_nm'], 1.0)
+        self.assertTrue(all(center > 1527.0 for center in plan['peaks_nm']))
+        for group in range(9):
+            rows = plan['rows'][group * 5:group * 5 + 5]
+            wavelengths = [row['measured_nm'] for row in rows]
+            self.assertAlmostEqual(wavelengths[-1] - wavelengths[0], 1.0, delta=.04)
+            self.assertTrue(all(
+                abs(spacing - .25) <= .03
+                for spacing in np.diff(wavelengths)
+            ))
+
     def test_continuous_bounded_memory_clock_wrap_and_manual_stop(self):
         table, x, y = reference()
         plan = t.select_points(table, x, y)

@@ -38,6 +38,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import app_JDSU as local_app
 from app_version import APP_VERSION
 from displacement_pressure_reference import from_machine as displacement_reference
+from contact_stress_sequence import build_depth_targets as build_stress_depth_targets
 from fbg_lan_serial import FbgLanSerial
 from fbg_mqtt_transport import load_remote_config, validate_device_id
 from fbg_network_transport import (
@@ -78,11 +79,12 @@ from machine_profile import (
     set_runtime_machine_id,
 )
 from mechanical_finger_3d import (
-    MAX_PRESS_DEPTH_MM,
     MODEL_X_HALF_SPAN_MM,
     MODEL_Y_HALF_SPAN_MM,
-    MechanicalFinger3DWindow,
+    MAX_PRESS_DEPTH_MM,
 )
+from legacy_finger_stub import LegacyFingerControllerStub as MechanicalFinger3DWindow
+from manual_stress_capture import ManualStressCaptureWindow
 from mode_table_manager import activate_pending_runtime_tables
 from ota_machine_profiles import (
     MACHINE_LABELS,
@@ -115,6 +117,10 @@ COVERAGE_CAPTURE_POLL_MS = 10
 COVERAGE_CONTACT_PHASE_MS = 70
 COVERAGE_POST_RELEASE_MS = 260
 COVERAGE_WRITER_QUEUE_CAPACITY = 512
+
+# Between two stress depths the tool must fully release and let the silicone
+# relax before the next depth presses the same XY point again.
+STRESS_SEQUENCE_INTER_DEPTH_MS = 700
 
 
 _LEGACY_UNIFIED_STYLE = """
@@ -267,8 +273,8 @@ PAGE_INFO = (
         "spectrum",
     ),
     (
-        "机械手指 3D 应力",
-        "把当前光谱峰位映射为机械手指表面的空间应力",
+        "手动触觉数据采集",
+        "在3D手指模型上人工标注按压位置，并记录按下/释放全过程45点时序",
         "finger",
     ),
     (
@@ -760,6 +766,8 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._coverage_records = 0
         self._coverage_dataset_path: Path | None = None
         self._coverage_motion_test = False
+        self._coverage_is_stress_sequence = False
+        self._coverage_stress_depth_text = ""
         self._coverage_writer: FingerSessionWriter | None = None
         self._coverage_native_recorder = None
         self._coverage_native_stats = None
@@ -832,9 +840,37 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.remote_controller.network_panel.hide()
         self.remote_page = self.remote_controller.takeCentralWidget()
 
-        self.finger_controller = MechanicalFinger3DWindow()
-        self.finger_page = self.finger_controller.takeCentralWidget()
-        self._connect_shared_finger_view()
+        # The old 3-D/Mach3 finger model is retired: the visible workspace is
+        # the fixed 25-point manual grid.  A lightweight stub keeps the legacy
+        # stress/remote/fast-flank call sites functional without OpenGL.
+        self.finger_controller = MechanicalFinger3DWindow(self)
+        self.manual_capture_controller = ManualStressCaptureWindow(
+            self.local_controller.page_temporary_test,
+            wavelength_provider=lambda: (
+                [
+                    float(row["measured_nm"])
+                    for row in (
+                        getattr(
+                            self.local_controller.page_temporary_test,
+                            "plan",
+                            None,
+                        )
+                        or {}
+                    ).get("rows", [])
+                ]
+                or list(
+                    getattr(
+                        self.local_controller.page_temporary_test,
+                        "reference_wavelengths",
+                        None,
+                    )
+                    or ()
+                )
+            ),
+            output_root=output_path("manual_touch_sequences"),
+        )
+        self.manual_capture_controller.attach()
+        self.finger_page = self.manual_capture_controller.takeCentralWidget()
         self.mach3_position_timer = QtCore.QTimer(self)
         self.mach3_position_timer.setInterval(100)
         self.mach3_position_timer.timeout.connect(self.mach3_emergency.query_status)
@@ -875,30 +911,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         )
 
     def _connect_shared_finger_view(self):
-        stress_page = self.local_controller.page_peak
-        stress_page.finger_3d_window = self.finger_controller
-        stress_page.finger_3d_open_handler = self.open_finger_tab
-        self.remote_controller.finger_3d_window = self.finger_controller
-        self.remote_controller.finger_3d_open_handler = self.open_finger_tab
-        self.finger_controller.press_target_requested.connect(
-            self._finger_press_requested
-        )
-        self.finger_controller.coverage_run_requested.connect(
-            self._finger_coverage_requested
-        )
-        self.finger_controller.coverage_stop_requested.connect(
-            self._finger_coverage_stop_requested
-        )
-        self.finger_controller.fast_flank_start_requested.connect(
-            self._start_fast_flank_stream
-        )
-        self.finger_controller.fast_flank_stop_requested.connect(
-            self._stop_fast_flank_stream
-        )
-        self.mach3_emergency.contact_reached.connect(self._finger_contact_reached)
-        self.mach3_emergency.release_started.connect(self._finger_release_started)
-        self.mach3_emergency.release_reached.connect(self._finger_release_reached)
-        self.mach3_emergency.press_finished.connect(self._finger_press_finished)
+        # Retired with the 3-D window: stress/remote/fast-flank code paths call
+        # into the LegacyFingerControllerStub, which accepts their updates.
+        pass
 
     @QtCore.pyqtSlot()
     def _start_fast_flank_stream(self):
@@ -1066,6 +1081,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.finger_controller.click_press_status_label.setText(
             "3D点选按压：正在安全抬升并定位…"
         )
+        self.finger_controller.remember_click_press_location(dict(target))
         self.mach3_emergency.press_target(dict(target))
 
     @QtCore.pyqtSlot(dict)
@@ -1301,6 +1317,228 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         )
         if not motion_test:
             self._coverage_capture_timer.start()
+        QtCore.QTimer.singleShot(0, self._run_next_coverage_press)
+
+    @QtCore.pyqtSlot(dict)
+    def _contact_stress_sequence_requested(self, request: dict):
+        """Run the multi-depth stress-ladder acquisition at one location.
+
+        Reuses the entire coverage machinery (guarded press, phase events,
+        session writer, native frame recorder) but expands each location into
+        an ordered depth ladder.  Every recorded frame carries the active
+        ``stress_depth_mm`` so a time-series model can associate the 45-point
+        change with one contact stress level at a known location.
+        """
+
+        if self._coverage_active:
+            self.finger_controller.coverage_summary_label.setText(
+                "覆盖/应力序列采集正在运行，新请求已拒绝"
+            )
+            return
+        if request.get("kind") != "contact_stress_sequence":
+            return
+        try:
+            depth_steps = [
+                float(value) for value in request.get("depth_steps_mm", ())
+            ]
+            dwell_seconds = float(request.get("dwell_seconds", 0.4))
+            repeats = int(request.get("repeats", 1))
+        except (TypeError, ValueError):
+            self.finger_controller.coverage_summary_label.setText(
+                "应力序列参数无效，未启动"
+            )
+            return
+        if (
+            not depth_steps
+            or not all(0.0 < d <= MAX_PRESS_DEPTH_MM for d in depth_steps)
+            or dwell_seconds <= 0.0
+            or repeats < 1
+        ):
+            self.finger_controller.coverage_summary_label.setText(
+                f"应力深度必须在 0～{MAX_PRESS_DEPTH_MM:.2f} mm，未启动"
+            )
+            return
+        if self.demo:
+            self.finger_controller.coverage_summary_label.setText(
+                f"演示模式：应力序列含{len(depth_steps)}个深度档，不会控制机床"
+            )
+            return
+        status = dict(self._last_mach3_status)
+        if not status:
+            self.finger_controller.coverage_summary_label.setText(
+                "等待Mach3实时坐标，未启动应力序列采集"
+            )
+            return
+        if status.get("estop") or status.get("estop_led"):
+            self.finger_controller.coverage_summary_label.setText(
+                "Mach3处于Reset/急停状态，未启动应力序列采集"
+            )
+            return
+        if not status.get("stopped"):
+            self.finger_controller.coverage_summary_label.setText(
+                "机床尚未确认停止，未启动应力序列采集"
+            )
+            return
+        if not all(status.get(key) for key in ("x_homed", "y_homed", "z_homed")):
+            self.finger_controller.coverage_summary_label.setText(
+                "X/Y/Z尚未全部回零，未启动应力序列采集"
+            )
+            return
+        if not self._ensure_finger_spectrum_ready_for_coverage():
+            self.finger_controller.coverage_summary_label.setText(
+                "应力序列已准备；等待九个光栅峰全部在线后才能开始"
+            )
+            return
+
+        locations = [dict(point) for point in request.get("points", ())]
+        if not locations:
+            self.finger_controller.coverage_summary_label.setText(
+                "应力序列位置为空，未启动"
+            )
+            return
+
+        queue = []
+        for repetition in range(1, repeats + 1):
+            for location in locations:
+                for target in build_stress_depth_targets(
+                    location, depth_steps
+                ):
+                    target = dict(target)
+                    target["coverage_repetition"] = repetition
+                    target["dwell_seconds"] = dwell_seconds
+                    target["xy_feed_mm_min"] = float(
+                        request.get("xy_feed_mm_min", 60.0)
+                    )
+                    target["z_travel_feed_mm_min"] = float(
+                        request.get("z_travel_feed_mm_min", 60.0)
+                    )
+                    target["press_feed_mm_min"] = float(
+                        request.get("press_feed_mm_min", 15.0)
+                    )
+                    target["approach_clearance_mm"] = 0.5
+                    calibration = request.get("calibration_machine_minus_work")
+                    if calibration is not None:
+                        target["calibration_machine_minus_work"] = list(calibration)
+                    queue.append(target)
+
+        depth_text = " → ".join(f"{d:.2f}" for d in depth_steps)
+        total = len(queue)
+        answer = QtWidgets.QMessageBox.warning(
+            self,
+            "确认接触应力序列采集",
+            f"将在 {len(locations)} 个位置各执行 {len(depth_steps)} 个深度档按压。\n"
+            f"深度阶梯：{depth_text} mm（由浅到深，每档之间完全释放）。\n"
+            f"每档：定位 → 接触 → 保持{dwell_seconds:.1f}s → 释放并记录全程光谱。\n"
+            f"共 {total} 次受监护按压。\n\n"
+            "请确认：\n"
+            "• 手指、线缆和整个XY/Z路径无障碍；\n"
+            "• 8 mm压面与手指顶面保持平行；\n"
+            "• 光谱正在连续更新，物理急停随手可按；\n"
+            "• 主轴保持关闭（程序每次定位前强制M5）。",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel,
+            QtWidgets.QMessageBox.Cancel,
+        )
+        if answer != QtWidgets.QMessageBox.Yes:
+            return
+
+        self._coverage_queue = queue
+        self._coverage_total = total
+        self._coverage_completed = 0
+        self._coverage_current = None
+        self._coverage_cancel_after_current = False
+        self._coverage_records = 0
+        self._coverage_motion_test = False
+        self._coverage_is_stress_sequence = True
+        self._coverage_stress_depth_text = depth_text
+        self._coverage_dataset_path = None
+        self._coverage_writer = None
+        self._coverage_phase = None
+        self._coverage_phase_event_id = None
+        self._coverage_writer_sequence = 0
+        self._coverage_last_frame_key = None
+        self._coverage_phase_frame_counts.clear()
+        self._coverage_completion_pending = False
+        output_dir = output_path()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        session_stem = "contact_stress_sequence_" + time.strftime("%Y%m%d_%H%M%S")
+        session_dir = output_dir / session_stem
+        suffix = 1
+        while session_dir.exists():
+            session_dir = output_dir / f"{session_stem}_{suffix:02d}"
+            suffix += 1
+        try:
+            metadata = {
+                "dataset_kind": "contact_stress_sequence",
+                "training_eligible": False,
+                "training_exclusion_reason": (
+                    "Unreviewed multi-depth acquisition; depth labels are CNC "
+                    "displacement proxies and native timing needs qualification "
+                    "before time-series training."
+                ),
+                "native_capture": bool(self._uses_local_pages()),
+                "ui_frames_are_decimated": True,
+                "unique_positions": len(locations),
+                "repeats": repeats,
+                "depth_steps_mm": depth_steps,
+                "total_presses": total,
+                "dwell_seconds": dwell_seconds,
+                "press_face_diameter_mm": 8.0,
+                "source_at_start": self.current_source,
+                "capture_phases": list(
+                    ("pre_contact", "contact", "hold", "release",
+                     "release_complete")
+                ),
+                "frame_label_fields": (
+                    "quality.stress_depth_mm",
+                    "quality.stress_depth_order",
+                    "quality.press_event_id",
+                    "quality.coverage_phase",
+                ),
+                "time_series_intended_use": (
+                    "classify pressed location from the 45-point change after "
+                    "press onset"
+                ),
+                "contact_label_basis": (
+                    "calibrated_cnc_depth_ladder_not_force_sensor"
+                ),
+                "adc_event_synchronization_verified": False,
+            }
+            self._coverage_writer = FingerSessionWriter(
+                session_dir,
+                queue_capacity=COVERAGE_WRITER_QUEUE_CAPACITY,
+                manifest_extra=metadata,
+            )
+            self._coverage_dataset_path = session_dir
+            self._start_coverage_native_capture()
+            self._coverage_writer.write_event(
+                ContactEvent(kind="session_start", metadata=metadata)
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            if self._coverage_native_recorder is not None:
+                try:
+                    self._coverage_native_recorder.close()
+                except Exception:
+                    pass
+                self._coverage_native_recorder = None
+            if self._coverage_writer is not None:
+                try:
+                    self._coverage_writer.close()
+                except Exception as close_exc:
+                    exc = RuntimeError(f"{exc}; 数据关闭失败：{close_exc}")
+            self._coverage_dataset_path = None
+            self._coverage_writer = None
+            self.finger_controller.coverage_summary_label.setText(
+                f"无法建立应力序列数据文件，未启动：{exc}"
+            )
+            return
+        self._coverage_active = True
+        self.finger_controller.set_coverage_running(True)
+        self.finger_controller.set_coverage_progress(
+            0,
+            self._coverage_total,
+            detail=f"应力序列：准备第1档按压（{depth_text} mm）",
+        )
+        self._coverage_capture_timer.start()
         QtCore.QTimer.singleShot(0, self._run_next_coverage_press)
 
     def _ensure_finger_spectrum_ready_for_coverage(self) -> bool:
@@ -1686,6 +1924,11 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
                 math.pi * 4.0**2 if contact is True else (0.0 if contact is False else None)
             ),
             metadata={
+                "stress_depth_mm": target.get("stress_depth_mm"),
+                "stress_depth_order": target.get("stress_depth_order"),
+                "is_stress_sequence": bool(
+                    self._coverage_is_stress_sequence
+                ),
                 "press_event_id": self._coverage_press_event_id(target),
                 "contact": contact,
                 "commanded_indentation_mm": depth,
@@ -1809,6 +2052,24 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
                     "adc_event_synchronization_verified": False,
                     "point_index": int(target.get("point_index", 0)),
                     "repetition": int(target.get("coverage_repetition", 0)),
+                    "stress_depth_mm": (
+                        float(target["stress_depth_mm"])
+                        if target.get("stress_depth_mm") is not None
+                        else None
+                    ),
+                    "stress_depth_order": (
+                        int(target["stress_depth_order"])
+                        if target.get("stress_depth_order") is not None
+                        else None
+                    ),
+                    "stress_depth_count": (
+                        int(target["stress_depth_count"])
+                        if target.get("stress_depth_count") is not None
+                        else None
+                    ),
+                    "is_stress_sequence": bool(
+                        self._coverage_is_stress_sequence
+                    ),
                     "model_x_norm": model_x_norm,
                     "model_y_norm": model_y_norm,
                     "model_xy_mm": (
@@ -1908,6 +2169,8 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._coverage_current = None
         self._coverage_cancel_after_current = False
         self._coverage_motion_test = False
+        self._coverage_is_stress_sequence = False
+        self._coverage_stress_depth_text = ""
         self._coverage_stop_reason = None
         self._coverage_completion_pending = False
         self._coverage_phase = None
@@ -2566,13 +2829,10 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         # view, while configuration/OTA pages stay deliberately calm.
         self.workflow_strip.setVisible(index < 2)
         self.open_finger_button.setVisible(index == 0)
-        if hasattr(self, "mach3_position_timer") and not self.demo:
-            if index < 2:
-                if not self.mach3_position_timer.isActive():
-                    self.mach3_position_timer.start()
-                self.mach3_emergency.query_status()
-            else:
-                self.mach3_position_timer.stop()
+        # Machine-free manual capture replaced the visible 3-D/Mach3 page.
+        # Do not poll Mach3 merely because the capture tab is open.
+        if hasattr(self, "mach3_position_timer"):
+            self.mach3_position_timer.stop()
         self._refresh_responsive_shell()
 
     def _update_source_status(self, text: str, kind: str = "info"):
@@ -3068,6 +3328,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             self.remote_controller.deactivate_network()
             self.local_controller.close()
             self.lan_serial.close()
+            if hasattr(self, "manual_capture_controller"):
+                self.manual_capture_controller.close_session()
+                self.manual_capture_controller.close()
             self.finger_controller.close()
             self.mach3_emergency.close()
         finally:
