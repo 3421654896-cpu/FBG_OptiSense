@@ -103,6 +103,14 @@ def runtime_parameter_note(machine_id: str | None = None) -> str:
             "当前9峰、2001点和3峰/15点参数均为一号机专用参数；"
             f"2001点：{profile['label']}（已认证）"
         )
+    tested = profile.get("validation_tested")
+    if tested is not None and int(tested) < 2001:
+        return (
+            f"2001点：{profile['label']}（临时表；独立复测"
+            f"{int(tested)}/2001，{int(profile['validation_passed'])}通过、"
+            f"{int(profile['validation_failed'])}未通过、"
+            f"{int(profile.get('validation_pending', 2001 - int(tested)))}待测）"
+        )
     return (
         f"2001点：{profile['label']}（独立复测"
         f"{profile['validation_passed']}/2001通过，"

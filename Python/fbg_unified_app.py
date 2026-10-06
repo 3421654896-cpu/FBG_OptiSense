@@ -2712,10 +2712,44 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         if machine_id == previous_id:
             self._refresh_machine_identity()
             return
+        # Drop the old physical board before changing the active calibration.
+        was_local_lan = self.current_source == NETWORK_LAN and not self.demo
+        if was_local_lan:
+            self._release_local_control()
         if not self.ota_page.set_machine(machine_id):
+            if was_local_lan:
+                self.local_controller.acquire_local_control()
             return
         errors = self.local_controller.reload_machine_calibration(machine_id)
         self._refresh_machine_identity()
+        if errors and was_local_lan:
+            self.current_source = None
+            self._set_checked_source(None)
+            self._update_source_status(
+                f"{runtime_machine_label(machine_id)}点表载入失败，局域网连接已停止",
+                "error",
+            )
+            self.statusBar().showMessage(errors[0])
+            return
+        if was_local_lan:
+            try:
+                target = self._configure_lan_target()
+            except ValueError as exc:
+                self.current_source = None
+                self._set_checked_source(None)
+                self._update_source_status(str(exc), "error")
+                return
+            if not self.local_controller.acquire_local_control():
+                self.current_source = None
+                self._set_checked_source(None)
+                self._update_source_status(
+                    f"{runtime_machine_label(machine_id)}局域网连接未启动", "error"
+                )
+                return
+            self._update_source_status(
+                f"局域网正在连接{runtime_machine_label(machine_id)} {target}",
+                "warning",
+            )
         if errors:
             self.statusBar().showMessage(
                 f"已切换为 {runtime_machine_label(machine_id)}，但2001点表不可用："
@@ -2734,8 +2768,12 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         note = runtime_parameter_note(machine_id)
         if machine_id == "machine_2":
             note += "；9峰/3峰路线仍需二号机单独采集"
+        try:
+            lan_target = self.ota_settings_store.lan_board_ip(machine_id)
+        except ValueError:
+            lan_target = "未设置（请在 OTA 页面填写板卡 IP）"
         self.device_version.setText(
-            f"{note}\n统一控制 · ADC 光谱 · 3D 定位"
+            f"{note}\n局域网目标：{lan_target}\n统一控制 · ADC 光谱 · 3D 定位"
         )
         self.setWindowTitle(
             f"FBG OptiSense Studio {APP_VERSION} — {machine_label} · "
@@ -2983,6 +3021,14 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         selected = self.current_source if source is None else source
         return selected == SOURCE_LOCAL or (selected == NETWORK_LAN and not self.demo)
 
+    def _configure_lan_target(self) -> str:
+        """Pin LAN control to the selected unit, never an arbitrary peer."""
+
+        machine_id = self.ota_page.current_machine_id
+        target = self.ota_settings_store.lan_board_ip(machine_id)
+        self.lan_serial.board_host = target
+        return target
+
     def _select_local_transport(self, source: str):
         """Point the legacy pages at CDC or at the same-LAN byte stream."""
 
@@ -2993,6 +3039,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             self.usb_serial.baudrate = self.local_controller.baud
             return
         if source == NETWORK_LAN and not self.demo:
+            self._configure_lan_target()
             local_app.ser = self.lan_serial
             self.local_controller.port = "LAN"
             return
@@ -3203,11 +3250,6 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         """Give the OTA socket exclusive ownership of the board's LAN port."""
         if self._uses_local_pages() and not self._can_leave_local():
             return False
-        learned_ip = self.lan_serial.board_ip or getattr(
-            self.transport, "board_ip", None
-        )
-        if learned_ip:
-            self.ota_page.set_board_ip(learned_ip)
         self.remote_controller.deactivate_network()
         self._release_local_control()
         self.current_source = None
@@ -3227,11 +3269,6 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._generated_mode_table_package_path = str(Path(package_path).resolve())
         self.workspace_tabs.setCurrentIndex(3)
         self._workspace_changed(3)
-        learned_ip = self.lan_serial.board_ip or getattr(
-            self.transport, "board_ip", None
-        )
-        if learned_ip:
-            self.ota_page.set_board_ip(learned_ip)
         self.statusBar().showMessage(
             "新点表固件包已校验；输入OTA密码后仍需点击“开始安全升级”确认上传"
         )

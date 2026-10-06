@@ -25,6 +25,20 @@
         "validation_failed": 285,
         "certified": false
       }
+    },
+    "machine_3": {
+      "machine_label": "三号机",
+      "fullband": {
+        "label": "三号机临时2001点（2026-09-27，未认证）",
+        "source_format": "calibration_json",
+        "source_path": "machine_defaults/machine_3/machine_3_provisional_2001_20260927.json",
+        "guard_path": null,
+        "validation_tested": 725,
+        "validation_passed": 703,
+        "validation_failed": 22,
+        "validation_pending": 1276,
+        "certified": false
+      }
     }
   }
 }
