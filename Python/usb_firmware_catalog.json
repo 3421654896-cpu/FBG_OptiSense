@@ -1,0 +1,10 @@
+{
+  "schema": "fbg_usb_firmware_catalog_v1",
+  "machines": {
+    "machine_2": {
+      "usb_serial": "395736523033",
+      "filename": "JDSU_F205RE_v1.0.106.fbgfw",
+      "sha256": "ae637aab383f8443bff35bf1ef8413e3a28e51e5e9f6c66aca38f9bb0da1fb44"
+    }
+  }
+}

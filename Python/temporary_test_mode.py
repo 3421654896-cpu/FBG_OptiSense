@@ -1,7 +1,8 @@
-"""Temporary selected-channel spectra: detected peaks x 5 calibrated rows.
+"""Temporary selected-channel spectra: five-point legacy or seven-point routes.
 
-Protocol v3 never modifies installed tables. Automatic selections are equally
-spaced; operator-edited points may be irregular. Plotted wavelengths are the
+Temporary protocols never modify installed tables. New automatic selections
+pair the left/right fitted optical heights, not wavelength distances; operator
+edits may be irregular. Plotted wavelengths are the
 actual meter calibration of those rows. Sparse ADC points are measurements,
 not a reconstructed full-band spectrum.
 """
@@ -15,6 +16,7 @@ import time
 
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
+from scipy.interpolate import Akima1DInterpolator
 from scipy.signal import find_peaks, peak_widths
 
 from laser_dac_safety import FULLBAND_2001_CODE_LIMITS
@@ -26,6 +28,10 @@ LIMITS = FULLBAND_2001_CODE_LIMITS
 POINTS_PER_PEAK = 5
 MAX_PEAKS = 9
 MAX_POINTS = POINTS_PER_PEAK * MAX_PEAKS
+AUTO_POINTS_PER_PEAK = 7
+MAX_AUTO_POINTS = AUTO_POINTS_PER_PEAK * MAX_PEAKS
+V6_CRC_OFFSET = 796
+V6_FIELD_BITS = (11, 16, 16, 15, 15, 15, 10)
 # Compatibility name retained for older tests/tools that import POINTS.
 POINTS = MAX_POINTS
 FEEDBACK_KOHM = (2, 40, 5, 20)
@@ -36,6 +42,8 @@ SELECTION_CENTER_SMOOTH_SIGMA_NM = .04
 SELECTION_DBM_SCORE_FRACTION = .27
 SELECTION_DBM_AMBIGUITY_RATIO = .65
 SELECTION_LINEAR_REFINEMENT_NM = .15
+AUTO_SELECTION_PROMINENCE_DB = 5.0
+AUTO_SELECTION_HEIGHT_FRACTION = .5
 
 
 def assess_five_point_shape(wavelength_nm, values):
@@ -105,7 +113,33 @@ def _plan_schema(point_count):
 def _validate_group_count(groups):
     if not isinstance(groups, (list, tuple)) or not 1 <= len(groups) <= MAX_PEAKS:
         raise ValueError('临时路线需要1～9个峰，每峰5点')
-    return len(groups) * POINTS_PER_PEAK
+    count = len(groups[0])
+    if count not in (5, 7) or any(len(group) != count for group in groups):
+        raise ValueError('每峰必须统一为5点或7点')
+    return len(groups) * count
+
+
+def points_per_peak_for_rows(rows):
+    """Infer uniform contiguous groups; old ungrouped diagnostic rows stay x5."""
+    if not rows or not all('group' in row for row in rows):
+        return 5
+    groups = [row['group'] for row in rows]
+    count = sum(group == 1 for group in groups)
+    if count not in (5, 7) or len(rows) % count or len(rows) // count > MAX_PEAKS:
+        raise ValueError('点表必须包含1～9个完整的五点或七点峰')
+    if groups != [i // count + 1 for i in range(len(rows))]:
+        raise ValueError('峰分组必须连续且按波长排序')
+    return count
+
+
+def assess_peak_shape(wavelength_nm, values):
+    if len(values) == 5:
+        return assess_five_point_shape(wavelength_nm, values)
+    from temporary_peak_fit_makima import fit_peak_points
+    fit = fit_peak_points(wavelength_nm, values)
+    return dict(passed=bool(fit.get('valid')), reason=fit.get('reason'),
+                fitted_center_nm=fit.get('center_nm'), r_squared=fit.get('r_squared'),
+                reference_values=list(values))
 
 
 def build_selected_plan(table, groups, reference_values, *, source='validated_live_reference'):
@@ -114,13 +148,14 @@ def build_selected_plan(table, groups, reference_values, *, source='validated_li
     table = tuple(table)
     values = np.asarray(reference_values, dtype=float)
     point_count = _validate_group_count(groups)
+    group_size = len(groups[0])
     if (len(table) != 2001 or values.shape != (point_count,)
             or not np.all(np.isfinite(values))):
         raise ValueError(f'验证路线需要完整2001点表、{len(groups)}组索引和{point_count}个有限参考值')
     rows, checks, peaks = [], [], []
     previous = -1
     for group, indices in enumerate(groups, 1):
-        if (len(indices) != 5 or any(type(index) is not int for index in indices)
+        if (len(indices) != group_size or any(type(index) is not int for index in indices)
                 or indices[0] <= previous or len(set(np.diff(indices))) != 1):
             raise ValueError('验证路线必须是9组严格递增的等间隔五点')
         selected = []
@@ -132,11 +167,11 @@ def build_selected_plan(table, groups, reference_values, *, source='validated_li
                                  target_nm=float(point.target_nm),
                                  measured_nm=float(point.measured_nm),
                                  codes=list(point.codes)))
-        start = (group - 1) * POINTS_PER_PEAK
-        check = assess_five_point_shape(
-            [row['measured_nm'] for row in selected], values[start:start + 5]
+        start = (group - 1) * group_size
+        check = assess_peak_shape(
+            [row['measured_nm'] for row in selected], values[start:start + group_size]
         )
-        check.update(group=group, peak_center_index=indices[2],
+        check.update(group=group, peak_center_index=indices[group_size // 2],
                      spacing_nm=(indices[1] - indices[0]) * .02)
         if not check['passed']:
             raise ValueError(f"验证路线第{group}峰不合格：{check['reason']}")
@@ -146,7 +181,7 @@ def build_selected_plan(table, groups, reference_values, *, source='validated_li
         previous = indices[-1]
     command(rows, 32, 1)
     return dict(schema=_plan_schema(point_count), rows=rows, peaks_nm=peaks,
-                peak_count=len(groups), point_count=point_count,
+                peak_count=len(groups), point_count=point_count, points_per_peak=group_size,
                 reference_kind='validated_sparse_CH1', reference_source=source,
                 optical_accuracy_verified=False, discarded_weak_peaks=0,
                 spacing_basis='nominal_calibrated_table', hidden_points=0,
@@ -155,10 +190,239 @@ def build_selected_plan(table, groups, reference_values, *, source='validated_li
                 validated_reference_values=values.tolist())
 
 
+def _three_height_pairs(left_dbm, right_dbm, peak_dbm, drop_db, *, anchor_outer=False):
+    """Jointly choose ordered, distinct real pairs near three optical levels.
+
+    Each flank is ordered from apex outward. The optical-pair mismatch has
+    four times the squared-error weight of an individual target-level error.
+    A two-dimensional prefix minimum enforces distinct/outward rows without
+    imposing mirrored wavelengths or enumerating every six-row combination.
+    With anchor_outer, the lowest pair is fixed to the closest allowed height
+    above the cutoff on each flank, leaving at least two real rows inward.
+    """
+    left, right = np.asarray(left_dbm, float), np.asarray(right_dbm, float)
+    if (left.ndim != 1 or right.ndim != 1 or len(left) < 3 or len(right) < 3
+            or not np.all(np.isfinite(left)) or not np.all(np.isfinite(right))
+            or not math.isfinite(peak_dbm) or not math.isfinite(drop_db) or drop_db <= 0):
+        raise ValueError('峰左右各需至少三个真实采样点')
+    levels = np.linspace(drop_db / 3, drop_db, 3)
+    mismatch = 4 * (left[:, None] - right[None, :]) ** 2
+    outer = None
+    if anchor_outer:
+        threshold = peak_dbm - drop_db
+        endpoints = []
+        for flank in (left, right):
+            eligible = [i for i in range(2, len(flank)) if flank[i] >= threshold - 1e-8
+                        and np.count_nonzero(flank[:i] >= flank[i]) >= 2]
+            if not eligible:
+                raise ValueError('半高线以上缺少最低点及两个更高的内侧真实点')
+            endpoints.append(min(eligible, key=lambda i: abs(flank[i] - threshold)))
+        outer = tuple(endpoints)
+    stages = []
+    for stage, level in enumerate(levels):
+        cost = ((peak_dbm - left[:, None] - level) ** 2
+                + (peak_dbm - right[None, :] - level) ** 2 + mismatch)
+        if stages:
+            prefix = np.minimum.accumulate(np.minimum.accumulate(stages[-1], axis=0), axis=1)
+            prior = np.full_like(cost, np.inf)
+            prior[1:, 1:] = prefix[:-1, :-1]
+            cost += prior
+        if outer is not None:
+            if stage == 2:
+                anchored = np.full_like(cost, np.inf)
+                anchored[outer] = cost[outer]
+                cost = anchored
+            else:
+                # A noisy flank must not put an inner selected point below
+                # the anchored "lowest" point.
+                cost[(left[:, None] < left[outer[0]]) | (right[None, :] < right[outer[1]])] = np.inf
+        stages.append(cost)
+    at = np.unravel_index(int(np.argmin(stages[-1])), stages[-1].shape)
+    pairs = []
+    for stage in range(2, -1, -1):
+        pairs.append(tuple(int(index) for index in at))
+        if stage:
+            prior = stages[stage - 1][:at[0], :at[1]]
+            at = np.unravel_index(int(np.argmin(prior)), prior.shape)
+    return list(reversed(pairs))
+
+
+def auto_select_dense_plan(table, wavelengths, values, *, feedback_selector=2,
+                           source='auto_dense_selection'):
+    """Select seven height-layered real rows in each peak's visual dBm upper half.
+
+    Keep upstream smoothed dBm detection/ranking. Fit the raw dense ADC with
+    the default Makima interpolant, just like the displayed sparse peak, then
+    convert its apex to dBm. The two local smoothed dBm valleys define a peak
+    base; use the higher valley, then the dBm midpoint to the fitted apex.
+    This is visual log-height, NOT half of linear power or a fixed -5 dB band.
+    Retained raw ADC and physical DAC codes are never changed; a new sparse
+    reference remains necessary.
+    """
+    table = tuple(table)
+    x, y = np.asarray(wavelengths, float), np.asarray(values, float)
+    if (len(table) != 2001 or x.ndim != 1 or y.shape != x.shape or len(x) < MAX_AUTO_POINTS
+            or not np.all(np.isfinite(x)) or not np.all(np.isfinite(y))
+            or np.any(np.diff(x) <= 0) or np.max(np.diff(x)) > .105):
+        raise ValueError('自动选点需要完整2001点表和连续有序密集光谱')
+    if type(feedback_selector) is not int or feedback_selector not in range(4):
+        raise ValueError('Invalid analog feedback selector')
+    measured_axis = np.asarray([point.measured_nm for point in table], float)
+    if not np.all(np.isfinite(measured_axis)) or np.any(np.diff(measured_axis) <= 0):
+        raise ValueError('标定波长必须有限且递增')
+    # Dense samples can be a 751-point subrange with stride 2, not the full
+    # 2001-point table. Map each actual sample to its calibrated physical row.
+    physical_indices = np.asarray([
+        int(np.argmin(abs(measured_axis - wavelength))) for wavelength in x
+    ], dtype=int)
+    if (np.any(np.diff(physical_indices) <= 0)
+            or np.any(abs(measured_axis[physical_indices] - x) > .01001)):
+        raise ValueError('密集光谱无法唯一映射到当前标定表')
+    step = float(np.median(np.diff(x)))
+    sigma = max(.5, SELECTION_CENTER_SMOOTH_SIGMA_NM / step)
+    from temporary_optical_units import adc_code_to_dbm
+    floor = .5 if float(np.max(y)) >= 50 else max(float(np.max(y)) * 1e-4, np.finfo(float).tiny)
+    detection_curve = gaussian_filter1d(
+        np.asarray(adc_code_to_dbm(np.maximum(y, floor), feedback_selector), float),
+        sigma=sigma, mode='nearest')
+    detected, properties = find_peaks(
+        detection_curve, prominence=AUTO_SELECTION_PROMINENCE_DB,
+        distance=max(1, round(1.0 / step)))
+    if len(detected) < MAX_PEAKS:
+        raise ValueError(f'只识别到{len(detected)}个有效峰，未生成63点；可继续手动选点')
+    widths = np.maximum(peak_widths(detection_curve, detected, rel_height=.5)[0] * step, step)
+    scores = np.asarray(properties['prominences'], float) * np.sqrt(widths)
+    selected = np.sort(detected[np.argsort(scores)[::-1][:MAX_PEAKS]])
+    # Default fitting is Makima in linear ADC; the dBm display is a conversion
+    # of that fitted curve, not a new Gaussian or a fit of the smoothed detector.
+    spline = Akima1DInterpolator(x, y, method='makima', extrapolate=False)
+    stationary = np.asarray(spline.derivative().roots(extrapolate=False), float)
+    stationary = stationary[np.isfinite(stationary)]
+    maxima = stationary[np.asarray(spline.derivative(2)(stationary)) < 0]
+    fitted_adc = np.asarray(spline(measured_axis[physical_indices]), float)
+    sample_by_index = {int(index): order for order, index in enumerate(physical_indices)}
+    groups, symmetry, bands = [], [], []
+    for peak in selected:
+        position = int(np.searchsorted(detected, peak))
+        lower = (float((x[detected[position - 1]] + x[peak]) / 2)
+                 if position else float(x[0]))
+        upper = (float((x[peak] + x[detected[position + 1]]) / 2)
+                 if position + 1 < len(detected) else float(x[-1]))
+        candidates = maxima[(maxima >= max(lower, x[peak] - .35))
+                            & (maxima <= min(upper, x[peak] + .35))]
+        if not len(candidates):
+            raise ValueError(f'第{len(groups) + 1}峰未找到内部Makima拟合峰顶，请检查密集光谱')
+        apex_nm = float(max(candidates, key=lambda wavelength: float(spline(wavelength))))
+        peak_adc = float(spline(apex_nm))
+        if not math.isfinite(peak_adc) or peak_adc <= 0:
+            raise ValueError('拟合峰值无效，无法计算dBm选点下限')
+        peak_dbm = float(adc_code_to_dbm(peak_adc, feedback_selector))
+        left_base_samples = np.flatnonzero((x >= lower) & (x < apex_nm))
+        right_base_samples = np.flatnonzero((x > apex_nm) & (x <= upper))
+        if not len(left_base_samples) or not len(right_base_samples):
+            raise ValueError('拟合峰两侧缺少局部峰底，无法确定dBm上半段')
+        left_base = int(left_base_samples[np.argmin(detection_curve[left_base_samples])])
+        right_base = int(right_base_samples[np.argmin(detection_curve[right_base_samples])])
+        left_base_dbm, right_base_dbm = float(detection_curve[left_base]), float(detection_curve[right_base])
+        baseline_dbm = max(left_base_dbm, right_base_dbm)
+        if not math.isfinite(baseline_dbm) or baseline_dbm >= peak_dbm:
+            raise ValueError('局部峰底与拟合峰顶无有效dBm高度差')
+        threshold_dbm = baseline_dbm + AUTO_SELECTION_HEIGHT_FRACTION * (peak_dbm - baseline_dbm)
+        drop_db = peak_dbm - threshold_dbm
+        threshold_adc = peak_adc * 10 ** (-drop_db / 10)
+        crossings = np.asarray(spline.solve(threshold_adc, extrapolate=False), float)
+        left_crossings = crossings[(crossings >= lower) & (crossings < apex_nm)]
+        right_crossings = crossings[(crossings > apex_nm) & (crossings <= upper)]
+        if not len(left_crossings) or not len(right_crossings):
+            raise ValueError(f'第{len(groups) + 1}峰的dBm视觉上半段范围不完整，'
+                             '请扩大扫描范围')
+        band_left, band_right = float(np.max(left_crossings)), float(np.min(right_crossings))
+        center = int(physical_indices[int(np.argmin(abs(x - apex_nm)))])
+        # Rows must be real captured samples, inside the connected fitted band,
+        # and above the same peak-relative dBm cutoff in raw and fitted values.
+        within = ((x >= band_left) & (x <= band_right)
+                  & (measured_axis[physical_indices] >= band_left)
+                  & (measured_axis[physical_indices] <= band_right)
+                  & (y >= threshold_adc - 1e-9) & (fitted_adc >= threshold_adc - 1e-9))
+        available = set(int(index) for index in physical_indices[within])
+        if center not in available:
+            raise ValueError('拟合峰顶附近没有符合dBm上半段下限的真实中心点，'
+                             '请减小采样间隔')
+        # Pair optical heights, not physical-index offsets. Keep three distinct
+        # captured rows strictly on each fitted flank and in wavelength order.
+        left_indices = sorted((index for index in available if index < center
+                               and measured_axis[index] < apex_nm
+                               and x[sample_by_index[index]] < apex_nm), reverse=True)
+        right_indices = sorted(index for index in available if index > center
+                               and measured_axis[index] > apex_nm
+                               and x[sample_by_index[index]] > apex_nm)
+        if len(left_indices) < 3 or len(right_indices) < 3:
+            raise ValueError(f'第{len(groups) + 1}峰的dBm上半段内'
+                             '左右不足三个实测点，请减小采样间隔')
+        left_heights = np.asarray(adc_code_to_dbm(
+            fitted_adc[[sample_by_index[index] for index in left_indices]], feedback_selector), float)
+        right_heights = np.asarray(adc_code_to_dbm(
+            fitted_adc[[sample_by_index[index] for index in right_indices]], feedback_selector), float)
+        pairs = _three_height_pairs(left_heights, right_heights, peak_dbm, drop_db,
+                                    anchor_outer=True)
+        paired_left = [left_indices[left] for left, _ in pairs]
+        paired_right = [right_indices[right] for _, right in pairs]
+        indices = list(reversed(paired_left)) + [center] + paired_right
+        groups.append(indices)
+        sample_orders = [sample_by_index[index] for index in indices]
+        bands.append(dict(group=len(groups), fitted_peak_nm=apex_nm,
+                          fitted_peak_dbm=peak_dbm, threshold_dbm=threshold_dbm,
+                          baseline_dbm=baseline_dbm, left_base_dbm=left_base_dbm,
+                          right_base_dbm=right_base_dbm,
+                          left_base_nm=float(x[left_base]), right_base_nm=float(x[right_base]),
+                          peak_drop_db=drop_db, height_fraction=AUTO_SELECTION_HEIGHT_FRACTION,
+                          band_left_nm=band_left, band_right_nm=band_right,
+                          fitted_peak_adc=peak_adc, threshold_adc=threshold_adc,
+                          selected_fitted_dbm=np.asarray(adc_code_to_dbm(
+                              fitted_adc[sample_orders], feedback_selector), float).tolist(),
+                          selected_raw_dbm=np.asarray(adc_code_to_dbm(
+                              y[sample_orders], feedback_selector), float).tolist(),
+                          all_selected_at_or_above_threshold=True,
+                          center_sample_error_pm=1000 * (x[sample_by_index[center]] - apex_nm)))
+        selected_fit = bands[-1]['selected_fitted_dbm']
+        selected_raw = bands[-1]['selected_raw_dbm']
+        bands[-1]['boundary_height_gap_db'] = [selected_fit[0] - threshold_dbm,
+                                               selected_fit[6] - threshold_dbm]
+        paired_fit_left, paired_fit_right = selected_fit[2::-1], selected_fit[4:]
+        symmetry.append(dict(group=len(groups), center_index=center,
+                             center_target_nm=float(table[center].target_nm),
+                             left_indices=paired_left, right_indices=paired_right,
+                             target_drop_db=np.linspace(drop_db / 3, drop_db, 3).tolist(),
+                             target_height_dbm=(peak_dbm - np.linspace(drop_db/3, drop_db, 3)).tolist(),
+                             fitted_left_dbm=paired_fit_left, fitted_right_dbm=paired_fit_right,
+                             fitted_pair_difference_db=[abs(left - right) for left, right
+                                                        in zip(paired_fit_left, paired_fit_right)],
+                             raw_pair_difference_db=[abs(left - right) for left, right
+                                                     in zip(selected_raw[2::-1], selected_raw[4:])]))
+    plan = build_manual_dense_plan(table, groups, x, y, source=source)
+    plan.update(
+        manual_selection_method='auto_makima_height_paired_7point', automatic_selection=True,
+        points_per_peak=7, symmetry_checks=symmetry,
+        symmetry_basis='fitted_dbm_height',
+        selection_feedback_selector=feedback_selector,
+        selection_prominence_db=AUTO_SELECTION_PROMINENCE_DB,
+        selection_height_region='dbm_visual_upper_half',
+        selection_height_fraction=AUTO_SELECTION_HEIGHT_FRACTION,
+        selection_baseline_basis='higher_of_two_local_smoothed_dbm_valleys',
+        selection_boundary_rule='closest_real_height_above_half_with_two_inner_rows',
+        selection_fit_method='makima_piecewise_cubic_dense_adc',
+        selection_threshold_unit='dbm', selection_band_checks=bands,
+        selection_rule='seven_real_uniform_height_paired_points_in_dbm_visual_upper_half',
+        automatic_selection_upstream_commit='fca441009c225cac1d1c60b0afd651f1b5d96b25',
+        discarded_weak_peaks=len(detected) - MAX_PEAKS,
+    )
+    return plan
+
+
 def build_manual_dense_plan(table, groups, wavelengths, values, *, source='manual_dense_selection'):
     """Rebuild an operator-edited peak×5 route against one dense CH1 spectrum.
 
-    Automatic selection remains equally spaced, but an operator may move each
+    Automatic selection pairs optical heights, but an operator may move each
     displayed point independently. Manual groups only have to remain strictly
     increasing on the physical 2001-point table. A weak dense-shape preview
     does not reject the edit: the route is kept disabled until the normal live
@@ -169,6 +433,7 @@ def build_manual_dense_plan(table, groups, wavelengths, values, *, source='manua
     x = np.asarray(wavelengths, dtype=float)
     y = np.asarray(values, dtype=float)
     point_count = _validate_group_count(groups)
+    group_size = len(groups[0])
     if (len(table) != 2001 or x.ndim != 1
             or y.shape != x.shape or len(x) < point_count
             or not np.all(np.isfinite(x)) or not np.all(np.isfinite(y))
@@ -179,7 +444,7 @@ def build_manual_dense_plan(table, groups, wavelengths, values, *, source='manua
     measured_axis = np.asarray([point.measured_nm for point in table], dtype=float)
     previous = -1
     for group, indices in enumerate(groups, 1):
-        if (len(indices) != 5 or any(type(index) is not int for index in indices)
+        if (len(indices) != group_size or any(type(index) is not int for index in indices)
                 or indices[0] <= previous or np.any(np.diff(indices) <= 0)
                 or indices[0] < 0 or indices[-1] >= len(table)):
             raise ValueError(f'手动路线必须是{len(groups)}组互不重叠且波长递增的五点')
@@ -191,14 +456,15 @@ def build_manual_dense_plan(table, groups, wavelengths, values, *, source='manua
                                  measured_nm=float(point.measured_nm),
                                  codes=list(point.codes)))
         sampled = [float(np.interp(measured_axis[index], x, y)) for index in indices]
-        check = assess_five_point_shape(
+        check = assess_peak_shape(
             [row['measured_nm'] for row in selected], sampled
         )
-        check.update(group=group, peak_center_index=indices[2], spacing_nm=None,
+        middle = group_size // 2
+        check.update(group=group, peak_center_index=indices[middle], spacing_nm=None,
                      point_spacings_nm=(np.diff(indices) * .02).tolist())
         fitted_center = check.get('fitted_center_nm')
         peaks.append(float(fitted_center) if fitted_center is not None
-                     and math.isfinite(fitted_center) else selected[2]['measured_nm'])
+                     and math.isfinite(fitted_center) else selected[middle]['measured_nm'])
         checks.append(check)
         rows.extend(selected)
         previous = indices[-1]
@@ -206,7 +472,7 @@ def build_manual_dense_plan(table, groups, wavelengths, values, *, source='manua
     command(rows, 32, 1)
     return dict(
         schema=_plan_schema(point_count), rows=rows, peaks_nm=peaks,
-        peak_count=len(groups), point_count=point_count,
+        peak_count=len(groups), point_count=point_count, points_per_peak=group_size,
         reference_kind='dense_CH1', reference_source=source,
         reference_wavelengths_nm=x.tolist(), reference_values=y.tolist(),
         optical_accuracy_verified=False, discarded_weak_peaks=0,
@@ -222,26 +488,110 @@ def _validate_plan(plan):
     rows = plan.get('rows', [])
     command(rows, 32, 1)
     peaks = plan.get('peaks_nm', [])
-    peak_count = len(rows) // POINTS_PER_PEAK
-    if (len(rows) % POINTS_PER_PEAK or not 1 <= peak_count <= MAX_PEAKS
+    group_size = points_per_peak_for_rows(rows)
+    peak_count = len(rows) // group_size
+    if (len(rows) % group_size or not 1 <= peak_count <= MAX_PEAKS
             or len(peaks) != peak_count or not all(math.isfinite(v) for v in peaks)):
         raise ValueError('临时点表峰数或每峰五点结构无效')
     for i, row in enumerate(rows):
-        if (row.get('group') != i // 5 + 1 or
+        if (row.get('group') != i // group_size + 1 or
                 not math.isfinite(row.get('target_nm', math.nan)) or
                 not math.isfinite(row.get('measured_nm', math.nan)) or
                 abs(row['target_nm'] - (1525 + .02 * row['index'])) > 1e-6 or
                 abs(row['measured_nm'] - row['target_nm']) > .00201):
             raise ValueError('临时点表的分组或标定坐标无效')
+    if (plan.get('automatic_selection') and group_size == 7
+            and plan.get('symmetry_basis') == 'fitted_dbm_height'):
+        _validate_height_pair_metadata(plan, peak_count)
+    elif plan.get('automatic_selection') and group_size == 7:
+        # Legacy wavelength-mirrored routes retain their original validation;
+        # new height-paired routes must not be forced back onto a mirrored grid.
+        for start in range(0, len(rows), 7):
+            indices = [row['index'] for row in rows[start:start + 7]]
+            if any(left + right != 2 * indices[3] for left, right in zip(indices, reversed(indices))):
+                raise ValueError('自动七点路线左右不对称')
     plan['optical_accuracy_verified'] = False
     plan['peak_count'] = peak_count
     plan['point_count'] = len(rows)
+    if plan.get('points_per_peak', group_size) != group_size:
+        raise ValueError('保存的每峰点数与路线分组不一致')
+    plan['points_per_peak'] = group_size
     checks = plan.get('selection_fit_checks')
     plan['selection_validation_required'] = not (
         isinstance(checks, list) and len(checks) == peak_count
         and all(isinstance(check, dict) and check.get('passed') for check in checks)
     )
     return plan
+
+
+def _validate_height_pair_metadata(plan, peak_count):
+    """Check height-pair identities/diagnostics without claiming optical accuracy."""
+    checks, bands = plan.get('symmetry_checks'), plan.get('selection_band_checks')
+    region = plan.get('selection_height_region')
+    visual_half = region == 'dbm_visual_upper_half'
+    drop = plan.get('selection_peak_drop_db')
+    if (not isinstance(checks, list) or len(checks) != peak_count
+            or not isinstance(bands, list) or len(bands) != peak_count
+            or region not in (None, 'dbm_visual_upper_half')):
+        raise ValueError('保存的高度配对明细不完整')
+    if visual_half:
+        if (plan.get('selection_height_fraction') != .5
+                or plan.get('selection_baseline_basis') != 'higher_of_two_local_smoothed_dbm_valleys'
+                or plan.get('selection_boundary_rule') != 'closest_real_height_above_half_with_two_inner_rows'):
+            raise ValueError('保存的dBm视觉半高规则无效')
+    elif type(drop) not in (int, float) or not math.isfinite(drop) or drop <= 0:
+        # Old fixed-relative-cutoff records retain their original meaning.
+        raise ValueError('保存的高度配对明细不完整')
+    try:
+        for group, (check, band) in enumerate(zip(checks, bands), 1):
+            rows = plan['rows'][(group - 1)*7:group*7]
+            indices = [row['index'] for row in rows]
+            if (check['group'] != group or band['group'] != group
+                    or check['center_index'] != indices[3]
+                    or check['left_indices'] != indices[2::-1]
+                    or check['right_indices'] != indices[4:]):
+                raise ValueError('高度配对行号与保存路线不一致')
+            fit = np.asarray(band['selected_fitted_dbm'], float)
+            raw = np.asarray(band['selected_raw_dbm'], float)
+            if visual_half:
+                baseline, left_base, right_base = (float(band[key]) for key in
+                    ('baseline_dbm', 'left_base_dbm', 'right_base_dbm'))
+                drop = band['fitted_peak_dbm'] - band['threshold_dbm']
+                if (not all(math.isfinite(value) for value in (baseline, left_base, right_base, drop))
+                        or drop <= 0 or band['height_fraction'] != .5
+                        or abs(baseline - max(left_base, right_base)) > 1e-8
+                        or abs(band['threshold_dbm'] - .5*(band['fitted_peak_dbm'] + baseline)) > 1e-8
+                        or abs(band['peak_drop_db'] - drop) > 1e-8):
+                    raise ValueError('保存的dBm视觉半高下限不一致')
+            if (fit.shape != (7,) or raw.shape != (7,)
+                    or not np.all(np.isfinite(fit)) or not np.all(np.isfinite(raw))
+                    or not math.isfinite(band['fitted_peak_dbm'])
+                    or not math.isfinite(band['threshold_dbm'])
+                    or abs(band['threshold_dbm'] - (band['fitted_peak_dbm'] - drop)) > 1e-8
+                    or np.any(fit < band['threshold_dbm'] - 1e-8)
+                    or np.any(raw < band['threshold_dbm'] - 1e-8)
+                    or not rows[2]['measured_nm'] < band['fitted_peak_nm'] < rows[4]['measured_nm']):
+                raise ValueError('保存的高度配对光强或峰顶范围无效')
+            expected = [
+                ('target_drop_db', np.linspace(drop/3, drop, 3)),
+                ('fitted_left_dbm', fit[2::-1]), ('fitted_right_dbm', fit[4:]),
+                ('fitted_pair_difference_db', abs(fit[2::-1] - fit[4:])),
+                ('raw_pair_difference_db', abs(raw[2::-1] - raw[4:])),
+            ]
+            if visual_half:
+                expected.append(('target_height_dbm', band['fitted_peak_dbm'] - np.linspace(drop/3, drop, 3)))
+                gap = np.asarray(band['boundary_height_gap_db'], float)
+                if gap.shape != (2,) or not np.allclose(gap, fit[[0, 6]] - band['threshold_dbm'],
+                                                       rtol=0, atol=1e-8):
+                    raise ValueError('保存的半高边界偏差与明细不一致')
+                if np.any(fit[1:3] < fit[0] - 1e-8) or np.any(fit[4:6] < fit[6] - 1e-8):
+                    raise ValueError('保存的半高边界点不是该侧最低点')
+            for key, values in expected:
+                saved = np.asarray(check[key], float)
+                if saved.shape != (3,) or not np.allclose(saved, values, rtol=0, atol=1e-8):
+                    raise ValueError('保存的高度配对差值与明细不一致')
+    except (KeyError, TypeError, OverflowError) as exc:
+        raise ValueError('保存的高度配对明细无效') from exc
 
 
 def validate_plan_payload(plan):
@@ -270,7 +620,7 @@ def load_calibrated_plan(path):
     payload = json.loads(Path(path).read_text(encoding='utf-8'))
     plan = payload.get('plan', {})
     results = payload.get('rows', [])
-    if (not payload.get('complete') or len(results) not in range(5, 46, 5)
+    if (not payload.get('complete') or len(results) not in (set(range(5, 46, 5)) | set(range(7, 64, 7)))
             or not all(r.get('success') for r in results)):
         raise ValueError('需要完整成功的每峰五点实时标定文件')
     _validate_plan(plan)
@@ -352,21 +702,9 @@ def select_points(table, wavelengths, values, *, spacing_nm=None,
         np.asarray(properties['prominences'], dtype=float)
         * np.sqrt(detection_width_nm)
     )
-    # A clipped (saturated) FBG reflection has a flattened top, which inflates
-    # its dBm half-height width and therefore its score far beyond the physical
-    # peak population.  Normalising against that inflated maximum raises the
-    # keep threshold and silently discards the weakest real gratings.  Use the
-    # second-highest score as the reference instead: a single clipped giant
-    # cannot raise it, yet it stays far above ripple/baseline bumps, which the
-    # same fraction rule continues to exclude.
-    if len(detection_scores) >= 2:
-        detection_score_reference = float(
-            np.sort(detection_scores)[-2]
-        )
-    else:
-        detection_score_reference = float(np.max(detection_scores))
     dominant = np.flatnonzero(
-        detection_scores >= detection_score_reference * SELECTION_DBM_SCORE_FRACTION
+        detection_scores
+        >= float(np.max(detection_scores)) * SELECTION_DBM_SCORE_FRACTION
     )
     if not len(dominant):
         dominant = np.asarray([int(np.argmax(detection_scores))], dtype=int)
@@ -561,7 +899,13 @@ def _feedback_pair(adc_channel, feedback_selector):
 
 def command(rows, cycles, tag, first_delay_us=600, spacing_us=50,
             boundary_extra_us=0, feedback_selector=2, point_delays_us=None,
-            adc_channel=1):
+            adc_channel=1, single_sample=False, fast_dac_writes=False):
+    if type(single_sample) is not bool or type(fast_dac_writes) is not bool:
+        raise ValueError('Sampling/DAC options must be boolean')
+    if fast_dac_writes and not single_sample:
+        raise ValueError('Fast DAC writes require the Beta single-sample protocol')
+    if single_sample:
+        spacing_us = 0  # Exactly one wait and one physical ADC read per point.
     if type(feedback_selector) is not int or feedback_selector not in range(4):
         raise ValueError('Invalid analog feedback selector')
     if type(adc_channel) is not int or adc_channel not in range(4):
@@ -572,16 +916,21 @@ def command(rows, cycles, tag, first_delay_us=600, spacing_us=50,
     if type(cycles) is not int or not (cycles == 0 or 32 <= cycles <= 512):
         raise ValueError("cycles must be 0 (continuous) or 32..512")
     point_count = len(rows)
+    group_size = points_per_peak_for_rows(rows)
     if (type(tag) is not int or not 1 <= tag <= 0xffffffff
-            or point_count not in range(POINTS_PER_PEAK, MAX_POINTS + 1,
-                                        POINTS_PER_PEAK)):
+            or point_count not in range(group_size, group_size * MAX_PEAKS + 1,
+                                        group_size)):
         raise ValueError("5～45 rows (a multiple of five) and a nonzero uint32 tag required")
-    if any(type(v) is not int or not 50 <= v <= limit or v % 25 for v, limit in ((first_delay_us, 850), (spacing_us, 600))) or first_delay_us + spacing_us > 900:
+    if (type(first_delay_us) is not int or not 50 <= first_delay_us <= 850 or first_delay_us % 25
+            or (not single_sample and (type(spacing_us) is not int or not 50 <= spacing_us <= 600
+                                       or spacing_us % 25 or first_delay_us + spacing_us > 900))):
         raise ValueError("首次等待须为50～850 µs、双采样间隔须为50～600 µs，均为25 µs整数倍且合计不超过900 µs")
     if type(boundary_extra_us) is not int or not 0 <= boundary_extra_us <= 3000 or boundary_extra_us % 25:
         raise ValueError('跨峰额外等待须为0～3000 µs的25 µs整数倍；总等待不限，允许低于15 Hz')
     packet = bytearray(808)
     protocol_version = (
+        7 if single_sample else
+        6 if group_size == 7 else
         3 if adc_channel == 1 and point_count == MAX_POINTS else
         4 if adc_channel == 1 else
         5
@@ -590,7 +939,9 @@ def command(rows, cycles, tag, first_delay_us=600, spacing_us=50,
     packet[6:8] = first_delay_us.to_bytes(2, 'big')
     packet[8:12] = tag.to_bytes(4, 'big')
     packet[12:16] = (b'T45!' if protocol_version == 3 else
-                     b'TVR!' if protocol_version == 4 else b'TVC!')
+                     b'TVR!' if protocol_version == 4 else
+                     b'T7S!' if protocol_version == 6 else
+                     b'T1S!' if protocol_version == 7 else b'TVC!')
     packet[16:18] = cycles.to_bytes(2, 'big')
     packet[18] = 16
     packet[19] = ((0 if feedback_selector == 2 else feedback_selector + 1)
@@ -598,6 +949,8 @@ def command(rows, cycles, tag, first_delay_us=600, spacing_us=50,
                   else (adc_channel << 4) | feedback_selector)
     packet[20:22] = spacing_us.to_bytes(2, 'big')
     packet[22:24] = boundary_extra_us.to_bytes(2,'big')
+    if single_sample:
+        packet[22:24] = bytes((group_size, int(fast_dac_writes)))
     previous = -1
     for i, row in enumerate(rows):
         index, codes = row['index'], tuple(row['codes'])
@@ -606,7 +959,25 @@ def command(rows, cycles, tag, first_delay_us=600, spacing_us=50,
         if any(type(c) is not int or not 0 <= c <= limit for c, limit in zip(codes, LIMITS)):
             raise ValueError("DAC current limit exceeded")
         previous = index
-        packet[24+i*12:36+i*12] = b''.join(v.to_bytes(2, 'big') for v in (index, *codes))
+        if protocol_version not in (6, 7):
+            packet[24+i*12:36+i*12] = b''.join(v.to_bytes(2, 'big') for v in (index, *codes))
+    if protocol_version in (6, 7):
+        # Fixed 808-byte transport stays unchanged. Lossless bit packing uses
+        # the existing code ceilings, not rounding/truncation of DAC values.
+        waits = ([first_delay_us + (boundary_extra_us if i % group_size == 0 else 0)
+                  for i in range(point_count)] if point_delays_us is None
+                 else list(point_delays_us))
+        if (len(waits) != point_count or (point_delays_us is not None and boundary_extra_us)
+                or any(type(v) is not int or not 50 <= v <= 15000 or v % 25 for v in waits)):
+            raise ValueError('七点路线逐点等待须为50～15000 µs的25 µs整数倍')
+        bit = 24 * 8
+        for row, wait in zip(rows, waits):
+            for value, width in zip((row['index'], *row['codes'], wait // 25), V6_FIELD_BITS):
+                for shift in range(width - 1, -1, -1):
+                    packet[bit // 8] |= ((value >> shift) & 1) << (7 - bit % 8)
+                    bit += 1
+        packet[V6_CRC_OFFSET:V6_CRC_OFFSET + 4] = binascii.crc32(packet[:V6_CRC_OFFSET]).to_bytes(4, 'big')
+        return bytes(packet)
     packet[564:568] = binascii.crc32(packet[:564]).to_bytes(4, 'big')
     if point_delays_us is not None:
         if boundary_extra_us or len(point_delays_us) != point_count or any(
@@ -632,18 +1003,17 @@ def extract_frames(buffer):
         kind, status = buffer[2:4]
         # Include the old rejection type so old firmware fails visibly.  Data
         # frames carry their variable point count at byte 29.
-        if kind in (10, 14) and status == 127:
+        if kind in (10, 14, 16) and status == 127:
             length = 20
-        elif kind == 14:
+        elif kind in (14, 16):
             if len(buffer) < 30:
                 return
             point_count = buffer[29]
-            if point_count not in range(POINTS_PER_PEAK, MAX_POINTS + 1,
-                                        POINTS_PER_PEAK):
+            if point_count not in (set(range(5, 46, 5)) | set(range(7, 64, 7))):
                 del buffer[0]
                 continue
-            length = 46 + point_count * (13 if status & 2 else 9)
-        elif kind == 15:
+            length = 46 + point_count * (11 if kind == 16 else 13 if status & 2 else 9)
+        elif kind in (15, 17):
             length = 42
         else:
             length = 0
@@ -659,20 +1029,23 @@ def extract_frames(buffer):
 
 def decode(wire, tag, route_crc, first_delay_us=600, spacing_us=50,
            boundary_extra_us=0, feedback_selector=2, point_delays_us=None,
-           point_count=MAX_POINTS, adc_channel=1):
+           point_count=MAX_POINTS, adc_channel=1, points_per_peak=5,
+           single_sample=False, fast_dac_writes=False):
+    if single_sample:
+        spacing_us = 0
     u16 = lambda at: int.from_bytes(wire[at:at+2], 'big')
     u32 = lambda at: int.from_bytes(wire[at:at+4], 'big')
-    if len(wire) == 20 and wire[:2] == b'\xd9\x9d' and wire[2] in (10, 14) and wire[3] == 127:
+    if len(wire) == 20 and wire[:2] == b'\xd9\x9d' and wire[2] in (10, 14, 16) and wire[3] == 127:
         if u32(4) != tag or wire[-2:] != b'\x9d\xd9':
             raise ValueError("Rejection identity mismatch")
         raise RuntimeError(f"板卡拒绝临时{point_count}点协议（{u16(8):04x}），请使用配套固件并检查设备状态")
     expected_narrow = 46 + point_count * 9
-    expected_wide = 46 + point_count * 13
+    expected_wide = 46 + point_count * (11 if single_sample else 13)
     if len(wire) not in (expected_narrow, expected_wide, 42) or wire[:2] != b'\xd9\x9d' or wire[-2:] != b'\x9d\xd9' or u32(len(wire)-6) != binascii.crc32(wire[:-6]):
         raise ValueError("Frame CRC/length/trailer mismatch")
     if u32(4) != tag:
         raise ValueError("Session tag mismatch")
-    if len(wire) == 42 and wire[2] == 15:
+    if len(wire) == 42 and wire[2] == (17 if single_sample else 15):
         feedback_pair = _feedback_pair(adc_channel, feedback_selector)
         if (u32(32) != route_crc
                 or wire[18:22] != bytes((1, 1, *feedback_pair))):
@@ -685,7 +1058,8 @@ def decode(wire, tag, route_crc, first_delay_us=600, spacing_us=50,
     wide = bool(status & 2)
     encoded_channel = (status >> 2) & 3
     permitted_mask = 3 if adc_channel == 1 else 15
-    if (wire[2] != 14 or len(wire) != (expected_wide if wide else expected_narrow)
+    if (wire[2] != (16 if single_sample else 14) or (single_sample and not wide)
+            or len(wire) != (expected_wide if wide else expected_narrow)
             or status & ~permitted_mask or encoded_channel != (0 if adc_channel == 1 else adc_channel)
             or u32(24) != route_crc):
         raise ValueError("Data identity mismatch")
@@ -699,39 +1073,55 @@ def decode(wire, tag, route_crc, first_delay_us=600, spacing_us=50,
         raise ValueError("Data timing/count/order mismatch")
     records, previous = [], -1
     for i in range(point_count):
-        at = order_end + i*(12 if wide else 8)
-        first, second = u16(at), u16(at+2)
-        write, end = (u32(at+4), u32(at+8)) if wide else (u16(at+4), u16(at+6))
-        expected_delay = first_delay_us+spacing_us+(boundary_extra_us if i%5==0 else 0)
+        at = order_end + i*(10 if single_sample else 12 if wide else 8)
+        first = u16(at)
+        second = first if single_sample else u16(at+2)
+        write, end = ((u32(at+2), u32(at+6)) if single_sample else
+                      (u32(at+4), u32(at+8)) if wide else (u16(at+4), u16(at+6)))
+        expected_delay = first_delay_us+spacing_us+(boundary_extra_us if i%points_per_peak==0 else 0)
         if point_delays_us is not None:
             expected_delay = point_delays_us[i] + spacing_us
         if max(first, second) > 4095 or not previous < write < end <= u32(20)+1 or end-write < expected_delay:
             raise ValueError("ADC/timestamp validation failed")
         previous = end
-        records.append(dict(first_code=first, second_code=second, write_end_us=write, second_end_us=end))
+        records.append(dict(adc_code=first, write_end_us=write, sample_end_us=end)
+                       if single_sample else dict(first_code=first, second_code=second,
+                                                  write_end_us=write, second_end_us=end))
     return dict(kind='data', sequence=sequence, cycle_start_us=u32(16), elapsed_us=u32(20),
                 records=records, i2c_errors=u16(34), spi_errors=u32(36), firmware=u32(8),
                 feedback_selector=feedback_selector, adc_channel=adc_channel,
-                signal_channel_name=SIGNAL_CHANNELS[adc_channel])
+                signal_channel_name=SIGNAL_CHANNELS[adc_channel], points_per_peak=points_per_peak,
+                single_sample=single_sample, samples_per_point=(1 if single_sample else 2),
+                fast_dac_writes=fast_dac_writes)
+
+
+def frame_adc_values(frame):
+    key = 'adc_code' if frame.get('single_sample') else 'second_code'
+    return [record[key] for record in frame['records']]
 
 
 def quality(frame):
-    pairs = np.asarray([[r['first_code'], r['second_code']] for r in frame['records']], float)
-    values = pairs[:, 1]
+    single = bool(frame.get('single_sample'))
+    pairs = (np.asarray(frame_adc_values(frame), float).reshape(-1, 1) if single else
+             np.asarray([[r['first_code'], r['second_code']] for r in frame['records']], float))
+    values = pairs[:, 0 if single else 1]
     clipped = bool(np.any(pairs >= 4080))
-    settling = bool(np.any(abs(pairs[:, 1]-pairs[:, 0]) > np.maximum(8, abs(values)*.02)))
-    if len(values) % POINTS_PER_PEAK:
+    settling = False if single else bool(np.any(abs(pairs[:, 1]-pairs[:, 0]) > np.maximum(8, abs(values)*.02)))
+    group_size = frame.get('points_per_peak', 5)
+    if len(values) % group_size:
         raise ValueError('Frame point count is not divisible into five-point peaks')
-    edge = any(int(np.argmax(group)) in (0, 4)
-               for group in values.reshape(-1, POINTS_PER_PEAK))
+    edge = any(int(np.argmax(group)) in (0, group_size - 1)
+               for group in values.reshape(-1, group_size))
     return dict(warmed_up=frame['sequence'] >= 16, clipped=clipped, unsettled=settling,
-                pair_difference_large=settling, stability_verified=False,
+                pair_difference_large=(None if single else settling),
+                difference_check_performed=not single, stability_verified=False,
                 peak_at_edge=edge, optical_accuracy_verified=False)
 
 
 def execute_device(device, plan, output, *, cycles=256, on_frame=None, should_stop=lambda: False,
                    first_delay_us=600, spacing_us=50, boundary_extra_us=0,
-                   feedback_selector=2, point_delays_us=None, adc_channel=1):
+                   feedback_selector=2, point_delays_us=None, adc_channel=1,
+                   single_sample=False, fast_dac_writes=False):
     import app_JDSU as app
     from benchmark_stress_realtime import _safe_disarm, _close_shutter
     from capture_ch1_teacher_spectrum import save_checkpoint
@@ -745,16 +1135,21 @@ def execute_device(device, plan, output, *, cycles=256, on_frame=None, should_st
     tag = (time.time_ns() & 0xffffffff) or 1
     point_delays_us = list(point_delays_us) if point_delays_us is not None else None
     point_count = len(plan['rows'])
-    peak_count = point_count // POINTS_PER_PEAK
+    group_size = points_per_peak_for_rows(plan['rows'])
+    peak_count = point_count // group_size
     packet = command(plan['rows'], cycles, tag, first_delay_us, spacing_us,
                      boundary_extra_us, feedback_selector, point_delays_us,
-                     adc_channel)
-    crc = binascii.crc32(packet[:662] if point_delays_us is not None else packet[24:564])
+                     adc_channel, single_sample, fast_dac_writes)
+    spacing_us = 0 if single_sample else spacing_us
+    crc = binascii.crc32(packet[:V6_CRC_OFFSET] if packet[4] in (6, 7) else
+                        packet[:662] if point_delays_us is not None else packet[24:564])
     report = dict(schema=('temporary_test_45_capture_v1' if point_count == MAX_POINTS
                           else 'temporary_test_variable_capture_v2'),
                   plan=plan, frames=[], complete=False,
-                  point_count=point_count, peak_count=peak_count,
+                  point_count=point_count, peak_count=peak_count, points_per_peak=group_size,
                   first_delay_us=first_delay_us, spacing_us=spacing_us,
+                  single_sample=single_sample, samples_per_point=(1 if single_sample else 2),
+                  fast_dac_writes=fast_dac_writes, protocol_version=packet[4],
                   boundary_extra_us=boundary_extra_us,
                   point_delays_us=point_delays_us,
                   signal_channel=adc_channel,
@@ -809,7 +1204,8 @@ def execute_device(device, plan, output, *, cycles=256, on_frame=None, should_st
             for wire in extract_frames(buffer):
                 frame = decode(wire, tag, crc, first_delay_us, spacing_us,
                                boundary_extra_us, feedback_selector,
-                               point_delays_us, point_count, adc_channel)
+                               point_delays_us, point_count, adc_channel, group_size,
+                               single_sample, fast_dac_writes)
                 if frame['i2c_errors'] or frame['spi_errors']:
                     raise RuntimeError("Board I2C/SPI error")
                 if frame['kind'] == 'terminal':
@@ -829,7 +1225,15 @@ def execute_device(device, plan, output, *, cycles=256, on_frame=None, should_st
                         raise ValueError("Board clock/firmware changed")
                     frame['cycle_start_us'] = previous['cycle_start_us'] + delta
                 received_count += 1
-                frame['host_received_s'] = time.monotonic()
+                frame['host_received_s'] = time.perf_counter()
+                arrival_lookup = getattr(device, 'take_frame_arrival_info', None)
+                if callable(arrival_lookup):
+                    arrival = arrival_lookup(wire)
+                    if (isinstance(arrival, tuple) and len(arrival) == 2
+                            and isinstance(arrival[0], float)
+                            and isinstance(arrival[1], int)):
+                        frame['socket_arrival_s'] = arrival[0]
+                        frame['socket_receive_batch'] = arrival[1]
                 frame['quality'] = quality(frame)
                 report['frames'].append(frame)
                 if continuous:
@@ -858,6 +1262,12 @@ def execute_device(device, plan, output, *, cycles=256, on_frame=None, should_st
         report['error'] = str(exc)
         raise
     finally:
+        # Shutdown helpers clear the serial input buffer.  The LAN adapter
+        # also clears its counters there, so retain the acquisition counters
+        # before sending the mandatory disarm/shutter commands.
+        stats = getattr(device, 'transport_stats', None)
+        if isinstance(stats, dict):
+            report['transport_stats_before_shutdown'] = dict(stats)
         errors = []
         for key, action in (('disarm_ack', _safe_disarm), ('shutter_ack', _close_shutter)):
             try:

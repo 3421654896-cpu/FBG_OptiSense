@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import ctypes
+import ipaddress
 import json
 import os
 from ctypes import wintypes
@@ -232,7 +233,32 @@ class OtaMachineProfileStore:
             "board_ip": str(stored.get("board_ip", "")),
             "package_path": package_path,
             "password": password,
+            "mqtt_device_id": str(stored.get("mqtt_device_id", "")),
         }
+
+    def lan_board_ip(self, machine_id: str) -> str:
+        """Return the selected unit's pinned LAN target without decrypting OTA credentials.
+
+        Full-function LAN control must never fall back to subnet-wide discovery:
+        another powered unit may answer first while a different machine's
+        wavelength table is selected in the application.
+        """
+
+        if machine_id not in MACHINE_LABELS:
+            raise ValueError(f"不支持的机号：{machine_id}")
+        value = str(
+            self._data.get("machines", {}).get(machine_id, {}).get("board_ip", "")
+        ).strip()
+        try:
+            address = ipaddress.IPv4Address(value)
+        except ipaddress.AddressValueError as exc:
+            raise ValueError(
+                f"{MACHINE_LABELS[machine_id]}没有有效的板卡 IP；"
+                "请先在 OTA 页面填写并保存该机的板卡 IP"
+            ) from exc
+        if address.is_unspecified or address.is_multicast or address.is_loopback:
+            raise ValueError(f"{MACHINE_LABELS[machine_id]}的板卡 IP 不可用于局域网连接")
+        return str(address)
 
     def save_profile(
         self,
@@ -241,6 +267,7 @@ class OtaMachineProfileStore:
         board_ip: str,
         password: str,
         package_path: str,
+        mqtt_device_id: str = "",
     ) -> None:
         if machine_id not in MACHINE_LABELS:
             raise ValueError(f"不支持的机号：{machine_id}")
@@ -248,6 +275,7 @@ class OtaMachineProfileStore:
             "machine_label": MACHINE_LABELS[machine_id],
             "board_ip": str(board_ip).strip(),
             "package_path": str(package_path).strip(),
+            "mqtt_device_id": str(mqtt_device_id).strip(),
             "password_dpapi": self._protector(password) if password else "",
         }
         self._data.setdefault("machines", {})[machine_id] = record

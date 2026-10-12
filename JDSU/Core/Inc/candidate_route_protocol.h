@@ -21,23 +21,27 @@
  */
 #define CANDIDATE_ROUTE_COUNT 27U
 #define TEMPORARY_ROUTE_COUNT 45U
+#define TEMPORARY_ROUTE_MAX_COUNT 63U
+#define TEMPORARY_ROUTE_V6_CRC_OFFSET 796U
 #define TEMPORARY_ROUTE_MIN_COUNT 5U
 #define CANDIDATE_ROUTE_V1_CRC_OFFSET 348U
 #define CANDIDATE_ROUTE_V2_GUARD_OFFSET 352U
 #define CANDIDATE_ROUTE_V2_CRC_OFFSET 364U
 typedef struct {
-    uint16_t indices[TEMPORARY_ROUTE_COUNT];
-    uint16_t codes[TEMPORARY_ROUTE_COUNT][5];
+    uint16_t indices[TEMPORARY_ROUTE_MAX_COUNT];
+    uint16_t codes[TEMPORARY_ROUTE_MAX_COUNT][5];
     uint16_t firstDelayUs;
     uint16_t spacingUs;
     uint16_t boundaryExtraUs;
-    uint16_t pointDelayUs[TEMPORARY_ROUTE_COUNT];
+    uint16_t pointDelayUs[TEMPORARY_ROUTE_MAX_COUNT];
     uint8_t pointCount;
     uint32_t totalWaitUs;
     uint32_t tableCrc;
     uint8_t protocolVersion;
     uint8_t adcChannel;
     uint8_t feedbackSelector;
+    uint8_t pointsPerPeak;
+    uint8_t fastDacWrites;
     uint8_t guardBeforeLocal;
     uint16_t guardHoldUs;
     uint16_t guardIndex;
@@ -58,12 +62,82 @@ static uint32_t CandidateRoute_Crc(const uint8_t *p, size_t count)
     }
     return crc ^ 0xFFFFFFFFUL;
 }
+/* v6 T7S!: each row is losslessly packed as index:11, DAC:16/16/15/15/15,
+ * absolute wait in 25 us units:10. All 63 rows fit the unchanged 808-byte
+ * transport. CRC covers header, rows, waits and zero padding through byte795.
+ * There are no hidden rows, flash writes or resampled DAC values. */
+static uint16_t CandidateRoute_Bits(const uint8_t *packet, size_t *bit, uint8_t width)
+{
+    uint16_t value = 0U;
+    for(uint8_t i = 0U; i < width; i++, (*bit)++)
+        value = (uint16_t)((value << 1) |
+                ((packet[*bit / 8U] >> (7U - *bit % 8U)) & 1U));
+    return value;
+}
+
+static uint8_t CandidateRoute_ParseV6(const uint8_t *packet, CandidateRoute *out)
+{
+    static const uint8_t widths[7] = {11U,16U,16U,15U,15U,15U,10U};
+    static const uint16_t limits[5] = {63351U,63351U,32767U,24575U,24575U};
+    uint8_t count = packet[5], channel = packet[19] >> 4, selector = packet[19] & 3U;
+    uint8_t single = packet[4] == 7U;
+    uint8_t group = single ? packet[22] : 7U;
+    uint16_t cycles = CandidateRoute_U16(packet + 16U);
+    uint16_t first = CandidateRoute_U16(packet + 6U), spacing = CandidateRoute_U16(packet + 20U);
+    uint16_t boundary = single ? 0U : CandidateRoute_U16(packet + 22U);
+    if(packet[0] != 255U || packet[1] != 255U || packet[2] != 3U || packet[3] != 10U ||
+       (group != 5U && group != 7U) || count < group || count > group * 9U || count % group ||
+       (single && (packet[23] & 0xFEU)) ||
+       packet[12] != 'T' || packet[13] != (single ? '1' : '7') || packet[14] != 'S' || packet[15] != '!' ||
+       packet[18] != 16U || channel > 3U || (packet[19] & 12U) || (channel >= 2U && selector) ||
+       !(packet[8] | packet[9] | packet[10] | packet[11]) ||
+       (cycles != 0U && (cycles < 32U || cycles > 512U)) ||
+       first < 50U || first > 850U || first % 25U ||
+       (single ? spacing != 0U : (spacing < 50U || spacing > 600U ||
+        spacing % 25U || (uint32_t)first + spacing > 900U)) || boundary > 3000U || boundary % 25U)
+        return 0U;
+    uint32_t supplied = ((uint32_t)packet[796] << 24) | ((uint32_t)packet[797] << 16) |
+                        ((uint32_t)packet[798] << 8) | packet[799];
+    if(CandidateRoute_Crc(packet, TEMPORARY_ROUTE_V6_CRC_OFFSET) != supplied) return 0U;
+    for(size_t i = 800U; i < 808U; i++) if(packet[i]) return 0U;
+    size_t bit = 24U * 8U;
+    uint16_t previous = 0U;
+    /* Validate the entire route before publishing any output or writing DACs. */
+    for(uint8_t row = 0U; row < count; row++) {
+        uint16_t values[7];
+        for(uint8_t field = 0U; field < 7U; field++) values[field] = CandidateRoute_Bits(packet, &bit, widths[field]);
+        if(values[0] > 2000U || (row && values[0] <= previous) || values[6] < 2U || values[6] > 600U)
+            return 0U;
+        previous = values[0];
+        for(uint8_t field = 0U; field < 5U; field++) if(values[field + 1U] > limits[field]) return 0U;
+    }
+    for(; bit < TEMPORARY_ROUTE_V6_CRC_OFFSET * 8U; bit++)
+        if((packet[bit / 8U] >> (7U - bit % 8U)) & 1U) return 0U;
+    bit = 24U * 8U;
+    out->totalWaitUs = (uint32_t)count * spacing;
+    for(uint8_t row = 0U; row < count; row++) {
+        out->indices[row] = CandidateRoute_Bits(packet, &bit, widths[0]);
+        for(uint8_t field = 0U; field < 5U; field++)
+            out->codes[row][field] = CandidateRoute_Bits(packet, &bit, widths[field + 1U]);
+        out->pointDelayUs[row] = CandidateRoute_Bits(packet, &bit, widths[6]) * 25U;
+        out->totalWaitUs += out->pointDelayUs[row];
+    }
+    out->pointCount = count; out->protocolVersion = packet[4];
+    out->pointsPerPeak = group; out->fastDacWrites = single ? packet[23] : 0U;
+    out->adcChannel = channel; out->feedbackSelector = selector;
+    out->firstDelayUs = first; out->spacingUs = spacing; out->boundaryExtraUs = boundary;
+    out->tableCrc = supplied;
+    out->guardBeforeLocal = 0U; out->guardHoldUs = 0U; out->guardIndex = 0U;
+    for(uint8_t field = 0U; field < 5U; field++) out->guardCodes[field] = 0U;
+    return 1U;
+}
 static uint8_t CandidateRoute_Parse(const uint8_t *packet, size_t length, CandidateRoute *out)
 {
     static const uint16_t legacyLimits[5] = {58981U, 58981U, 32767U, 24575U, 24575U};
     static const uint16_t temporaryLimits[5] = {63351U, 63351U, 32767U, 24575U, 24575U};
     if(!packet || !out || length != 808U) return 0U;
     uint8_t version = packet[4];
+    if(version == 6U || version == 7U) return CandidateRoute_ParseV6(packet, out);
     /* v3/v4: temporary selected rows, no hidden writes. Separate magic,
      * CRC and frame types keep the existing v1/v2 wire contract unchanged. */
     if(version == 3U || version == 4U || version == 5U) {
@@ -148,6 +222,7 @@ static uint8_t CandidateRoute_Parse(const uint8_t *packet, size_t length, Candid
         out->protocolVersion = version;
         out->adcChannel = adcChannel;
         out->feedbackSelector = feedbackSelector;
+        out->pointsPerPeak = 5U; out->fastDacWrites = 0U;
         out->pointCount = pointCount;
         out->firstDelayUs = first;
         out->spacingUs = spacing;
@@ -219,6 +294,7 @@ static uint8_t CandidateRoute_Parse(const uint8_t *packet, size_t length, Candid
     out->protocolVersion = version;
     out->adcChannel = 1U;
     out->feedbackSelector = 2U;
+    out->pointsPerPeak = 3U; out->fastDacWrites = 0U;
     out->pointCount = CANDIDATE_ROUTE_COUNT;
     if(version == 2U) {
         out->guardBeforeLocal = packet[22];

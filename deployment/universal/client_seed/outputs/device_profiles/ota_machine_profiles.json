@@ -1,0 +1,18 @@
+{
+  "schema": "fbg_ota_machine_profiles_v1",
+  "selected_machine_id": "machine_1",
+  "machines": {
+    "machine_1": {
+      "machine_label": "一号机",
+      "board_ip": "192.168.3.46",
+      "package_path": "",
+      "password_dpapi": ""
+    },
+    "machine_2": {
+      "machine_label": "二号机",
+      "board_ip": "192.168.3.26",
+      "package_path": "",
+      "password_dpapi": ""
+    }
+  }
+}

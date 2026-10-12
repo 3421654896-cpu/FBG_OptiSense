@@ -5,7 +5,19 @@
 #include "stress_table.h"
 #include "stress_multirate.h"
 #include "firmware_version.h"
+#if FBG_FEATURE_BETA_DAC_POLLING
+#include "pi11210_register_polling.h"
+#endif
 #include "candidate_route_protocol.h"
+#include "dense_scan_protocol.h"
+#include "board_thermal_protocol.h"
+
+static uint32_t lastBoardThermalTick = 0U;
+static void publishCachedThermalIfDue(uint8_t mode)
+{
+    if((uint32_t)(HAL_GetTick() - lastBoardThermalTick) >= 500U)
+        checkTemp(mode);
+}
 
 #define DAC_DELAY 3
 #define TRANSITION_STEPS 6
@@ -136,7 +148,9 @@ uint8_t readBuf[2] = {0};
 uint16_t IDACData[5] = {0};
 uint16_t prevDAC[5] = {0};
 uint16_t uADCOriginvalues[4] = {0};
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 int8_t unstableFlags[Number][4] = {0};
+#endif
 
 static uint8_t prevDACValid = 0;
 /* ADC/unstable arrays are frame-local and start at zero for either table. */
@@ -227,6 +241,7 @@ static uint16_t stressMultirateReleaseCodes =
 
 static void stressMultirateDisarmAndClear(void)
 {
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 		stressHoldRequestedTag = 0U;
 		stressHoldActiveTag = 0U;
 		stressHoldRequestedProduction = 0U;
@@ -244,6 +259,7 @@ static void stressMultirateDisarmAndClear(void)
 				stressMultirateReleaseCodes);
 		StressMultirate_SetSingleTrackEnabled(&stressMultirateState, 0U);
 		StressMultirate_StartSession(&stressMultirateState);
+#endif
 }
 
 static PI11210_Status_t pi11210Status = {0};
@@ -539,12 +555,31 @@ static HAL_StatusTypeDef PI11210_WriteRegisterRaw(uint8_t registerAddress,
 		uint16_t value)
 {
 		HAL_StatusTypeDef result = HAL_ERROR;
+		/* Keep Mem_Write: same-board timing showed Master_Transmit was slower
+		 * for this three-byte register command. Do not infer speed from API size. */
 		uint8_t data[2];
 		data[0] = (uint8_t)(value >> 8);
 		data[1] = (uint8_t)value;
 
 		for(uint8_t attempt = 0U; attempt < 2U; attempt++)
 		{
+#if FBG_FEATURE_BETA_DAC_POLLING
+                /* Keep initialization/control/status on HAL. The fast path
+                 * only writes the five already initialized DAC registers. */
+                if(pi11210Status.initialized && pi11210Status.online &&
+                   pi11210Status.partValid &&
+                   (CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk) &&
+                   (DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk) &&
+                   (registerAddress == IDAC1 || registerAddress == IDAC4 ||
+                    registerAddress == IDAC5 || registerAddress == IDAC6 ||
+                    registerAddress == IDAC7))
+                    result = PI11210_WriteRegisterPolling(&hi2c1,
+                            (uint8_t)(IDAC_7BIT_ADDR << 1),
+                            (uint8_t)(registerAddress << 1), data,
+                            PI11210_I2C_TIMEOUT_MS,
+                            (registerAddress == IDAC7) ? 1U : 0U);
+                else
+#endif
 				result = HAL_I2C_Mem_Write(&hi2c1,
 						(uint16_t)(IDAC_7BIT_ADDR << 1),
 						(uint16_t)(registerAddress << 1),
@@ -553,10 +588,22 @@ static HAL_StatusTypeDef PI11210_WriteRegisterRaw(uint8_t registerAddress,
 				if(result == HAL_OK)
 				{
 						pi11210Status.online = 1U;
+#if FBG_FEATURE_BETA_DAC_POLLING
+                        /* A recovered byte transfer must not make a failed
+                         * row look successful and reopen the SOA shutter. */
+                        if(attempt != 0U)
+                        {
+                            pi11210Status.initialized = 0U;
+                            return HAL_ERROR;
+                        }
+#endif
 						return HAL_OK;
 				}
 				PI11210_CountI2CError();
 				pi11210Status.online = 0U;
+#if FBG_FEATURE_BETA_DAC_POLLING
+                PI11210_ForceShutter();
+#endif
 				if(attempt == 0U && PI11210_RecoverI2CBus() != HAL_OK) break;
 		}
 		pi11210Status.initialized = 0U;
@@ -603,6 +650,7 @@ HAL_StatusTypeDef PI11210_Init(void)
 		uint8_t preserveShutter =
 				(HAL_GPIO_ReadPin(PI11210_CLR_PORT, PI11210_CLR_PIN) == GPIO_PIN_SET)
 				? 1U : 0U;
+		PI11210_ForceShutter();
 		pi11210Status.initialized = 0U;
 
 		result = PI11210_ReadStatusRaw();
@@ -620,10 +668,13 @@ HAL_StatusTypeDef PI11210_Init(void)
 				if(PI11210_ReadStatusRaw() != HAL_OK) return HAL_ERROR;
 				preserveShutter = 1U;
 		}
-		/* Configure the datasheet-defined zero-current Gate.  CLR stays low during
-		 * normal operation; no unmonitored negative SOA voltage is generated. */
+		/* Configure the datasheet-defined zero-current Gate while CLR is asserted.
+		 * It is released only by an explicit source-mode command. */
 		if(PI11210_WriteRegisterRaw(PI11210_REG_IDAC6_CONFIG,
 				PI11210_IDAC6_GATE_CONFIG) != HAL_OK) return HAL_ERROR;
+		/* IDAC6 source code is write-only.  Do not assume a previous command or
+		 * power-on reset left it at zero before CLR can be released. */
+		if(PI11210_WriteRegisterRaw((uint8_t)IDAC6, 0U) != HAL_OK) return HAL_ERROR;
 		if(pi11210Status.rawStatus &
 				(PI11210_STATUS_PRO_TEMP | PI11210_STATUS_OVR_TEMP))
 		{
@@ -713,22 +764,12 @@ HAL_StatusTypeDef PI11210_SetSOAShutter(uint8_t shutterEnabled)
 		return HAL_OK;
 }
 
-HAL_StatusTypeDef PI11210_SetCode(PI11210_Channeld_t channel, uint16_t code)
+/* Private row writer: callers validate readiness once before the five writes.
+ * Current limiting and the cached over-temperature check remain per channel. */
+static HAL_StatusTypeDef PI11210_WriteReadyCode(PI11210_Channeld_t channel, uint16_t code)
 {
 		HAL_StatusTypeDef result;
-
-		switch(channel)
-		{
-				case IDAC5:
-				case IDAC6:
-				case IDAC1:
-				case IDAC4:
-				case IDAC7:
-						break;
-				default: return HAL_ERROR;
-		}
 		code = PI11210_LimitCode(channel, code);
-		if(PI11210_EnsureReady() != HAL_OK) return HAL_ERROR;
 		if(pi11210Status.rawStatus &
 				(PI11210_STATUS_PRO_TEMP | PI11210_STATUS_OVR_TEMP)) return HAL_ERROR;
 
@@ -737,13 +778,33 @@ HAL_StatusTypeDef PI11210_SetCode(PI11210_Channeld_t channel, uint16_t code)
 		 * during the off/source transition. */
 		result = PI11210_WriteRegisterRaw((uint8_t)channel, code);
 		dacRet = result;
-		if(result == HAL_OK && channel == IDAC6 &&
-				pi11210Status.soaMode == PI11210_SOA_SHUTTER)
+		if(result == HAL_OK && channel == IDAC6)
 		{
 				HAL_GPIO_WritePin(PI11210_CLR_PORT, PI11210_CLR_PIN, GPIO_PIN_RESET);
+				if(HAL_GPIO_ReadPin(PI11210_CLR_PORT, PI11210_CLR_PIN) != GPIO_PIN_RESET)
+				{
+						PI11210_ForceShutter();
+						dacRet = HAL_ERROR;
+						return HAL_ERROR;
+				}
 				pi11210Status.soaMode = PI11210_SOA_SOURCE;
 		}
 		return result;
+}
+
+HAL_StatusTypeDef PI11210_SetCode(PI11210_Channeld_t channel, uint16_t code)
+{
+		switch(channel)
+		{
+				case IDAC5:
+				case IDAC6:
+				case IDAC1:
+				case IDAC4:
+				case IDAC7: break;
+				default: return HAL_ERROR;
+		}
+		if(PI11210_EnsureReady() != HAL_OK) return HAL_ERROR;
+		return PI11210_WriteReadyCode(channel, code);
 }
 
 static HAL_StatusTypeDef PI11210_ApplyChangedTableCodes(void)
@@ -770,22 +831,87 @@ static HAL_StatusTypeDef PI11210_ApplyChangedTableCodes(void)
 
 static HAL_StatusTypeDef PI11210_ApplyCalibrationCodes(const uint16_t codes[5])
 {
-		uint8_t allWritesOk = 1U;
+		if(PI11210_EnsureReady() != HAL_OK)
+		{
+				prevDACValid = 0U;
+				PI11210_ForceShutter();
+				return HAL_ERROR;
+		}
 		/* The wavelength table was measured with this complete five-write order.
 		 * Always rewrite all channels so the optical path depends only on the
 		 * requested target row; the mode-specific settling interval follows it. */
 		for(uint8_t channelIndex = 0U; channelIndex < 5U; channelIndex++)
 		{
 				uint16_t code = codes[channelIndex];
-				if(PI11210_SetCode(tableDACChannels[channelIndex], code) == HAL_OK)
+				if(PI11210_WriteReadyCode(tableDACChannels[channelIndex], code) == HAL_OK)
 				{
 						prevDAC[channelIndex] = code;
 				}
-				else allWritesOk = 0U;
+				else
+				{
+						/* Never reinitialize/release CLR for a later channel after
+						 * any write in this row failed. Abort with shutter asserted. */
+						prevDACValid = 0U;
+						PI11210_ForceShutter();
+						return HAL_ERROR;
+				}
 		}
-		prevDACValid = allWritesOk;
-		return allWritesOk ? HAL_OK : HAL_ERROR;
+		prevDACValid = 1U;
+		return HAL_OK;
 }
+
+#if FBG_FEATURE_BETA_SINGLE_ADC
+static HAL_StatusTypeDef PI11210_ApplyTemporaryCodesFast(const uint16_t codes[5])
+{
+        /* Experimental only: v115/v116 optical A/B failed despite clean bus
+         * status and dark timing. Do not infer optical equivalence from the
+         * datasheet's sequential-write diagram or a successful HAL return.
+         * Only GAIN (0x15)
+         * and SOA (0x16) are adjacent in calibration order. Do not touch the
+         * group register or unused channels, or skip any of the five codes. */
+        HAL_StatusTypeDef result = HAL_ERROR;
+        uint16_t gain = PI11210_LimitCode(IDAC5, codes[0]);
+        uint16_t soa = PI11210_LimitCode(IDAC6, codes[1]);
+        uint8_t data[4] = {(uint8_t)(gain >> 8), (uint8_t)gain,
+                           (uint8_t)(soa >> 8), (uint8_t)soa};
+        if(PI11210_EnsureReady() != HAL_OK || (pi11210Status.rawStatus &
+                (PI11210_STATUS_PRO_TEMP | PI11210_STATUS_OVR_TEMP))) goto failed;
+        for(uint8_t attempt = 0U; attempt < 2U; attempt++) {
+                result = HAL_I2C_Mem_Write(&hi2c1,
+                        (uint16_t)(IDAC_7BIT_ADDR << 1), (uint16_t)(IDAC5 << 1),
+                        I2C_MEMADD_SIZE_8BIT, data, 4U, PI11210_I2C_TIMEOUT_MS);
+                if(result == HAL_OK) break;
+                PI11210_CountI2CError();
+                pi11210Status.online = 0U;
+                if(attempt == 0U && PI11210_RecoverI2CBus() != HAL_OK) break;
+        }
+        dacRet = result;
+        if(result != HAL_OK) {
+                pi11210Status.initialized = 0U;
+                goto failed;
+        }
+        pi11210Status.online = 1U;
+        /* Release CLR only after the complete GAIN/SOA transaction succeeds. */
+        HAL_GPIO_WritePin(PI11210_CLR_PORT, PI11210_CLR_PIN, GPIO_PIN_RESET);
+        if(HAL_GPIO_ReadPin(PI11210_CLR_PORT, PI11210_CLR_PIN) != GPIO_PIN_RESET)
+                goto failed;
+        pi11210Status.soaMode = PI11210_SOA_SOURCE;
+        prevDAC[0] = gain; prevDAC[1] = soa;
+        for(uint8_t channelIndex = 2U; channelIndex < 5U; channelIndex++) {
+                uint16_t code = PI11210_LimitCode(tableDACChannels[channelIndex], codes[channelIndex]);
+                if(PI11210_WriteReadyCode(tableDACChannels[channelIndex], code) != HAL_OK)
+                        goto failed;
+                prevDAC[channelIndex] = code;
+        }
+        prevDACValid = 1U;
+        return HAL_OK;
+failed:
+        dacRet = HAL_ERROR;
+        prevDACValid = 0U;
+        PI11210_ForceShutter();
+        return HAL_ERROR;
+}
+#endif
 
 static HAL_StatusTypeDef PI11210_ApplyFullTableRowCalibrationOrder(uint16_t tableIndex)
 {
@@ -1103,6 +1229,8 @@ static uint16_t precisionLegacy20kMask(uint8_t selector)
 		return (uint16_t)((1UL << TEMPERATURE_SEGMENT_COUNT) - 1UL);
 }
 
+static uint8_t stressHoldWait(uint32_t start, uint32_t offsetUs, uint32_t cyclesPerUs);
+
 void runLaserSwitchTest(void)
 {
 		uint16_t sourceIndex = ((uint16_t)aRxBuffer[4] << 8) | aRxBuffer[5];
@@ -1110,6 +1238,7 @@ void runLaserSwitchTest(void)
 		uint8_t useFullTable = aRxBuffer[8] & 0x01U;
 		uint8_t useStressTable = aRxBuffer[8] & 0x02U;
 		uint8_t useCustomCodes = aRxBuffer[8] & 0x04U;
+        uint8_t useFastCodes = useCustomCodes && (aRxBuffer[8] & 0x08U);
 		uint32_t diagnosticTag = ((uint32_t)aRxBuffer[9] << 24) |
 		        ((uint32_t)aRxBuffer[10] << 16) |
 		        ((uint32_t)aRxBuffer[11] << 8) | (uint32_t)aRxBuffer[12];
@@ -1136,7 +1265,8 @@ void runLaserSwitchTest(void)
 				uint32_t suppliedCrc = ((uint32_t)aRxBuffer[36] << 24) |
 				        ((uint32_t)aRxBuffer[37] << 16) |
 				        ((uint32_t)aRxBuffer[38] << 8) | (uint32_t)aRxBuffer[39];
-				if(aRxBuffer[13] != 'C' || aRxBuffer[14] != '2' || aRxBuffer[15] != 'P' ||
+				if((useFastCodes && !FBG_FEATURE_BETA_SINGLE_ADC) ||
+                   aRxBuffer[13] != 'C' || aRxBuffer[14] != '2' || aRxBuffer[15] != (useFastCodes ? 'B' : 'P') ||
 				   CandidateRoute_Crc(aRxBuffer, 36U) != suppliedCrc)
 				{
 						ClearRxBuff();
@@ -1161,7 +1291,7 @@ void runLaserSwitchTest(void)
 				}
 		}
 		if((aRxBuffer[8] != 0U && aRxBuffer[8] != 1U && aRxBuffer[8] != 3U &&
-		    aRxBuffer[8] != 5U) ||
+		    aRxBuffer[8] != 5U && !(FBG_FEATURE_BETA_SINGLE_ADC && aRxBuffer[8] == 13U)) ||
 		   (useStressTable && (sourceIndex >= STRESS_TABLE_POINT_COUNT ||
 		                       targetIndex >= STRESS_TABLE_POINT_COUNT)) ||
 		   (useCustomCodes && (sourceIndex > 2000U || targetIndex > 2000U)) ||
@@ -1175,20 +1305,40 @@ void runLaserSwitchTest(void)
 		        (useStressTable ? Stress_Wave_DAC[sourceIndex] : Wave_DAC[sourceIndex]);
 		targetCodes = useCustomCodes ? customTargetCodes :
 		        (useStressTable ? Stress_Wave_DAC[targetIndex] : Wave_DAC[targetIndex]);
+#if FBG_FEATURE_BETA_SINGLE_ADC
+        if(useCustomCodes) {
+                CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+                DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+                ReceEndFlag = 0U; /* Only now, after validating the complete request. */
+        }
+#endif
 
 		/* Hold the source for 100 ms. Source stability is NOT verified here;
 		 * the tagged curve is a pair-transition diagnostic, not sparse replay. */
 		for(uint8_t channel = 0; channel < 5; channel++) IDACData[channel] = sourceCodes[channel];
 		prevDACValid = 0U;
-		if(((useStressTable || useCustomCodes) ? PI11210_ApplyCalibrationCodes(sourceCodes)
-		                   : PI11210_ApplyChangedTableCodes()) != HAL_OK)
+        HAL_StatusTypeDef sourceResult;
+#if FBG_FEATURE_BETA_SINGLE_ADC
+        if(useFastCodes) sourceResult = PI11210_ApplyTemporaryCodesFast(sourceCodes);
+        else
+#endif
+        sourceResult = ((useStressTable || useCustomCodes) ? PI11210_ApplyCalibrationCodes(sourceCodes)
+		                   : PI11210_ApplyChangedTableCodes());
+		if(sourceResult != HAL_OK)
 		{
 				ClearRxBuff();
 				return;
 		}
-		delay_us(SWITCH_TEST_SOURCE_SETTLE_US);
+#if FBG_FEATURE_BETA_SINGLE_ADC
+        if(useCustomCodes) {
+                if(!stressHoldWait(DWT->CYCCNT, SWITCH_TEST_SOURCE_SETTLE_US, cyclesPerUs)) {
+                        PI11210_ForceShutter(); prevDACValid = 0U; ClearRxBuff(); return;
+                }
+        } else
+#endif
+        delay_us(SWITCH_TEST_SOURCE_SETTLE_US);
 		ADC_ReadSix(baseline);
-		if(!ADC_LastTransferOk()) { prevDACValid = 0U; ClearRxBuff(); return; }
+		if(!ADC_LastTransferOk()) { PI11210_ForceShutter(); prevDACValid = 0U; ClearRxBuff(); return; }
 
 		/* In wavelength-only mode, hold GAIN and SOA at their source values so
 		 * the detector step is not caused by a simultaneous optical-power change.
@@ -1213,6 +1363,12 @@ void runLaserSwitchTest(void)
 				if(PI11210_ApplyCalibrationCodes(targetCodes) != HAL_OK)
 				{ prevDACValid = 0U; ClearRxBuff(); return; }
 		}
+#if FBG_FEATURE_BETA_SINGLE_ADC
+        else if(useFastCodes) {
+                if(PI11210_ApplyTemporaryCodesFast(targetCodes) != HAL_OK)
+                        { prevDACValid = 0U; ClearRxBuff(); return; }
+        }
+#endif
 		else if((useStressTable ? PI11210_ApplyStressRowCalibrationOrder() :
 		         useCustomCodes ? PI11210_ApplyCalibrationCodes(targetCodes)
 		                       : PI11210_ApplyChangedTableCodes()) != HAL_OK)
@@ -1230,7 +1386,7 @@ void runLaserSwitchTest(void)
 		txBuffer[position++] = 0x5DU;
 		txBuffer[position++] = useCustomCodes ? 0x03U :
 		        (useStressTable ? 0x02U : 0x01U);
-		txBuffer[position++] = useCustomCodes ? 0x05U :
+		txBuffer[position++] = useCustomCodes ? (useFastCodes ? 0x0DU : 0x05U) :
 		        (useFullTable | useStressTable);
 		switchTestWriteU16(&position, sourceIndex);
 		switchTestWriteU16(&position, targetIndex);
@@ -1243,11 +1399,20 @@ void runLaserSwitchTest(void)
 
 		for(uint8_t sampleIndex = 0; sampleIndex < SWITCH_TEST_SAMPLE_COUNT; sampleIndex++)
 		{
+#if FBG_FEATURE_BETA_SINGLE_ADC
+                if(useCustomCodes) {
+                        if(!stressHoldWait(switchEnd, switchTestOffsetsUs[sampleIndex], cyclesPerUs)) {
+                                PI11210_ForceShutter(); prevDACValid = 0U; ClearRxBuff(); return;
+                        }
+                } else
+#endif
+                {
 				targetCycle = switchEnd + switchTestOffsetsUs[sampleIndex] * cyclesPerUs;
 				while((int32_t)(DWT->CYCCNT - targetCycle) < 0) { }
+                }
 				uint32_t sampleCycle = DWT->CYCCNT;
 				ADC_ReadSix(samples);
-				if(!ADC_LastTransferOk()) { prevDACValid = 0U; ClearRxBuff(); return; }
+				if(!ADC_LastTransferOk()) { PI11210_ForceShutter(); prevDACValid = 0U; ClearRxBuff(); return; }
 				switchTestWriteU32(&position, (sampleCycle - switchStart) / cyclesPerUs);
 				for(uint8_t channel = 0; channel < 6; channel++) switchTestWriteU16(&position, samples[channel]);
 		}
@@ -1276,10 +1441,15 @@ static uint8_t fastStreamControlActive(void)
 static uint8_t stressHoldWait(uint32_t start, uint32_t offsetUs, uint32_t cyclesPerUs)
 {
 		uint32_t lastService = DWT->CYCCNT;
-		while((uint32_t)(DWT->CYCCNT - start) / cyclesPerUs < offsetUs)
+		/* All route holds are bounded below one DWT wrap. Precompute the
+		 * cycle deadlines instead of dividing on every busy-loop iteration. */
+		if(cyclesPerUs == 0U || offsetUs > 0xFFFFFFFFUL / cyclesPerUs) return 0U;
+		uint32_t targetCycles = offsetUs * cyclesPerUs;
+		uint32_t serviceCycles = 1000U * cyclesPerUs;
+		while((uint32_t)(DWT->CYCCNT - start) < targetCycles)
 		{
 				if(ReceEndFlag || !fastStreamControlActive()) return 0U;
-				if((uint32_t)(DWT->CYCCNT - lastService) / cyclesPerUs >= 1000U)
+				if((uint32_t)(DWT->CYCCNT - lastService) >= serviceCycles)
 				{
 						ThermalControl_Process();
 						ThermalControl_SafetyTick();
@@ -1348,9 +1518,17 @@ volatile uint32_t routeDiagnosticRejectMask = 0U;
 
 static uint32_t routeTestCrcByte(uint32_t crc, uint8_t value)
 {
+        /* Reflected CRC32/IEEE; two nibble lookups replace eight bit steps.
+         * The wire CRC and polynomial remain identical. */
+        static const uint32_t nibble[16] = {
+                0x00000000UL, 0x1DB71064UL, 0x3B6E20C8UL, 0x26D930ACUL,
+                0x76DC4190UL, 0x6B6B51F4UL, 0x4DB26158UL, 0x5005713CUL,
+                0xEDB88320UL, 0xF00F9344UL, 0xD6D6A3E8UL, 0xCB61B38CUL,
+                0x9B64C2B0UL, 0x86D3D2D4UL, 0xA00AE278UL, 0xBDBDF21CUL
+        };
         crc ^= value;
-        for(uint8_t bit = 0U; bit < 8U; bit++)
-                crc = (crc >> 1) ^ ((crc & 1U) ? 0xEDB88320UL : 0U);
+        crc = (crc >> 4) ^ nibble[crc & 0x0FU];
+        crc = (crc >> 4) ^ nibble[crc & 0x0FU];
         return crc;
 }
 
@@ -1695,15 +1873,17 @@ static void runFastFlankStream(void)
 {
 		uint8_t customStream = aRxBuffer[3] == 0x0AU;
 		uint8_t temporary45Stream = customStream &&
-				(aRxBuffer[4] == 3U || aRxBuffer[4] == 4U || aRxBuffer[4] == 5U);
+				(aRxBuffer[4] == 3U || aRxBuffer[4] == 4U || aRxBuffer[4] == 5U || aRxBuffer[4] == 6U || aRxBuffer[4] == 7U);
+		uint8_t singleSample = customStream && aRxBuffer[4] == 7U;
 		uint8_t wideTemporary = 0U;
 		uint8_t guardedCustomStream = 0U;
 		uint8_t tripletStream = (aRxBuffer[3] == 0x08U) || customStream;
 		uint8_t fullMapStream = aRxBuffer[3] == 0x09U;
 		static CandidateRoute candidateRoute;
-		static const uint8_t candidateLocalRows[TEMPORARY_ROUTE_COUNT] = {
+		static const uint8_t candidateLocalRows[TEMPORARY_ROUTE_MAX_COUNT] = {
 				0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,
-				27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+				27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,
+				45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62
 		};
 		const uint8_t *streamRows = fullMapStream ? fastFullMapRows
 				: (customStream ? candidateLocalRows : (tripletStream ? fastTripletRows : routeTestRows[1]));
@@ -1742,18 +1922,22 @@ static void runFastFlankStream(void)
 		uint16_t reject = 0U;
 		uint32_t tableCrc = 0xFFFFFFFFUL;
 		uint16_t tailStart = customStream
-				? (temporary45Stream ? 666U : (aRxBuffer[4] == 2U ? 368U : 352U))
+				? ((aRxBuffer[4] == 6U || singleSample) ? 800U : temporary45Stream ? 666U : (aRxBuffer[4] == 2U ? 368U : 352U))
 				: (fullMapStream ? (explicitFullMapGain ? 23U : 21U) : (explicitFlankSpacing ? 22U : 19U));
 		for(uint16_t index = tailStart; index < USART_RX_SIZE; index++)
 				if(aRxBuffer[index] != 0U) { tailInvalid = 1U; break; }
 		if(!fastStreamControlActive()) reject |= 1U;
+		if(singleSample && !FBG_FEATURE_BETA_SINGLE_ADC) reject |= 256U;
 		if(workState != EXTRA_STATE) reject |= 2U;
 		if(!dma_transfer_complete) reject |= 4U;
 		uint8_t temporaryCountValid = route == 3U
 				? aRxBuffer[5] == TEMPORARY_ROUTE_COUNT
+				: route == 6U ? (aRxBuffer[5] >= 7U && aRxBuffer[5] <= TEMPORARY_ROUTE_MAX_COUNT && aRxBuffer[5] % 7U == 0U)
+				: singleSample ? ((aRxBuffer[22] == 5U || aRxBuffer[22] == 7U) &&
+				  aRxBuffer[5] >= aRxBuffer[22] && aRxBuffer[5] <= aRxBuffer[22] * 9U && aRxBuffer[5] % aRxBuffer[22] == 0U)
 				: (aRxBuffer[5] >= TEMPORARY_ROUTE_MIN_COUNT &&
 				   aRxBuffer[5] <= TEMPORARY_ROUTE_COUNT && aRxBuffer[5] % 5U == 0U);
-		if((customStream ? (route != 1U && route != 2U && route != 3U && route != 4U && route != 5U)
+		if((customStream ? (route != 1U && route != 2U && route != 3U && route != 4U && route != 5U && route != 6U && route != 7U)
 		                 : (route != 1U)) ||
 		   aRxBuffer[5] != (customStream
 				? (temporary45Stream ? aRxBuffer[5] : 27U) : 0U) ||
@@ -1790,9 +1974,12 @@ static void runFastFlankStream(void)
 					if(temporary45Stream)
 					{
 						pointCount = candidateRoute.pointCount;
-						wideTemporary = candidateRoute.totalWaitUs > 40500UL;
+						/* x7 has more DAC overhead than x5; use 32-bit point
+						 * timestamps even at short dwells, not the old 45-row budget. */
+						wideTemporary = singleSample || candidateRoute.protocolVersion == 6U ||
+								candidateRoute.totalWaitUs > 40500UL;
 						frameLength = (uint16_t)(46U + pointCount *
-								(wideTemporary ? 13U : 9U));
+								(singleSample ? 11U : wideTemporary ? 13U : 9U));
 						/* Slow selected scans are finite unless cycles is zero.
 						 * Their budget follows the requested dwell time, not 15 Hz. */
 						streamTimeoutMs = 5000UL + requestedCycles *
@@ -1809,13 +1996,17 @@ static void runFastFlankStream(void)
 				if(memcmp(&aRxBuffer[12], "F27!", 4U) != 0) reject |= 256U;
 		}
 		else if(memcmp(&aRxBuffer[12], "F15!", 4U) != 0) reject |= 256U;
-		if(PD_ReadFeedbackSelector(0U) != 0U) reject |= 512U;
-		uint8_t selectedAdcChannel = (temporary45Stream && route == 5U)
+		uint8_t selectedAdcChannel = (temporary45Stream && (route == 5U || route == 6U || route == 7U))
 				? candidateRoute.adcChannel : 1U;
 		uint8_t selectedFeedback = temporary45Stream
 				? candidateRoute.feedbackSelector : requestedStreamSelector1;
 		uint8_t expectedSelector0 = selectedAdcChannel == 0U ? selectedFeedback : 0U;
 		uint8_t expectedSelector1 = selectedAdcChannel == 1U ? selectedFeedback : 0U;
+		/* Legacy/CH1 streams leave CH0 at 2 kOhm.  A v5 CH0 stream
+		 * deliberately selects its own gain; validate that exact selector
+		 * below instead of rejecting valid 5/20/40 kOhm settings here. */
+		if(selectedAdcChannel != 0U && PD_ReadFeedbackSelector(0U) != 0U)
+				reject |= 512U;
 		if(expectedSelector0 > 3U || expectedSelector1 > 3U ||
 		   PD_ReadFeedbackSelector(0U) != expectedSelector0 ||
 		   PD_ReadFeedbackSelector(1U) != expectedSelector1) reject |= 1024U;
@@ -1825,7 +2016,7 @@ static void runFastFlankStream(void)
 				memset(aTxBuffer, 0, USART_TX_SIZE);
 				aTxBuffer[0] = 0xD9U; aTxBuffer[1] = 0x9DU;
 				aTxBuffer[2] = customStream
-						? (temporary45Stream ? 0x0EU : (aRxBuffer[4] == 2U ? 0x0CU : 0x0AU))
+						? (singleSample ? 0x10U : temporary45Stream ? 0x0EU : (aRxBuffer[4] == 2U ? 0x0CU : 0x0AU))
 						: 0x03U;
 				aTxBuffer[3] = 0x7FU;
 				for(uint8_t byte = 0U; byte < 4U; byte++)
@@ -1872,6 +2063,10 @@ static void runFastFlankStream(void)
 
 		while((continuousTemporary || completed < requestedCycles) && !stopReason)
 		{
+				/* Only publish between complete optical frames. After the first
+				 * cycle SOURCE is established, so the existing protected USB wait
+				 * also drains this tiny monitor before reusing txBuffer. */
+				if(completed) publishCachedThermalIfDue(EXTRA_STATE);
 				/* Never overwrite the shared transmit buffer before USB owns the
 				 * previous frame. The bounded wait remains protection-aware. */
 				uint32_t waitStart = DWT->CYCCNT;
@@ -1904,18 +2099,32 @@ static void runFastFlankStream(void)
 				 * board timestamps without changing the 32-bit wire field. */
 				streamElapsedCycles += (uint32_t)(cycleStart - previousCycleStart);
 				previousCycleStart = cycleStart;
-				uint16_t firstCodes[FAST_FULLMAP_STREAM_POINTS];
-				uint16_t secondCodes[FAST_FULLMAP_STREAM_POINTS];
-				uint32_t writeEndUs[FAST_FULLMAP_STREAM_POINTS];
-				uint32_t secondEndUs[FAST_FULLMAP_STREAM_POINTS];
+				uint16_t firstCodes[TEMPORARY_ROUTE_MAX_COUNT];
+				uint16_t secondCodes[TEMPORARY_ROUTE_MAX_COUNT];
+				uint32_t writeEndUs[TEMPORARY_ROUTE_MAX_COUNT];
+				uint32_t secondEndUs[TEMPORARY_ROUTE_MAX_COUNT];
 				uint16_t samples[4];
 				uint16_t guardWriteEndUs = 0U;
 
 				for(uint8_t local = 0U; local < pointCount; local++)
 				{
 						uint8_t row = streamRows[local];
+						/* A short x7 hold never enters stressHoldWait's >=1 ms
+						 * cooperative service. One thermal step per 63-row frame
+						 * can therefore stale the 17-step 1-Wire transaction.
+						 * Advance at most one bounded primitive before each x7
+						 * group, outside both DAC-to-ADC settling windows. Keep
+						 * all legacy frame paths and thermal fault limits intact. */
+						if(temporary45Stream && (route == 6U || route == 7U) &&
+						   local % candidateRoute.pointsPerPeak == 0U)
+								ThermalControl_Process();
 						ThermalControl_SafetyTick();
 						PI11210_Process();
+						/* Service BW20's prompt/result state machine between
+						 * wavelength writes.  One service call per whole scan holds
+						 * each compact frame until several later scans complete. */
+						if(streamOverLan && temporary45Stream)
+								WifiTransport_Process();
 						if(!fastStreamControlActive()) { stopReason |= 2U; break; }
 						if(ReceEndFlag) { stopReason |= 1U; break; }
 						if(WifiTransport_IsOtaActive()) { stopReason |= 4U; break; }
@@ -1936,6 +2145,12 @@ static void runFastFlankStream(void)
 								IDACData[channel] = customStream ? candidateRoute.codes[local][channel] : Stress_Wave_DAC[row][channel];
 						if(customStream)
 						{
+#if FBG_FEATURE_BETA_SINGLE_ADC
+                                if(singleSample && candidateRoute.fastDacWrites) {
+                                        if(PI11210_ApplyTemporaryCodesFast(candidateRoute.codes[local]) != HAL_OK)
+                                                { stopReason |= 32U; break; }
+                                } else
+#endif
 								if(PI11210_ApplyCalibrationCodes(candidateRoute.codes[local]) != HAL_OK)
 										{ stopReason |= 32U; break; }
 						}
@@ -1969,12 +2184,14 @@ static void runFastFlankStream(void)
 						ADC_ReadMask((uint8_t)(1U << selectedAdcChannel), samples);
 						firstCodes[local] = samples[selectedAdcChannel];
 						if(!ADC_LastTransferOk()) { stopReason |= 64U; break; }
-						uint32_t firstEnd = DWT->CYCCNT;
-						if(!stressHoldWait(firstEnd, sampleSpacingUs, cyclesPerUs))
-								{ stopReason |= ReceEndFlag ? 1U : 8U; break; }
-						ADC_ReadMask((uint8_t)(1U << selectedAdcChannel), samples);
-						secondCodes[local] = samples[selectedAdcChannel];
-						if(!ADC_LastTransferOk()) { stopReason |= 64U; break; }
+						if(!singleSample) {
+                                uint32_t firstEnd = DWT->CYCCNT;
+                                if(!stressHoldWait(firstEnd, sampleSpacingUs, cyclesPerUs))
+                                        { stopReason |= ReceEndFlag ? 1U : 8U; break; }
+                                ADC_ReadMask((uint8_t)(1U << selectedAdcChannel), samples);
+                                secondCodes[local] = samples[selectedAdcChannel];
+                                if(!ADC_LastTransferOk()) { stopReason |= 64U; break; }
+                        }
 						uint32_t relativeSecondUs = (DWT->CYCCNT - cycleStart) / cyclesPerUs;
 						if(!wideTemporary && relativeSecondUs > 0xFFFFU) { stopReason |= 16U; break; }
 						secondEndUs[local] = relativeSecondUs;
@@ -1987,12 +2204,12 @@ static void runFastFlankStream(void)
 				memset(txBuffer, 0, frameLength);
 				txBuffer[position++] = 0xD9U; txBuffer[position++] = 0x9DU;
 				txBuffer[position++] = customStream
-						? (temporary45Stream ? 0x0EU : (guardedCustomStream ? 0x0CU : 0x0AU))
+						? (singleSample ? 0x10U : temporary45Stream ? 0x0EU : (guardedCustomStream ? 0x0CU : 0x0AU))
 						: 0x03U;
 				txBuffer[position++] =
 						((completed >= FAST_FLANK_STREAM_WARMUP_CYCLES) ? 1U : 0U) |
 						(wideTemporary ? 2U : 0U) |
-						((temporary45Stream && route == 5U)
+						((temporary45Stream && (route == 5U || route == 6U || route == 7U) && selectedAdcChannel != 1U)
 						 ? (uint8_t)(selectedAdcChannel << 2) : 0U);
 				switchTestWriteU32(&position, tag);
 				switchTestWriteU32(&position, APP_FIRMWARE_VERSION);
@@ -2015,7 +2232,7 @@ static void runFastFlankStream(void)
 				for(uint8_t local = 0U; local < pointCount; local++)
 				{
 						switchTestWriteU16(&position, firstCodes[local]);
-						switchTestWriteU16(&position, secondCodes[local]);
+						if(!singleSample) switchTestWriteU16(&position, secondCodes[local]);
 						if(wideTemporary)
 						{
 								switchTestWriteU32(&position, writeEndUs[local]);
@@ -2048,7 +2265,9 @@ static void runFastFlankStream(void)
 						{
 								queued = fullMapStream
 										? WifiTransport_QueueFastFullMapFrame(txBuffer, frameLength)
-										: WifiTransport_QueueRawFrame(txBuffer, frameLength);
+										: (temporary45Stream
+										   ? WifiTransport_QueueTemporaryFrame(txBuffer, frameLength)
+										   : WifiTransport_QueueRawFrame(txBuffer, frameLength));
 								if(queued) break;
 								ThermalControl_SafetyTick();
 								PI11210_Process();
@@ -2061,6 +2280,7 @@ static void runFastFlankStream(void)
 										{ stopReason |= 128U; break; }
 						}
 						if(stopReason || !queued) break;
+						WifiTransport_Process();
 				}
 				else
 				{
@@ -2080,7 +2300,9 @@ static void runFastFlankStream(void)
 		uint32_t finalWait = DWT->CYCCNT;
 		if(streamOverLan)
 		{
-				while(!WifiTransport_FlushFastFullMapFrames() &&
+				while(!(temporary45Stream
+				          ? WifiTransport_FlushTemporaryFrames()
+				          : WifiTransport_FlushFastFullMapFrames()) &&
 				      WifiTransport_IsLanRawClientActive() &&
 				      (DWT->CYCCNT - finalWait) / cyclesPerUs <= 1000000U)
 				{
@@ -2118,7 +2340,7 @@ static void runFastFlankStream(void)
 				memset(txBuffer, 0, endLength);
 				txBuffer[position++] = 0xD9U; txBuffer[position++] = 0x9DU;
 				txBuffer[position++] = customStream
-						? (temporary45Stream ? 0x0FU : (guardedCustomStream ? 0x0DU : 0x0BU))
+						? (singleSample ? 0x11U : temporary45Stream ? 0x0FU : (guardedCustomStream ? 0x0DU : 0x0BU))
 						: 0x04U;
 				txBuffer[position++] = (completed == requestedCycles && !stopReason) ? 0U : 1U;
 				switchTestWriteU32(&position, tag);
@@ -2388,6 +2610,7 @@ static void sendStressRawCapture(uint16_t pointCount, uint32_t frameStartMs,
 		else dma_transfer_complete = 1U;
 }
 
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 void write_ms5614t_table(void){
 		if(!dma_transfer_complete) return;
 
@@ -2875,6 +3098,8 @@ void write_ms5614t_table(void){
 		}
 }
 
+#endif /* FBG_FEATURE_LEGACY_PEAK_MODES */
+
 void write_ms5614t_manual(void){
 		uint8_t Head = 0xFF;
 		static uint32_t lastTempTick = 0U;
@@ -2910,11 +3135,229 @@ void write_ms5614t_manual(void){
 		ReceEndFlag = 0U;
 }
 
+/* Dense reference scanning is finite and RAM-only. The host supplies its
+ * selected machine's calibrated codes, including every transition guard.
+ * Adjacent blocks keep light on, but a missing next block fails dark after
+ * five seconds; malformed, cancelled, disconnected and final blocks shutter
+ * immediately. This does not change the direct-mode monitor's 50 Hz cadence. */
+static uint32_t denseScanTag = 0U, denseScanLastTick = 0U;
+static uint16_t denseScanNextSequence = 0U, denseScanCompleted = 0U;
+static uint16_t denseScanTotal = 0U, denseScanLastIndex = 0U;
+static uint32_t denseScanSettleUs = 0U;
+static uint8_t denseScanSelectors[2], denseScanOverLan = 0U;
+
+static uint8_t denseScanOwnerActive(uint8_t overLan)
+{
+        return overLan ? (!usbCdcHostOpen && WifiTransport_IsLanRawClientActive())
+                       : usbCdcHostOpen;
+}
+
+static uint8_t denseScanPiFlags(uint8_t writesOk)
+{
+        PI11210_Status_t pi = PI11210_GetStatus();
+        return 0x80U | (pi.online ? 1U : 0U) | (pi.partValid ? 2U : 0U) |
+                (writesOk ? 4U : 0U) |
+                ((pi.rawStatus & PI11210_STATUS_HI_TEMP) ? 8U : 0U) |
+                ((pi.rawStatus & PI11210_STATUS_OVR_TEMP) ? 16U : 0U) |
+                ((pi.rawStatus & PI11210_STATUS_PRO_TEMP) ? 32U : 0U);
+}
+
+static uint8_t denseScanWait(uint32_t start, uint32_t waitUs,
+                           uint32_t cyclesPerUs, uint8_t overLan)
+{
+        uint32_t lastService = start;
+        while((uint32_t)(DWT->CYCCNT-start)/cyclesPerUs < waitUs) {
+                if(ReceEndFlag || !denseScanOwnerActive(overLan) || WifiTransport_IsOtaActive()) return 0U;
+                if((uint32_t)(DWT->CYCCNT-lastService)/cyclesPerUs >= 1000U) {
+                        ThermalControl_Process(); ThermalControl_SafetyTick(); PI11210_Process();
+                        if(overLan) WifiTransport_Process();
+                        if(PI11210_GetStatus().soaMode != PI11210_SOA_SOURCE) return 0U;
+                        lastService = DWT->CYCCNT;
+                }
+        }
+        return !ReceEndFlag && denseScanOwnerActive(overLan) && !WifiTransport_IsOtaActive() &&
+               PI11210_GetStatus().soaMode == PI11210_SOA_SOURCE;
+}
+
+static uint8_t denseScanWrite(const uint16_t codes[5])
+{
+        for(uint8_t c = 0U; c < 5U; c++) {
+                if(PI11210_SetCode(tableDACChannels[c], codes[c]) != HAL_OK) {
+                        PI11210_ForceShutter(); return 0U;
+                }
+                IDACData[c] = codes[c];
+        }
+        return 1U;
+}
+
+static uint8_t denseScanSend(uint16_t length, uint8_t overLan)
+{
+        uint32_t start = HAL_GetTick();
+        if(overLan) {
+                while(!WifiTransport_QueueRawFrame(txBuffer, length)) {
+                        ThermalControl_SafetyTick(); PI11210_Process(); WifiTransport_Process();
+                        if(!WifiTransport_IsLanRawClientActive() || ReceEndFlag ||
+                           WifiTransport_IsOtaActive() || (uint32_t)(HAL_GetTick()-start) > 1000U)
+                                return 0U;
+                }
+                WifiTransport_Process();
+                return 1U;
+        }
+        /* A cached 20-byte monitor may be in flight. Never collide with it
+         * or overwrite an endpoint transfer; loss of owner still shutters. */
+        while(!dma_transfer_complete) {
+                ThermalControl_SafetyTick(); PI11210_Process();
+                if(!denseScanOwnerActive(overLan) || ReceEndFlag ||
+                   WifiTransport_IsOtaActive() || (uint32_t)(HAL_GetTick()-start) > 1000U)
+                        return 0U;
+        }
+        dma_transfer_complete = 0U;
+        if(CDC_Transmit_FS(txBuffer, length) != USBD_OK) {
+                dma_transfer_complete = 1U; return 0U;
+        }
+        return 1U;
+}
+
+static void runDenseScanBlock(void)
+{
+        static DenseScanRequest request;
+        uint8_t query = aRxBuffer[3] == 0x0CU;
+        uint8_t overLan = !usbCdcHostOpen && WifiTransport_IsLanRawClientActive();
+        uint32_t tag = DenseScan_U32(aRxBuffer + 8);
+        uint16_t sequence = query ? 0U : DenseScan_U16(aRxBuffer + 12);
+        uint16_t status = 0U;
+        uint8_t completed = 0U, requested = query ? DENSE_SCAN_MAX_OPS : aRxBuffer[14];
+        uint32_t cyclesPerUs = SystemCoreClock / 1000000U;
+        uint16_t i2cStart = PI11210_GetStatus().i2cErrorCount;
+        uint32_t spiStart = ADC_GetSpiErrorCount();
+        if(!fastStreamControlActive() || WifiTransport_IsOtaActive() || workState != EXTRA_STATE)
+                status |= 1U;
+        if(!tag || memcmp(aRxBuffer + 4, "DNS1", 4U) || !cyclesPerUs) status |= 2U;
+        if(query) {
+                for(uint16_t i = 12U; i < USART_RX_SIZE; i++) if(aRxBuffer[i]) status |= 2U;
+                if(PI11210_GetStatus().soaMode != PI11210_SOA_SHUTTER) status |= 4U;
+        } else if(!DenseScan_Parse(aRxBuffer, USART_RX_SIZE, &request)) status |= 2U;
+        if(!query && !status) {
+                if(PD_ReadFeedbackSelector(0U) != request.selectors[0] ||
+                   PD_ReadFeedbackSelector(1U) != request.selectors[1]) status |= 8U;
+                if(request.flags & 1U) {
+                        if(sequence || denseScanTag ||
+                           PI11210_GetStatus().soaMode != PI11210_SOA_SHUTTER) status |= 4U;
+                } else if(!denseScanTag || tag != denseScanTag ||
+                          sequence != denseScanNextSequence || request.total != denseScanTotal ||
+                          request.settleUs != denseScanSettleUs ||
+                          request.selectors[0] != denseScanSelectors[0] ||
+                          request.selectors[1] != denseScanSelectors[1] ||
+                          overLan != denseScanOverLan ||
+                          PI11210_GetStatus().soaMode != PI11210_SOA_SOURCE) status |= 4U;
+                uint16_t normalCount = 0U;
+                for(uint8_t i = 0U; i < request.count; i++) {
+                        uint16_t index = request.indices[i] & 0x7FFFU;
+                        if(!(request.flags & 1U) && denseScanCompleted && index <= denseScanLastIndex) status |= 16U;
+                        if(!(request.indices[i] & DENSE_SCAN_GUARD_FLAG)) normalCount++;
+                }
+                uint16_t expectedCount = (request.flags & 1U ? 0U : denseScanCompleted) + normalCount;
+                if(expectedCount > request.total ||
+                   ((request.flags & 2U) && expectedCount != request.total) ||
+                   (!(request.flags & 2U) && expectedCount == request.total)) status |= 16U;
+        }
+        /* Own a private request before allowing IRQs to fill the next mailbox. */
+        ClearRxBuff(); ReceEndFlag = 0U;
+        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+        uint32_t origin = DWT->CYCCNT;
+        uint16_t position = 48U;
+        memset(txBuffer, 0, 54U + DENSE_SCAN_MAX_OPS * 22U);
+        uint32_t blockStartTick = HAL_GetTick();
+        if(!query && !status) {
+                if(request.flags & 1U) {
+                        denseScanTag = tag; denseScanCompleted = 0U;
+                        denseScanOverLan = overLan;
+                        denseScanTotal = request.total; denseScanSettleUs = request.settleUs;
+                        denseScanSelectors[0] = request.selectors[0];
+                        denseScanSelectors[1] = request.selectors[1];
+                }
+                for(uint8_t i = 0U; i < request.count; i++) {
+                        if((uint32_t)(HAL_GetTick()-blockStartTick) > 13000U)
+                                { status |= 512U; break; }
+                        ThermalControl_Process(); ThermalControl_SafetyTick(); PI11210_Process();
+                        if(overLan) WifiTransport_Process();
+                        if(ReceEndFlag || !denseScanOwnerActive(overLan) || WifiTransport_IsOtaActive())
+                                { status |= 32U; break; }
+                        if(denseScanPiFlags(1U) & 0x30U) { status |= 64U; break; }
+                        if(!denseScanWrite(request.codes[i]))
+                                { status |= 64U; break; }
+                        uint32_t writeEnd = DWT->CYCCNT;
+                        /* Same calibrated five-write order and full requested wait.
+                         * Only one fresh ADC_ReadSix follows each real point. */
+                        if(!denseScanWait(writeEnd, request.waits[i], cyclesPerUs, overLan))
+                                { status |= 32U; break; }
+                        uint16_t samples[6] = {0U};
+                        uint8_t guard = (request.indices[i] & DENSE_SCAN_GUARD_FLAG) != 0U;
+                        if(!guard) {
+                                ADC_ReadSix(samples);
+                                if(!ADC_LastTransferOk()) { status |= 128U; break; }
+                        }
+                        uint32_t sampleEnd = DWT->CYCCNT;
+                        switchTestWriteU16(&position, request.indices[i]);
+                        for(uint8_t c = 0U; c < 6U; c++) switchTestWriteU16(&position, samples[c]);
+                        switchTestWriteU32(&position, (writeEnd-origin)/cyclesPerUs);
+                        switchTestWriteU32(&position, (sampleEnd-origin)/cyclesPerUs);
+                        completed++;
+                        /* ADC/dwell order is unchanged. Passive monitor bytes
+                         * use their own copied USB queue, not txBuffer. */
+                        publishCachedThermalIfDue(EXTRA_STATE);
+                        if(!guard) {
+                                denseScanCompleted++;
+                                denseScanLastIndex = request.indices[i];
+                        }
+                }
+                if(PI11210_GetStatus().i2cErrorCount != i2cStart || ADC_GetSpiErrorCount() != spiStart)
+                        status |= 256U;
+        }
+        if(status || (!query && (request.flags & 2U))) {
+                PI11210_ForceShutter(); denseScanTag = 0U;
+        }
+        if(!query && !status) denseScanNextSequence = sequence + 1U;
+        uint32_t elapsedUs = cyclesPerUs ? (DWT->CYCCNT-origin)/cyclesPerUs : 0U;
+        uint16_t length = 54U + completed * 22U;
+        txBuffer[0] = 0xD6U; txBuffer[1] = 0x6DU; txBuffer[2] = 1U;
+        txBuffer[3] = query ? 0U : 1U;
+        position = 4U;
+        switchTestWriteU16(&position, length); switchTestWriteU32(&position, tag);
+        switchTestWriteU16(&position, sequence);
+        txBuffer[position++] = requested; txBuffer[position++] = completed;
+        switchTestWriteU16(&position, status);
+        switchTestWriteU32(&position, APP_FIRMWARE_VERSION);
+        switchTestWriteU32(&position, query ? 0U : request.crc);
+        switchTestWriteU32(&position, elapsedUs);
+        switchTestWriteU32(&position, query ? 0U : request.settleUs);
+        txBuffer[position++] = PD_ReadFeedbackSelector(0U);
+        txBuffer[position++] = PD_ReadFeedbackSelector(1U);
+        txBuffer[position++] = PI11210_GetStatus().soaMode;
+        txBuffer[position++] = denseScanPiFlags(!status);
+        switchTestWriteU16(&position, (uint16_t)(PI11210_GetStatus().i2cErrorCount-i2cStart));
+        switchTestWriteU32(&position, ADC_GetSpiErrorCount()-spiStart);
+        switchTestWriteU16(&position, query ? 0U : request.total);
+        position = length - 6U;
+        switchTestWriteU32(&position, DenseScan_Crc(txBuffer, length-6U));
+        txBuffer[position++] = 0x6DU; txBuffer[position++] = 0xD6U;
+        if(!denseScanSend(length, overLan)) {
+                PI11210_ForceShutter(); denseScanTag = 0U;
+        }
+        denseScanLastTick = HAL_GetTick(); prevDACValid = 0U;
+}
+
 void write_ms5614t_extra(void){
 		uint8_t Head = 0xFF;
 		static uint32_t lastRtTick = 0U;
 		static uint32_t lastTempTick = 0U;
 		uint32_t nowTick = HAL_GetTick();
+        if(denseScanTag && (!denseScanOwnerActive(denseScanOverLan) || WifiTransport_IsOtaActive() ||
+           PI11210_GetStatus().soaMode != PI11210_SOA_SOURCE ||
+           (uint32_t)(nowTick-denseScanLastTick) > 5000U)) {
+                PI11210_ForceShutter(); denseScanTag = 0U;
+        }
 		/* Own a pending mailbox before doing any monitor ADC/USB work. An IRQ
 		 * may deliver a command inside checkRT/checkTemp; leave that newly
 		 * arrived mailbox intact for the next invocation, never clear it here. */
@@ -2940,6 +3383,12 @@ void write_ms5614t_extra(void){
 								if(!dma_transfer_complete) return;
 								runSOAResponseCapture();
 						}
+                        else if(aRxBuffer[2] == 0x03U &&
+                                (aRxBuffer[3] == 0x0CU || aRxBuffer[3] == 0x0DU)) {
+                                if(!dma_transfer_complete) return;
+                                runDenseScanBlock();
+                                return; /* Keep any newly arrived stop mailbox intact. */
+                        }
 						else if(aRxBuffer[2] == 0x00) singleValue();
 						else if(aRxBuffer[2] == 0x01) modify_table_loop();
 						else if(aRxBuffer[2] == 0x03 && aRxBuffer[3] == 0x01)
@@ -2971,6 +3420,17 @@ void write_ms5614t_extra(void){
 void ApplyWorkState(uint8_t newState)
 {
 		if(newState > PRECISION_TABLE_STATE) return;
+#if !FBG_FEATURE_LEGACY_PEAK_MODES
+        if(newState == TABLE_STATE || newState == PRECISION_TABLE_STATE)
+        {
+                /* An old client must not start an omitted scan mode or leave
+                 * optical output armed after its unsupported request. */
+                PI11210_ForceShutter();
+                newState = EXTRA_STATE;
+        }
+#endif
+        if(denseScanTag) PI11210_ForceShutter();
+        denseScanTag = 0U;
 		stressHoldRequestedTag = 0U;
 		stressHoldActiveTag = 0U;
 		stressRawCaptureRequested = 0U;
@@ -2980,6 +3440,7 @@ void ApplyWorkState(uint8_t newState)
 		workState = newState;
 		switch(workState)
 		{
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 			case TABLE_STATE:
 			{
 					StressMultirate_Configure(&stressMultirateState,
@@ -3020,6 +3481,7 @@ void ApplyWorkState(uint8_t newState)
 					prevDACValid = 0;
 					break;
 			}
+#endif
 			case MANUAL_STATE:
 			{
 					stressGainSettlePending = 0U;
@@ -3027,7 +3489,9 @@ void ApplyWorkState(uint8_t newState)
 					PD_RestoreFeedback40k();
 					LED_TABLE_LOW();
 					LED_MANUAL_HIGH();
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 					memset(unstableFlags, 0, sizeof(unstableFlags));
+#endif
 					break;
 			}
 			case EXTRA_STATE:
@@ -3040,9 +3504,12 @@ void ApplyWorkState(uint8_t newState)
 					PD_RestoreFeedback40k();
 					LED_TABLE_HIGH();
 					LED_MANUAL_HIGH();
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 					memset(unstableFlags, 0, sizeof(unstableFlags));
+#endif
 					break;
 			}
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 			case PRECISION_TABLE_STATE:
 			{
 					stressGainSettlePending = 0U;
@@ -3059,12 +3526,14 @@ void ApplyWorkState(uint8_t newState)
 					memset(unstableFlags, 0, sizeof(unstableFlags));
 					break;
 			}
+#endif
 		}
 }
 
 void modify_table_loop(void){
 		if(aRxBuffer[2] == 0x03U && (aRxBuffer[3] == 0x03U || aRxBuffer[3] == 0x04U))
 		{
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 				uint16_t point = ((uint16_t)aRxBuffer[4] << 8) | aRxBuffer[5];
 				uint32_t tag = ((uint32_t)aRxBuffer[6] << 24) |
 				        ((uint32_t)aRxBuffer[7] << 16) |
@@ -3081,11 +3550,13 @@ void modify_table_loop(void){
 						stressHoldRequestedTag = tag;
 						stressHoldRequestedProduction = aRxBuffer[3] == 0x04U;
 				}
+#endif
 				ClearRxBuff();
 				return;
 		}
 		if(aRxBuffer[2] == 0x03U && aRxBuffer[3] == 0x02U)
 		{
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 				/* Arm the next complete frame, never the partially scanned frame in
 				 * which this command happened to arrive. */
 				if(workState == TABLE_STATE && aRxBuffer[4] <= 1U &&
@@ -3101,6 +3572,7 @@ void modify_table_loop(void){
 								stressRawCaptureRequested = aRxBuffer[4] ? 2U : 1U;
 						}
 				}
+#endif
 				ClearRxBuff();
 				return;
 		}
@@ -3137,10 +3609,14 @@ void modify_table_loop(void){
 #endif
 		}
 		else if(aRxBuffer[3] == 0x04){
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 				getFilterDiff();
+#endif
 		}
 		else if(aRxBuffer[3] == 0x05){
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 				getWaveRange();
+#endif
 		}
 		else if(aRxBuffer[3] == 0x06){
 				/* Fixed CH0/CH1 transimpedance control for the 2001-point
@@ -3178,7 +3654,7 @@ void modify_table_loop(void){
 				 * safe EXTRA state and is verified from the physical choseA/B pins. */
 				uint8_t requested0 = aRxBuffer[4];
 				uint8_t requested1 = aRxBuffer[5];
-				uint8_t accepted = (workState == EXTRA_STATE
+				uint8_t accepted = (FBG_FEATURE_LEGACY_PEAK_MODES && workState == EXTRA_STATE
 						&& requested0 <= PD_FEEDBACK_SELECTOR_20K
 						&& requested1 <= PD_FEEDBACK_SELECTOR_20K) ? 1U : 0U;
 				if(accepted)
@@ -3223,8 +3699,11 @@ void modify_table_loop(void){
 						requestedVersion == STRESS_MULTIRATE_EXTENSION_VERSION_V3 ||
 						requestedVersion == STRESS_MULTIRATE_EXTENSION_VERSION_V4 ||
 						requestedVersion == STRESS_MULTIRATE_EXTENSION_VERSION_V5);
+				/* Dense/finger clients share this exact idle/disarm handshake.
+				 * Trimming the legacy scan must reject ARM, never safe DISARM. */
 				uint8_t accepted = (uint8_t)(workState == EXTRA_STATE &&
-						enable <= 1U && versionSupported);
+						enable <= 1U && versionSupported &&
+						(!enable || FBG_FEATURE_LEGACY_PEAK_MODES));
 				if(enable && accepted)
 				{
 						accepted = (uint8_t)(accepted &&
@@ -3272,6 +3751,7 @@ void modify_table_loop(void){
 		ClearRxBuff();
 }
 
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 void getFilterDiff(void){
 		uint16_t getDiffIdx = 4U;
 		uint16_t validateIdx = 4U;
@@ -3337,6 +3817,8 @@ void getWaveRange(void){
 		end_wave = (r_high<<8)+r_low;
 }
 
+#endif /* FBG_FEATURE_LEGACY_PEAK_MODES */
+
 void sampleVoltage(void){
 		delay_us(wave_time);
 		for(uint8_t adc_idx=0;adc_idx<4;adc_idx++){
@@ -3348,6 +3830,7 @@ void sampleVoltage(void){
 		}
 }
 
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 void sampleVoltageStable(uint16_t i){
 		(void)i;
 		uint16_t first[4] = {0};
@@ -3576,6 +4059,8 @@ void sampleVoltagePrecision(uint16_t i){
 		}
 }
 
+#endif /* FBG_FEATURE_LEGACY_PEAK_MODES */
+
 void sampleTemperature(void){
 		/* Full 1-Wire service runs between frames in main.  Snapshot its cached
 		 * value here so a due scratchpad read cannot stretch an optical frame.
@@ -3635,17 +4120,13 @@ void ClearRxBuff(void){
 }
 
 void checkTemp(uint8_t mode){
-		tempData = M1820Z_GetTmp();
-		tempInt = (int)tempData;
-		tempDec = (int)((tempData-tempInt)*10000);
-	
-		aTxBuffer[2] = mode;// the mode of this tx
-		aTxBuffer[3] = 0x01;// 0x01 refer temperature return
-		aTxBuffer[4] = (tempInt>>8) & 0xFF;
-		aTxBuffer[5] = tempInt & 0xFF;
-		aTxBuffer[6] = (tempDec>>8) & 0xFF;
-		aTxBuffer[7] = tempDec & 0xFF; 
-	
+		/* Main/frame maintenance advances the sensor cooperatively. Sending
+		 * telemetry must not add a 1-Wire transaction to the optical scan. */
+		ThermalControl_SafetyTick();
+		BoardThermal_Encode(aTxBuffer, mode, ThermalControl_GetTemperatureC(),
+				ThermalControl_GetFanRpm(), ThermalControl_GetFanDutyPermille(),
+				ThermalControl_GetStatusFlags(), ThermalControl_GetSensorAgeMs());
+		lastBoardThermalTick = HAL_GetTick();
 		USB_Queue_Send(aTxBuffer, USART_TX_SIZE);
 		ClearTxBuff();
 }
@@ -3802,13 +4283,26 @@ void singleValue_I(void){
 				 * bias.  A malformed host packet cannot request reverse current. */
 				values[1] = PI11210_IDAC6_OFF_CODE;
 				if(PI11210_SetSOAShutter(1U) != HAL_OK) allWritesOk = 0U;
+				/* The gate alone is not a DAC-code readback.  Clear the actual
+				 * source register while CLR remains asserted. */
+				if(allWritesOk && PI11210_WriteRegisterRaw((uint8_t)IDAC6, 0U) != HAL_OK)
+						allWritesOk = 0U;
+				if(allWritesOk && PI11210_WriteRegisterRaw(
+						PI11210_REG_IDAC6_POLARITY, 0U) != HAL_OK)
+						allWritesOk = 0U;
+		}
+		else if(PI11210_EnsureReady() != HAL_OK ||
+				PI11210_WriteRegisterRaw(PI11210_REG_IDAC6_POLARITY, 0U) != HAL_OK)
+		{
+				allWritesOk = 0U;
 		}
 
-		for(uint8_t i = 0U; i < 5U; i++)
+		for(uint8_t i = 0U; i < 5U && allWritesOk; i++)
 		{
 				if(requestedMode == PI11210_SOA_SHUTTER && i == 1U) continue;
 				if(PI11210_SetCode(channels[i], values[i]) != HAL_OK) allWritesOk = 0U;
 		}
+		if(!allWritesOk) PI11210_ForceShutter();
 
 		for(uint8_t i = 0U; i < 5U; i++)
 		{

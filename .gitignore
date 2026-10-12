@@ -1,1 +1,52 @@
-.venv/*
+*.o
+*.htm
+JDSU/MDK-ARM/JDSU/*
+JDSU/MDK-ARM/RTE/*
+*.xiechengxin
+*.yk
+*.uvoptx
+*.log
+/.release-signing/
+# Local hardware backup includes private board/Wi-Fi configuration.
+/Python/outputs/machine3_fw109_20261010/swd_before_PRIVATE/
+/Python/outputs/machine3_fw110_ch0_feedback_20261010/swd_before_PRIVATE/
+
+# Local environments, generated applications and hardware/runtime records.
+**/__pycache__/
+*.py[cod]
+**/.venv/
+**/.ruff_cache/
+**/.pytest_cache/
+**/build/
+/build/
+/dist/
+/release/
+/tmp/
+/.codex_tmp/
+/Python/tmp/
+/Python/app/
+/Python/app_*_build/
+/Python/outputs/
+/Python/beta_data/
+/JDSU/MDK-ARM/JDSU_beta_generated.uvprojx
+/outputs/
+*.axf
+*.map
+*.disasm.txt
+*.obj
+*.partial
+*.incomplete
+
+# Only the editable legacy/reference backups are source-controlled.
+/backups/*
+!/backups/hidden_features_20261009_d8e7f706/
+!/backups/reference45_before_10ms_20261010/
+**/*_PRIVATE/
+
+# Credentials stay local. Public verification keys and .example files are source.
+.env
+.env.*
+*.key
+*.pem
+/Python/fbg_remote_config*.yaml
+/Python/fbg_remote_config*.yml

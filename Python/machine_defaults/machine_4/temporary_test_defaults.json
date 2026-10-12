@@ -1,0 +1,17 @@
+{
+  "selection_plan": null,
+  "validated_route_indices": null,
+  "validated_reference_values": null,
+  "validated_reference_source": "四号机待专属校准和当前设备采集",
+  "point_delays_us": null,
+  "selection_reference": null,
+  "spacing_nm": 0.16,
+  "baseline_fraction": null,
+  "soft_baseline": false,
+  "first_delay_us": 850,
+  "boundary_extra_us": 0,
+  "digital_display_gain": 1,
+  "optical_accuracy_verified": false,
+  "machine_id": "machine_4",
+  "machine_label": "四号机"
+}

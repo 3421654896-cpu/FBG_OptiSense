@@ -23,6 +23,7 @@
 
 /* USER CODE BEGIN INCLUDE */
 #include "main.h"
+#include "ota_update.h"
 
 /* USER CODE END INCLUDE */
 
@@ -344,6 +345,21 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 
 			if (usbFrameLen == USART_RX_SIZE)
 			{
+					if(OtaUpdate_QueueUsbFrame(usbAssemblyBuffer, USART_RX_SIZE))
+					{
+						/* Wake an active scan using only an idle/stop command. The
+						 * update payload is held separately until the main loop. */
+						if(ReceEndFlag == 0U)
+						{
+							memset(aRxBuffer, 0, USART_RX_SIZE);
+							aRxBuffer[0] = 0xFFU; aRxBuffer[1] = 0xFFU;
+							aRxBuffer[2] = EXTRA_STATE; aRxBuffer[3] = 0x02U;
+							aRxBuffer[8] = EXTRA_STATE;
+							ReceEndFlag = 1U;
+						}
+					}
+					else
+					{
 					/* aRxBuffer is a one-frame mailbox.  Do not tear a command that
 					 * the main loop is still executing; a complete excess command is
 					 * deliberately dropped and can be retried by the host. */
@@ -351,6 +367,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 					{
 						memcpy(aRxBuffer, usbAssemblyBuffer, USART_RX_SIZE);
 						ReceEndFlag = 1U;
+					}
 					}
 					usbFrameLen = 0U;
 			}

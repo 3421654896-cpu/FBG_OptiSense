@@ -56,6 +56,7 @@ class ProvisioningSettings:
     tls: bool = True
     enabled: bool = True
     persist: bool = True
+    lan_only: bool = False
 
 
 _FIELD_LIMITS = (
@@ -95,7 +96,7 @@ def _encode_field(settings: ProvisioningSettings, name: str, limit: int) -> byte
 def build_provisioning_frame(settings: ProvisioningSettings) -> bytes:
     """Build the fixed 808-byte USB command accepted by the STM32 firmware."""
 
-    for name in ("tls", "enabled", "persist"):
+    for name in ("tls", "enabled", "persist", "lan_only"):
         if not isinstance(getattr(settings, name), bool):
             raise ValueError(f"{name} must be true or false")
     if isinstance(settings.broker_port, bool) or not isinstance(
@@ -106,13 +107,13 @@ def build_provisioning_frame(settings: ProvisioningSettings) -> bytes:
         raise ValueError("broker_port must be in the range 1..65535")
     if not settings.ssid:
         raise ValueError("Wi-Fi SSID is required")
-    if not settings.broker_host:
+    if not settings.lan_only and not settings.broker_host:
         raise ValueError("MQTT broker host is required")
     if not settings.device_id:
         raise ValueError("device_id is required")
     if not settings.topic_prefix.strip().strip("/"):
         raise ValueError("topic_prefix is required")
-    if settings.enabled and not settings.tls:
+    if settings.enabled and not settings.lan_only and not settings.tls:
         raise ValueError("广域网 MQTT 配置必须启用 TLS")
 
     fields = [_encode_field(settings, name, limit) for name, limit in _FIELD_LIMITS]
@@ -123,7 +124,9 @@ def build_provisioning_frame(settings: ProvisioningSettings) -> bytes:
     frame = bytearray(PROVISION_FRAME_SIZE)
     frame[0:4] = b"\xFF\xFF\x01\x20"
     frame[4] = PROVISION_VERSION
-    frame[5] = (0x01 if settings.enabled else 0) | (0x02 if settings.persist else 0)
+    frame[5] = ((0x01 if settings.enabled else 0)
+                | (0x02 if settings.persist else 0)
+                | (0x04 if settings.lan_only else 0))
     for index, value in enumerate(fields):
         frame[6 + index] = len(value)
     frame[14:16] = settings.broker_port.to_bytes(2, "big")
@@ -200,8 +203,10 @@ class ProvisionWorker(QtCore.QObject):
                             if status == 0 and valid:
                                 self.finished.emit(
                                     True,
-                                    "配置已写入。板卡正在连接 Wi-Fi 和公网 MQTT。"
-                                    f"\n配置校验号：{checksum:08X}，无线状态：{wifi_state}",
+                                    ("配置已写入。板卡正在连接 Wi-Fi 并建立局域网监听。"
+                                     if self.frame[5] & 0x04 else
+                                     "配置已写入。板卡正在连接 Wi-Fi 和公网 MQTT。")
+                                    + f"\n配置校验号：{checksum:08X}，无线状态：{wifi_state}",
                                 )
                             else:
                                 self.finished.emit(
@@ -254,6 +259,7 @@ class ProvisionWindow(QtWidgets.QWidget):
         self.wifi_password.setEchoMode(QtWidgets.QLineEdit.Password)
         self.host = QtWidgets.QLineEdit()
         self.host.setPlaceholderText("例如：你的 MQTT 服务域名")
+        self.lan_only = QtWidgets.QCheckBox("仅局域网（不依赖 MQTT；用于局域网测试和 OTA）")
         self.broker_port = QtWidgets.QSpinBox()
         self.broker_port.setRange(1, 65535)
         self.broker_port.setValue(8883)
@@ -271,6 +277,7 @@ class ProvisionWindow(QtWidgets.QWidget):
 
         form.addRow("Wi-Fi 名称", self.ssid)
         form.addRow("Wi-Fi 密码", self.wifi_password)
+        form.addRow("连接模式", self.lan_only)
         form.addRow("MQTT 服务器", self.host)
         form.addRow("MQTT 端口", self.broker_port)
         form.addRow("连接安全", self.tls)
@@ -308,7 +315,14 @@ class ProvisionWindow(QtWidgets.QWidget):
 
         self.refresh_button.clicked.connect(self.refresh_ports)
         self.send_button.clicked.connect(self.start_provisioning)
+        self.lan_only.toggled.connect(self._update_mqtt_fields)
+        self._update_mqtt_fields(self.lan_only.isChecked())
         self.refresh_ports()
+
+    def _update_mqtt_fields(self, lan_only: bool) -> None:
+        for field in (self.host, self.broker_port, self.tls, self.client_id,
+                      self.username, self.mqtt_password, self.topic_prefix):
+            field.setEnabled(not lan_only)
 
     def refresh_ports(self) -> None:
         current = self.port.currentData()
@@ -353,6 +367,7 @@ class ProvisionWindow(QtWidgets.QWidget):
             topic_prefix=self.topic_prefix.text().strip().strip("/"),
             device_id=device_id,
             tls=self.tls.isChecked(),
+            lan_only=self.lan_only.isChecked(),
         )
 
     def start_provisioning(self) -> None:

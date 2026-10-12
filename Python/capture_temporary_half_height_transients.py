@@ -22,7 +22,7 @@ import app_JDSU as app
 from analyze_wavelength_switch_board_capture import channel_metrics
 from benchmark_stress_realtime import _close_shutter, _safe_disarm
 from laser_switching_test import CHANNEL_NAMES, SwitchTester
-from temporary_test_mode import LIMITS, select_points
+from temporary_test_mode import LIMITS, select_points, points_per_peak_for_rows
 
 
 HERE = Path(__file__).resolve().parent
@@ -35,17 +35,19 @@ THREE_MS_US = 3000.0
 CUSTOM_RESPONSE_LENGTH = 18 + 12 + 33 * 16 + 2
 
 
-def custom_command(source: dict, target: dict, tag: int) -> bytes:
+def custom_command(source: dict, target: dict, tag: int, *, fast_dac_writes=False) -> bytes:
     if not 1 <= int(tag) <= 0xFFFFFFFF:
         raise ValueError("诊断标签无效")
     packet = bytearray(808)
     packet[:4] = b"\xff\xff\x03\x01"
     packet[4:6] = int(source["index"]).to_bytes(2, "big")
     packet[6:8] = int(target["index"]).to_bytes(2, "big")
-    packet[8] = 5
+    packet[8] = 13 if fast_dac_writes else 5
     packet[9:13] = int(tag).to_bytes(4, "big")
-    packet[13:16] = b"C2P"
+    packet[13:16] = b"C2B" if fast_dac_writes else b"C2P"
     for base, row in ((16, source), (26, target)):
+        if type(row['index']) is not int or not 0 <= row['index'] <= 2000:
+            raise ValueError('诊断物理索引超出0～2000范围')
         codes = tuple(row["codes"])
         if len(codes) != 5 or any(
             type(code) is not int or not 0 <= code <= limit
@@ -60,10 +62,10 @@ def custom_command(source: dict, target: dict, tag: int) -> bytes:
     return bytes(packet)
 
 
-def decode_custom(packet: bytes, source: dict, target: dict, tag: int) -> dict:
+def decode_custom(packet: bytes, source: dict, target: dict, tag: int, *, fast_dac_writes=False) -> dict:
     if (
         len(packet) != CUSTOM_RESPONSE_LENGTH
-        or packet[:4] != b"\xd5\x5d\x03\x05"
+        or packet[:4] != bytes((213, 93, 3, 13 if fast_dac_writes else 5))
         or packet[-2:] != b"\x5d\xd5"
     ):
         raise ValueError("临时双行诊断响应格式无效")
@@ -96,6 +98,7 @@ def decode_custom(packet: bytes, source: dict, target: dict, tag: int) -> dict:
         raise ValueError("临时双行诊断ADC超出12位范围")
     return {
         "path_update_us": update_us,
+        "fast_dac_writes": fast_dac_writes,
         "baseline_adc": baseline,
         "sample_start_from_switch_begin_us": times,
         "sample_start_after_target_write_us": [
@@ -105,20 +108,32 @@ def decode_custom(packet: bytes, source: dict, target: dict, tag: int) -> dict:
     }
 
 
-def capture_custom(device, source: dict, target: dict, tag: int) -> dict:
+def capture_custom(device, source: dict, target: dict, tag: int, *, fast_dac_writes=False) -> dict:
     device.reset_input_buffer()
-    device.write(custom_command(source, target, tag))
+    device.write(custom_command(source, target, tag, fast_dac_writes=fast_dac_writes))
     received = bytearray()
     deadline = time.monotonic() + 3.0
     while time.monotonic() < deadline:
         received.extend(device.read(4096))
-        start = received.find(b"\xd5\x5d\x03\x05")
+        start = received.find(bytes((213, 93, 3, 13 if fast_dac_writes else 5)))
         if start >= 0 and len(received) >= start + CUSTOM_RESPONSE_LENGTH:
             return decode_custom(
                 bytes(received[start:start + CUSTOM_RESPONSE_LENGTH]),
-                source, target, tag,
+                source, target, tag, fast_dac_writes=fast_dac_writes,
             )
     raise TimeoutError("未收到临时双行板上时间戳响应（需要固件1.0.74或更高）")
+
+
+def capture_target_level(device, target: dict, tag: int, *, fast_dac_writes=False) -> dict:
+    """Read a held target's tail before deciding whether to measure a transition.
+
+    Reuse the existing CRC/tag-bound diagnostic with identical source/target
+    rows. This is a steady-level probe, not an adjacent-switch t90 measurement.
+    """
+    record = capture_custom(device, target, target, tag, fast_dac_writes=fast_dac_writes)
+    record.update(source_fullband_index=int(target['index']),
+                  target_fullband_index=int(target['index']), request_tag=tag)
+    return record
 
 
 def load_half_height_plan(path: Path) -> tuple[dict, int]:
@@ -188,16 +203,20 @@ def main_edge_metric(records: list[dict], channel: str = "CH1", *,
     return metric
 
 
-def transition_analysis(records: list[dict], route: list[dict], repeats: int) -> dict:
+def transition_analysis(records: list[dict], route: list[dict], repeats: int, *,
+                        signal_channel_name='CH1', include_wrap=False) -> dict:
+    if signal_channel_name not in ('CH0', 'CH1', 'CH2', 'CH3'):
+        raise ValueError('Invalid signal channel for transition analysis')
+    group_size = points_per_peak_for_rows(route)
     transitions = []
-    # The user's production route is audited only in its small-to-large
-    # direction.  Deliberately exclude the last-to-first reverse wrap.
-    for target_order in range(1, len(route)):
+    # Legacy audits remain forward-only. Beta can include the actual cyclic
+    # predecessor of point 1, rather than pretending that point was measured.
+    for target_order in range(0 if include_wrap else 1, len(route)):
         selected = [
             item for item in records
             if int(item["route_target_order"]) == target_order
         ]
-        source_order = target_order - 1
+        source_order = (target_order - 1) % len(route)
         if len(selected) != repeats or any(
             int(item["route_source_order"]) != source_order for item in selected
         ):
@@ -207,7 +226,7 @@ def transition_analysis(records: list[dict], route: list[dict], repeats: int) ->
         ))
         metrics = {
             channel: channel_metrics(selected, channel)
-            for channel in ("PDT", "PDR", "CH1")
+            for channel in dict.fromkeys(("PDT", "PDR", "CH1", signal_channel_name))
         }
         for metric in metrics.values():
             t90 = metric.get("t90_us")
@@ -244,7 +263,8 @@ def transition_analysis(records: list[dict], route: list[dict], repeats: int) ->
             "target_wavelength_nm": float(route[target_order]["measured_nm"]),
             "peak_number": int(route[target_order]["group"]),
             "transition_kind": (
-                "cross_peak" if target_order % 5 == 0 else
+                "frame_wrap" if target_order == 0 else
+                "cross_peak" if target_order % group_size == 0 else
                 "within_peak"
             ),
             "path_update_us": path_update,
@@ -289,9 +309,11 @@ def transition_analysis(records: list[dict], route: list[dict], repeats: int) ->
         }
 
     return {
+        "signal_channel_name": signal_channel_name,
         "criterion_us": TWO_MS_US,
-        "direction": "strictly forward, small wavelength to large wavelength",
-        "reverse_wrap_tested": False,
+        "direction": ("forward scan plus last-to-first frame wrap" if include_wrap else
+                      "strictly forward, small wavelength to large wavelength"),
+        "reverse_wrap_tested": bool(include_wrap),
         "criterion": (
             "CH1 meaningful step reaches 90% and remains within 5% of its "
             "100 ms tail; board time is reported both after the final target "

@@ -39,10 +39,9 @@ void M1820Z_WriteByte(uint8_t data);
 uint8_t M1820Z_ReadByte(void);
 float M1820Z_GetTmp(void);
 
-/* cooling_percent is the physical fan command: 0 = minimum/off request,
- * 100 = full cooling.  The board's N-MOS inverts PC2 before J16. */
-void Set_Soft_PWM_Duty(uint8_t cooling_percent);
-
+/* One automatic temperature controller serves every machine/work mode,
+ * including calibration, direct-current acquisition and idle.  Raw PWM
+ * writes remain private; startup/sensor/PWM faults retain full-speed safety. */
 void ThermalControl_Init(void);
 /* Constant-time safety housekeeping for latency-sensitive wavelength scans.
  * It updates fan tach/stale-sensor fail-safe state without a 1-Wire slot.

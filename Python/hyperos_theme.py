@@ -1,14 +1,15 @@
 """HyperOS-inspired visual system for the unified FBG desktop studio.
 
-The theme deliberately borrows the calm hierarchy, soft materials and rounded
-setting cards of Xiaomi HyperOS while keeping measurement plots dark and high
+The theme borrows calm hierarchy and soft materials from Xiaomi HyperOS.
+Controls share one restrained corner/height system; plots and data panes are
+square, dark and high
 contrast.  It contains no acquisition logic, so the instrument behaviour stays
 independent from appearance changes.
 """
 
 from __future__ import annotations
 
-import pyqtgraph as pg
+import re
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 COLORS = {
@@ -62,7 +63,7 @@ def _palette() -> QtGui.QPalette:
 def build_stylesheet() -> str:
     """Return one centralized Qt style sheet for every embedded workflow."""
 
-    return r"""
+    sheet = r"""
 QWidget {
     color: #1B1C20;
     font-family: "Microsoft YaHei UI", "MiSans", "Segoe UI Variable", "Segoe UI";
@@ -460,22 +461,70 @@ QToolTip {
 }
 QMessageBox { background-color: #F5F5F7; }
 """
+    # One control radius, not a different pill shape for every component.
+    # Measurement/data surfaces are intentionally square (see overrides).
+    sheet = re.sub(r'border-radius: \d+px;', 'border-radius: 6px;', sheet)
+    return sheet + r"""
+QWidget { font-size: 10pt; }
+QLabel#pageTitle { font-size: 18pt; }
+QLabel#brandTitle { font-size: 15pt; }
+QLabel#sectionCaption, QLabel#navSection { color: #777A82; font-size: 9pt; }
+QPushButton, QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
+    min-height: 20px;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+QPushButton { padding: 6px 12px; }
+QPushButton[modeChip="true"], QPushButton[segment="true"] {
+    min-height: 20px; padding: 6px 12px;
+}
+QPushButton#navButton { min-height: 26px; padding: 10px 12px; }
+QPushButton[role="primary"]:disabled { color: #8B94A5; background: #E9EDF4; border-color: #E9EDF4; }
+QPushButton[role="danger"]:disabled { color: #A79A9A; background: #F4EFEF; }
+QLabel#sourceStatus, QLabel#statusPill { min-height: 20px; padding: 6px 10px; }
+QFrame#topBar, QFrame#contentCard, QFrame#controlGroup,
+QFrame#statusCard, QFrame#remoteCard, QFrame#sideStatusCard {
+    border-radius: 0px;
+}
+QFrame#workflowRow {
+    background: #FFFFFF; border: 1px solid #E7E8EC; border-radius: 0px;
+}
+QLabel#workflowSectionTitle { color: #777A82; font-size: 9pt; font-weight: 600; }
+QLabel#fieldCaption { color: #62656C; font-size: 9pt; }
+QLabel#acquisitionStatus { color: #62656C; font-size: 9pt; padding: 2px 0px; }
+QLabel#thermalReading { color: #34363B; font-size: 10pt; padding: 3px 0px; }
+QScrollArea#temporaryPageScroll { border: none; background: transparent; }
+QGraphicsView, QPlainTextEdit, QTableWidget, QTableView, QGroupBox,
+QTabWidget::pane { border-radius: 0px; }
+QTabWidget::pane { border: 1px solid #E7E8EC; top: -1px; }
+QTabWidget#workspaceTabs::pane { border: none; }
+QTabBar::tab {
+    color: #62656C; background: #F0F1F4; border: none;
+    border-bottom: 2px solid transparent; padding: 6px 12px; min-height: 18px;
+    margin-right: 1px;
+}
+QTabBar::tab:selected { color: #236BDA; background: #FFFFFF; border-bottom-color: #3482FF; }
+QTabBar::tab:hover { background: #EAF2FF; }
+QSplitter::handle { background: #E7E8EC; }
+"""
 
 
-def install_theme(app: QtWidgets.QApplication) -> None:
+def install_theme(app: QtWidgets.QApplication, *, configure_plots: bool = True) -> None:
     """Install the light HyperOS-style palette before windows are built."""
 
     app.setStyle("Fusion")
     app.setPalette(_palette())
     font = QtGui.QFont("Microsoft YaHei UI")
-    font.setPointSizeF(9.5)
+    font.setPointSizeF(10)
     app.setFont(font)
     app.setStyleSheet(build_stylesheet())
-    pg.setConfigOptions(
-        antialias=True,
-        background=COLORS["plot"],
-        foreground=COLORS["plot_text"],
-    )
+    if configure_plots:
+        import pyqtgraph as pg
+        pg.setConfigOptions(
+            antialias=True,
+            background=COLORS["plot"],
+            foreground=COLORS["plot_text"],
+        )
 
 
 def set_status(label: QtWidgets.QLabel, text: str, kind: str = "info") -> None:
@@ -491,6 +540,7 @@ def set_status(label: QtWidgets.QLabel, text: str, kind: str = "info") -> None:
 def polish_plots(root: QtWidgets.QWidget) -> None:
     """Keep every pyqtgraph view legible inside the soft light shell."""
 
+    import pyqtgraph as pg
     for plot in root.findChildren(pg.PlotWidget):
         plot.setBackground(COLORS["plot"])
         plot.setObjectName(plot.objectName() or "measurementPlot")

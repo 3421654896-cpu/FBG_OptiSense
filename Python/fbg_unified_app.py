@@ -37,6 +37,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import app_JDSU as local_app
 from app_version import APP_VERSION
+from beta_profile import beta_enabled
+from machine_identity import MachineIdentityStore, identity_for_port, native_ports
 from displacement_pressure_reference import from_machine as displacement_reference
 from fbg_lan_serial import FbgLanSerial
 from fbg_mqtt_transport import load_remote_config, validate_device_id
@@ -46,6 +48,9 @@ from fbg_network_transport import (
     FbgSelectableTransport,
 )
 from fbg_ota_widget import OtaUpdatePage
+from fbg_ota_protocol import load_package, parse_version
+from fbg_update_widget import AssetDownloadWorker, ReleaseCheckWorker, SoftwareUpdatePage
+from github_update_feed import UpdateOffers
 from fbg_remote_viewer import (
     MODE_STRESS,
     MODE_TEMPERATURE,
@@ -98,6 +103,9 @@ SOURCE_NAMES = {
     NETWORK_LAN: "局域网",
     NETWORK_WAN: "广域网",
 }
+# Customers update with the developer-supplied signed bundle and assistant.
+# Keep the engineering pages/backend recoverable, but no in-app online update.
+IN_APP_UPDATES_ENABLED = False
 LOCAL_MODE_NAMES = (
     "应力寻峰",
     "温度寻峰",
@@ -105,7 +113,7 @@ LOCAL_MODE_NAMES = (
     "单值",
     "无限准确模式",
     "等间隔模式",
-    "临时测试模式",
+    "手指应力测试模式",
 )
 
 # Coverage snapshots are UI-decimated. Native USB/LAN frames are also recorded
@@ -263,7 +271,7 @@ UNIFIED_STYLE = build_hyperos_stylesheet()
 PAGE_INFO = (
     (
         "光谱与寻峰",
-        "实时查看 ADC 反射光谱、拟合曲线与中心波长",
+        "",
         "spectrum",
     ),
     (
@@ -277,9 +285,14 @@ PAGE_INFO = (
         "network",
     ),
     (
-        "局域网 OTA 升级",
-        "安全校验固件包并在同一局域网内更新板卡程序",
+        "解调仪固件更新",
+        "通过原生 USB 一键检查与更新，升级期间保持供电",
         "ota",
+    ),
+    (
+        "客户端更新",
+        "更新电脑客户端，保留机号、标定表和采集记录",
+        "device",
     ),
 )
 
@@ -718,6 +731,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
     """One-window host for every operator-facing workflow."""
 
     lan_connection_changed = QtCore.pyqtSignal(bool, str)
+    native_thermal_received = QtCore.pyqtSignal(str, object)
 
     def __init__(
         self,
@@ -727,9 +741,18 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         device_id: str | None = None,
         demo: bool = False,
         ota_settings_store=None,
+        machine_identity_store=None,
     ):
         super().__init__()
         self.demo = bool(demo)
+        self.developer_mode = False
+        self.machine_identity_store = machine_identity_store or MachineIdentityStore()
+        self._confirmed_usb_identity = None
+        self._manual_usb_port = None
+        self._automatic_machine_switch = False
+        self._explicit_usb_port = None
+        self._identity_poll_signature = None
+        self._machine_calibration_errors = []
         self.current_source: str | None = None
         self.network_config_error = None
         self._closing = False
@@ -770,6 +793,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._coverage_phase_frame_counts: dict[str, int] = {}
         self._coverage_completion_pending = False
         self._remote_telemetry_cache: OrderedDict[tuple, tuple] = OrderedDict()
+        self._thermal_received_monotonic = None
+        self._thermal_reset_monotonic = time.monotonic()
+        self._thermal_mode = None
         self.ota_settings_store = ota_settings_store or OtaMachineProfileStore()
         initial_machine_id = self.ota_settings_store.selected_machine_id
         set_runtime_machine_id(initial_machine_id)
@@ -779,7 +805,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._coverage_capture_timer.timeout.connect(self._capture_coverage_phase_frame)
 
         self.setWindowTitle(
-            f"FBG OptiSense Studio {APP_VERSION} — "
+            f"FBG OptiSense Studio {APP_VERSION}{' Beta（开发测试）' if beta_enabled() else ''} — "
             f"{runtime_machine_label(initial_machine_id)} · 光栅解调与机械手指应力定位"
         )
         self.setWindowIcon(QtGui.QIcon(make_logo(128)))
@@ -798,6 +824,10 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         # acquisition worker and plot remains literally the USB implementation.
         self.usb_serial = local_app.ser
         self.usb_port = self.local_controller.port
+        self.local_controller.before_local_control = self._prepare_local_identity
+        self._usb_identity_guard = self._guard_usb_identity
+        self._previous_usb_identity_guard = local_app.serial_identity_guard
+        local_app.serial_identity_guard = self._usb_identity_guard
         self.lan_serial = FbgLanSerial(on_connection=self.lan_connection_changed.emit)
 
         self.bridge = TransportBridge()
@@ -844,8 +874,17 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._prefill_provisioning_fields()
 
         self.ota_page = OtaUpdatePage(settings_store=self.ota_settings_store)
+        self.ota_page.set_wan_config(self.network_config)
         self.ota_page.before_update = self._prepare_ota
         self.ota_page.after_update = self._after_ota_update
+        self.software_update_page = SoftwareUpdatePage()
+        self.software_update_page.install_ready.connect(self._install_desktop_update)
+        self._update_offers: UpdateOffers | None = None
+        self._release_check_thread: ReleaseCheckWorker | None = None
+        self._firmware_download_thread: AssetDownloadWorker | None = None
+        self._firmware_download_machine_id: str | None = None
+        self._firmware_toast_message = ""
+        self._software_toast_version = ""
         self._generated_mode_table_package_path = None
         self.local_controller.page_equal_interval.ota_package_ready = (
             self._open_generated_ota_package
@@ -853,6 +892,41 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
 
         self._build_shell()
         self._connect_signals()
+        self.local_controller.page_peak.thermal_telemetry.connect(
+            lambda values: self._local_thermal_received(0, values))
+        self.local_controller.page_temperature_peak.thermal_telemetry.connect(
+            lambda values: self._local_thermal_received(1, values))
+        self.local_controller.page_extra.temp_signal.connect(
+            self._single_value_temperature_received)
+        self.native_thermal_received.connect(self._native_thermal_received)
+        self._thermal_callbacks = {
+            SOURCE_LOCAL: lambda values: self.native_thermal_received.emit(SOURCE_LOCAL, values),
+            NETWORK_LAN: lambda values: self.native_thermal_received.emit(NETWORK_LAN, values),
+        }
+        self.usb_serial.thermal_observer.callback = self._thermal_callbacks[SOURCE_LOCAL]
+        self.lan_serial.thermal_observer.callback = self._thermal_callbacks[NETWORK_LAN]
+        self.bridge.telemetry.connect(self._remote_thermal_received)
+        self._thermal_display_timer = QtCore.QTimer(self)
+        self._thermal_display_timer.setInterval(1000)
+        self._thermal_display_timer.timeout.connect(self._expire_thermal_display)
+        self._thermal_display_timer.start()
+        self._machine_identity_timer = QtCore.QTimer(self)
+        self._machine_identity_timer.setInterval(1500)
+        self._machine_identity_timer.timeout.connect(self._poll_machine_identity)
+        if not self.demo:
+            self._machine_identity_timer.start()
+        self.ota_page.refresh_update_offer()
+        self._ota_version_timer = QtCore.QTimer(self)
+        self._ota_version_timer.setInterval(2000)
+        self._ota_version_timer.timeout.connect(self._poll_firmware_update)
+        if IN_APP_UPDATES_ENABLED:
+            self._ota_version_timer.start()
+        if IN_APP_UPDATES_ENABLED and not self.demo:
+            QtCore.QTimer.singleShot(1500, self._check_for_updates)
+            self._release_timer = QtCore.QTimer(self)
+            self._release_timer.setInterval(6 * 60 * 60 * 1000)
+            self._release_timer.timeout.connect(self._check_for_updates)
+            self._release_timer.start()
         if self.demo:
             self.finger_controller.update_machine_status(
                 {
@@ -2063,6 +2137,26 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             self.nav_group.addButton(button, index)
             self.nav_buttons.append(button)
             rail_layout.addWidget(button)
+            if index in (1, 2) or (not IN_APP_UPDATES_ENABLED and index in (3, 4)):
+                button.hide()
+
+        self.update_bubble = QtWidgets.QPushButton()
+        self.update_bubble.setObjectName("updateBubble")
+        self.update_bubble.setToolTip("查看当前解调仪的固件更新")
+        self.update_bubble.clicked.connect(
+            lambda: self.workspace_tabs.setCurrentIndex(3)
+        )
+        self.update_bubble.hide()
+        rail_layout.addWidget(self.update_bubble)
+        self.software_update_bubble = QtWidgets.QPushButton(
+            "● 客户端有新版本\n点击一键更新"
+        )
+        self.software_update_bubble.setObjectName("updateBubble")
+        self.software_update_bubble.clicked.connect(
+            lambda: self.workspace_tabs.setCurrentIndex(4)
+        )
+        self.software_update_bubble.hide()
+        rail_layout.addWidget(self.software_update_bubble)
 
         rail_layout.addStretch(1)
         self.side_device_card = QtWidgets.QFrame()
@@ -2077,7 +2171,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.machine_selector = QtWidgets.QComboBox()
         self.machine_selector.setObjectName("machineSelector")
         self.machine_selector.setToolTip(
-            "选择当前物理机号；同步切换该机的2001点激光表及独立保存的OTA参数"
+            "USB连接后按设备唯一编号自动识别；同步切换该机2001点表、光谱及点位记录。未登记设备需首次确认机号。"
         )
         for machine_id, machine_label in MACHINE_OPTIONS:
             self.machine_selector.addItem(machine_label, machine_id)
@@ -2098,6 +2192,15 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.device_name.setStyleSheet("font-weight: 700; font-size: 10.5pt;")
         self.device_name.setWordWrap(True)
         device_layout.addWidget(self.device_name)
+        self.device_name.hide()
+        self.board_temperature_label = QtWidgets.QLabel("板温：— °C")
+        self.board_temperature_label.setObjectName("thermalReading")
+        self.fan_speed_label = QtWidgets.QLabel("风扇：— RPM")
+        self.fan_speed_label.setObjectName("thermalReading")
+        for label in (self.board_temperature_label, self.fan_speed_label):
+            label.setWordWrap(True)
+            device_layout.addWidget(label)
+        self._clear_thermal_display()
         self.sidebar_link_value = QtWidgets.QLabel("● 等待数据链路")
         self.sidebar_link_value.setObjectName("sideBrandCaption")
         self.sidebar_link_value.setWordWrap(True)
@@ -2106,6 +2209,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.device_version.setObjectName("sideBrandCaption")
         self.device_version.setWordWrap(True)
         device_layout.addWidget(self.device_version)
+        self.device_version.hide()
         self.device_options_button = QtWidgets.QPushButton("端口与设备选项")
         self.device_options_button.setIcon(
             make_nav_icon("device", COLORS["text_2"], 20)
@@ -2116,7 +2220,18 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.device_options_menu.addMenu(self.local_controller.menu_port)
         self.device_options_menu.addMenu(self.local_controller.menu_baud)
         self.device_options_menu.addSeparator()
+        self.machine_identity_action = self.device_options_menu.addAction('识别/登记当前USB机器…')
+        self.machine_identity_action.triggered.connect(self._identify_usb_now)
         self.device_options_menu.addMenu(self.local_controller.menu_page)
+        self.device_options_menu.addSeparator()
+        self.ota_developer_action = self.device_options_menu.addAction(
+            "OTA 开发者设置"
+        )
+        self.ota_developer_action.setVisible(
+            not getattr(sys, "frozen", False)
+            or os.environ.get("FBG_STUDIO_DEVELOPER_MODE") == "1"
+        )
+        self.ota_developer_action.triggered.connect(self._open_ota_developer_settings)
         self.device_options_button.clicked.connect(self._show_device_options)
         self.display_maximize_button = QtWidgets.QPushButton("选择屏幕并最大化")
         self.display_maximize_button.setObjectName("displayMaximizeButton")
@@ -2132,6 +2247,13 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         )
         rail_layout.addWidget(self.side_device_card)
         device_layout.addWidget(self.display_maximize_button)
+        self.developer_mode_button = QtWidgets.QPushButton('开发者模式')
+        self.developer_mode_button.setCheckable(True)
+        self.developer_mode_button.setObjectName('developerModeButton')
+        self.developer_mode_button.setIcon(make_nav_icon('device', COLORS['text_2'], 20))
+        self.developer_mode_button.setToolTip('显示逐点等待、90%稳定时间、DAC和帧耗时诊断；默认关闭')
+        self.developer_mode_button.toggled.connect(self._developer_mode_changed)
+        device_layout.addWidget(self.developer_mode_button)
         self._refresh_machine_identity()
         root.addWidget(self.side_rail)
 
@@ -2144,8 +2266,8 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         top = QtWidgets.QFrame()
         top.setObjectName("topBar")
         top_layout = QtWidgets.QVBoxLayout(top)
-        top_layout.setContentsMargins(22, 15, 22, 14)
-        top_layout.setSpacing(11)
+        top_layout.setContentsMargins(18, 12, 18, 12)
+        top_layout.setSpacing(8)
 
         heading_row = QtWidgets.QHBoxLayout()
         heading_row.setContentsMargins(0, 0, 0, 0)
@@ -2159,6 +2281,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self.page_subtitle = QtWidgets.QLabel(PAGE_INFO[0][1])
         self.page_subtitle.setObjectName("pageSubtitle")
         self.page_subtitle.setWordWrap(True)
+        self.page_subtitle.setVisible(bool(PAGE_INFO[0][1]))
         page_heading.addWidget(self.page_title)
         page_heading.addWidget(self.page_subtitle)
         heading_row.addWidget(heading_widget, 1)
@@ -2185,6 +2308,11 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         )
         self.cnc_estop_button.clicked.connect(self.mach3_emergency.emergency_stop)
         heading_row.addWidget(self.cnc_estop_button)
+        # Hide the CNC-specific chrome without removing its handlers or the
+        # emergency service used by the remaining machine-control workflows.
+        self.cnc_status_label.hide()
+        self.cnc_release_button.hide()
+        self.cnc_estop_button.hide()
         top_layout.addLayout(heading_row)
 
         primary_widget = QtWidgets.QWidget()
@@ -2214,6 +2342,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             self.source_group.addButton(button)
             self.source_buttons[source] = button
             source_layout.addWidget(button)
+        # Keep the WAN implementation available for later use, but do not
+        # show an entry that the current operator workflow does not use.
+        self.source_buttons[NETWORK_WAN].hide()
         if not self.demo and self.network_config is None:
             self.source_buttons[NETWORK_WAN].setEnabled(False)
             self.source_buttons[NETWORK_WAN].setToolTip(
@@ -2256,17 +2387,20 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             self.mode_group.addButton(button, index)
             self.mode_buttons.append(button)
             secondary.addWidget(button)
+            if index in (0, 1, 4, 5):
+                button.hide()
         self.context_hint = QtWidgets.QLabel(
-            "USB与LAN局域网均支持七种完整采集模式，包括临时15/45点测试；"
-            "广域网提供应力与温度实时监测"
+            "顶部仅显示常用模式；USB与LAN局域网仍保留原有采集功能。"
         )
         self.context_hint.setObjectName("softHint")
         self.context_hint.setWordWrap(True)
         self.context_hint.setToolTip(self.context_hint.text())
+        self.context_hint.hide()
         self.open_finger_button = QtWidgets.QPushButton("进入 3D 应力视图")
         self.open_finger_button.setProperty("role", "primary")
         self.open_finger_button.clicked.connect(self.open_finger_tab)
         secondary.addWidget(self.open_finger_button)
+        self.open_finger_button.hide()
         workflow_layout.addWidget(mode_row)
         workflow_layout.addWidget(self.context_hint)
         top_layout.addWidget(self.workflow_strip)
@@ -2316,7 +2450,8 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         settings_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         settings_viewport = QtWidgets.QWidget()
         settings_layout = QtWidgets.QHBoxLayout(settings_viewport)
-        settings_layout.setContentsMargins(28, 22, 28, 28)
+        settings_layout.setContentsMargins(0, 0, 0, 0)
+        settings_layout.setAlignment(QtCore.Qt.AlignTop)
         settings_layout.addStretch(1)
         settings_card = QtWidgets.QFrame()
         settings_card.setObjectName("contentCard")
@@ -2341,7 +2476,8 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         ota_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         ota_viewport = QtWidgets.QWidget()
         ota_layout = QtWidgets.QHBoxLayout(ota_viewport)
-        ota_layout.setContentsMargins(28, 22, 28, 28)
+        ota_layout.setContentsMargins(0, 0, 0, 0)
+        ota_layout.setAlignment(QtCore.Qt.AlignTop)
         ota_layout.addStretch(1)
         ota_card = QtWidgets.QFrame()
         ota_card.setObjectName("contentCard")
@@ -2354,13 +2490,17 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         ota_scroll.setWidget(ota_viewport)
         ota_shell_layout.addWidget(ota_scroll)
         self.workspace_tabs.addTab(ota_shell, PAGE_INFO[3][0])
+        self.workspace_tabs.addTab(self.software_update_page, PAGE_INFO[4][0])
+        if not IN_APP_UPDATES_ENABLED:
+            self.workspace_tabs.setTabVisible(3, False)
+            self.workspace_tabs.setTabVisible(4, False)
         self.workspace_tabs.currentChanged.connect(self._workspace_changed)
         main_layout.addWidget(self.workspace_tabs, 1)
         root.addWidget(main, 1)
 
-        self.statusBar().showMessage(
-            "同一时刻只启用一条数据链路；所有模式共用同一套波长表和拟合算法"
-        )
+        # Keep the status bar for actionable safety/progress messages, not the
+        # static implementation note removed from the customer interface.
+        self.statusBar().clearMessage()
         self._update_source_status("数据链路：准备中", "info")
         self._workspace_changed(0)
         self._refresh_responsive_shell()
@@ -2403,23 +2543,21 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             )
         for widget in (
             self.device_caption,
-            self.device_name,
             self.sidebar_link_value,
-            self.device_version,
         ):
             widget.setVisible(not compact)
+        self.device_name.hide()
         self.device_options_button.setText("" if compact else "端口与设备选项")
         self.device_options_button.setToolTip("端口与设备选项")
         self.display_maximize_button.setText(
             "" if compact else "选择屏幕并最大化"
         )
+        self.developer_mode_button.setText('' if compact else '开发者模式')
         self.display_maximize_button.setToolTip(
             "选择一台显示器并在该屏幕最大化；保留Windows标题栏及右上角三个窗口按钮"
         )
-        self.page_subtitle.setVisible(not short_window)
-        self.context_hint.setVisible(
-            not short_window and self.workspace_tabs.currentIndex() < 2
-        )
+        self.page_subtitle.setVisible(bool(self.page_subtitle.text()) and not short_window)
+        self.context_hint.hide()  # Detailed hints remain in tooltips, not the header.
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -2434,10 +2572,174 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         ):
             QtCore.QTimer.singleShot(0, self._refresh_responsive_shell)
 
+    def _developer_mode_changed(self, enabled: bool):
+        self.developer_mode = bool(enabled)
+        self.local_controller.page_temporary_test.set_developer_mode(enabled)
+
+    def _identity_idle(self):
+        fast_worker = getattr(self, '_fast_flank_worker', None)
+        return (not self._closing and not self.ota_page.busy
+                and (fast_worker is None or not fast_worker.isRunning())
+                and self.local_controller.page_temporary_test.worker is None
+                and local_app.switch_mode_enable and not local_app.ser_open
+                and not local_app.ap_open)
+
+    def _bind_unknown_usb(self, serial):
+        labels = ['请选择机号'] + [label for _, label in MACHINE_OPTIONS]
+        label, accepted = QtWidgets.QInputDialog.getItem(
+            self, '首次识别USB机器',
+            f'USB唯一编号：{serial}\n尚未登记，请核对实物机号。确认后记住绑定，今后自动切换数据。',
+            labels, 0, False)
+        if not accepted or label == labels[0]:
+            return None
+        machine_id = next(mid for mid, name in MACHINE_OPTIONS if name == label)
+        if QtWidgets.QMessageBox.question(
+                self, '确认机器身份', f'确认设备 {serial} 是{label}吗？\n'
+                '将加载该机的校准数据；选择错误可能写入不适用的DAC码。',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No) != QtWidgets.QMessageBox.Yes:
+            return None
+        self.machine_identity_store.bind(serial, machine_id)
+        return machine_id
+
+    def _prepare_local_identity(self, port, *, explicit=False, allow_prompt=True):
+        """Resolve/load the owner before CDC is opened; no hardware commands."""
+        if self.demo or (port == 'LAN' and local_app.ser is self.lan_serial):
+            return True  # LAN remains the existing manually selected, pinned route.
+        if port == self._manual_usb_port:
+            return True
+        if not self._identity_idle():
+            self.statusBar().showMessage('正在采集或更新，暂不切换机器和校准数据')
+            return False
+        try:
+            ports = list(local_app.list_ports.comports())
+            native = native_ports(ports)
+            selected_native = [p for p in native if str(p.device).upper() == str(port).upper()]
+            if not selected_native:
+                # Preserve explicit legacy serial links; never auto-pick a debugger.
+                if explicit and any(str(p.device).upper() == str(port).upper() for p in ports):
+                    self._manual_usb_port = str(port)
+                    self._confirmed_usb_identity = None
+                    self.usb_port = str(port)
+                    self.statusBar().showMessage('非原生USB串口：不能自动识别机号，请手动核对当前机器数据')
+                    return True
+                raise ValueError('未找到所选STM32原生USB设备；未自动套用其他机器的数据')
+            if len(native) > 1 and not explicit and self._explicit_usb_port != str(port):
+                raise ValueError('连接了多台STM32，请先在端口与设备选项中选择要使用的USB端口')
+            actual_port, serial = identity_for_port(ports, port)
+            machine_id = self.machine_identity_store.resolve(serial)
+            if machine_id is None and allow_prompt:
+                machine_id = self._bind_unknown_usb(serial)
+            if machine_id is None:
+                raise ValueError('USB机器尚未登记，请点击端口与设备选项中的“识别/登记当前USB机器”')
+            if machine_id != get_runtime_machine_id():
+                if self.current_source == SOURCE_LOCAL:
+                    self._release_local_control()
+                self._automatic_machine_switch = True
+                try:
+                    self.machine_selector.setCurrentIndex(self.machine_selector.findData(machine_id))
+                finally:
+                    self._automatic_machine_switch = False
+            if get_runtime_machine_id() != machine_id or self._machine_calibration_errors:
+                raise ValueError('机器校准数据未完整载入，USB控制未启用')
+            self._confirmed_usb_identity = (actual_port.upper(), serial, machine_id)
+            self._manual_usb_port = None
+            self.usb_port = actual_port
+            if explicit:
+                self._explicit_usb_port = actual_port
+            self.machine_selector.setToolTip(
+                f'自动识别：{MACHINE_LABELS[machine_id]}\nUSB唯一编号：{serial}\n'
+                '已切换该机的校准表、光谱、参考线和点位记录；机号不是由COM编号推断。')
+            self.statusBar().showMessage(f'已自动识别{MACHINE_LABELS[machine_id]}，已切换对应数据')
+            return True
+        except (OSError, ValueError, KeyError) as exc:
+            self._confirmed_usb_identity = None
+            self.statusBar().showMessage(str(exc))
+            return False
+
+    def _guard_usb_identity(self, endpoint):
+        """Read-only check usable from workers; never touch Qt or send packets."""
+        if self.demo or endpoint is not self.usb_serial:
+            return
+        port = str(endpoint.port or '')
+        if self._manual_usb_port == port:
+            return
+        actual_port, serial = identity_for_port(list(local_app.list_ports.comports()), port)
+        current = (actual_port.upper(), serial, get_runtime_machine_id())
+        if (current != self._confirmed_usb_identity
+                or self.machine_identity_store.resolve(serial) != get_runtime_machine_id()):
+            raise ValueError('USB设备身份或机号已改变，请先停止并重新识别，禁止使用旧机器的DAC数据')
+
+    def _identify_usb_now(self):
+        if self.current_source not in (None, SOURCE_LOCAL) or not self._identity_idle():
+            self.statusBar().showMessage('请切换USB本地并停止采集后，再识别/登记机器')
+            return
+        port = self.local_controller.port
+        ports = native_ports(list(local_app.list_ports.comports()))
+        if len(ports) == 1:
+            port = str(ports[0].device)
+        if self._prepare_local_identity(port, explicit=True):
+            if self.local_controller.port != port:
+                self._release_local_control()
+                self.local_controller.port = port
+                self.usb_serial.port = port
+            if self.current_source is None:
+                self.switch_source(SOURCE_LOCAL)
+
+    def _poll_machine_identity(self):
+        if self.demo or self.current_source not in (None, SOURCE_LOCAL) or not self._identity_idle():
+            return
+        try:
+            ports = native_ports(list(local_app.list_ports.comports()))
+            signature = (tuple(sorted((str(p.device), str(p.serial_number)) for p in ports)),
+                         self.local_controller.port, get_runtime_machine_id())
+            if signature == self._identity_poll_signature:
+                return
+            self._identity_poll_signature = signature
+            if not ports:
+                self._confirmed_usb_identity = None
+                self.statusBar().showMessage('USB设备已断开，等待连接机器后自动识别')
+                return
+            selected = [p for p in ports if str(p.device) == self.local_controller.port]
+            if len(ports) != 1 and not selected:
+                self.statusBar().showMessage('检测到多台STM32，请在端口与设备选项中选择目标')
+                return
+            port = str(selected[0].device if selected else ports[0].device)
+            if self._confirmed_usb_identity is not None and self._confirmed_usb_identity[0] != port.upper():
+                self._release_local_control()
+            if not self._prepare_local_identity(port, allow_prompt=False):
+                return
+            if self.local_controller.port != port:
+                self._release_local_control()
+                self.local_controller.port = port
+                self.usb_serial.port = port
+            if self.current_source is None:
+                self.switch_source(SOURCE_LOCAL, force=True)
+            elif not self.usb_serial.is_open:
+                self.local_controller.acquire_local_control()
+        except (OSError, ValueError) as exc:
+            self.statusBar().showMessage(f'USB自动识别失败：{exc}')
+
     def _machine_selection_changed(self, index: int):
         machine_id = str(self.machine_selector.itemData(index) or "")
         previous_id = get_runtime_machine_id()
         if not machine_id:
+            return
+        if (not self.demo and not self._automatic_machine_switch
+                and self.current_source == SOURCE_LOCAL
+                and self._confirmed_usb_identity is not None
+                and machine_id != self._confirmed_usb_identity[2]):
+            self.machine_selector.blockSignals(True)
+            self.machine_selector.setCurrentIndex(max(self.machine_selector.findData(previous_id), 0))
+            self.machine_selector.blockSignals(False)
+            self.statusBar().showMessage('所选机号与已识别USB设备不符，未切换其他机器的数据')
+            return
+        if self.ota_page.busy:
+            self.machine_selector.blockSignals(True)
+            self.machine_selector.setCurrentIndex(
+                max(self.machine_selector.findData(previous_id), 0))
+            self.machine_selector.blockSignals(False)
+            self.statusBar().showMessage("固件更新期间不能切换机号，请等待完成或取消")
             return
         if not local_app.switch_mode_enable:
             previous_index = self.machine_selector.findData(previous_id)
@@ -2449,10 +2751,56 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         if machine_id == previous_id:
             self._refresh_machine_identity()
             return
+        self._clear_thermal_display()
+        # Disconnect before changing the calibration owner.  Otherwise the
+        # previous board can receive commands built from the new unit's table.
+        was_local_lan = self.current_source == NETWORK_LAN and not self.demo
+        if was_local_lan:
+            self._release_local_control()
         if not self.ota_page.set_machine(machine_id):
+            if was_local_lan:
+                self.local_controller.acquire_local_control()
             return
+        for page in (
+            self.local_controller.page_peak,
+            self.local_controller.page_temperature_peak,
+            self.local_controller.page_temporary_test,
+        ):
+            page.board_firmware_seen_monotonic = 0.0
+        self._prepare_selected_firmware_offer()
         errors = self.local_controller.reload_machine_calibration(machine_id)
+        self._machine_calibration_errors = list(errors)
         self._refresh_machine_identity()
+        if errors and was_local_lan:
+            # Never resume a different physical unit with any consumer still
+            # holding the previous machine's wavelength/current table.
+            self.current_source = None
+            self._set_checked_source(None)
+            self._update_source_status(
+                f"{runtime_machine_label(machine_id)}点表载入失败，局域网连接已停止",
+                "error",
+            )
+            self.statusBar().showMessage(errors[0])
+            return
+        if was_local_lan:
+            try:
+                target = self._configure_lan_target()
+            except ValueError as exc:
+                self.current_source = None
+                self._set_checked_source(None)
+                self._update_source_status(str(exc), "error")
+                return
+            if not self.local_controller.acquire_local_control():
+                self.current_source = None
+                self._set_checked_source(None)
+                self._update_source_status(
+                    f"{runtime_machine_label(machine_id)}局域网连接未启动", "error"
+                )
+                return
+            self._update_source_status(
+                f"局域网正在连接{runtime_machine_label(machine_id)} {target}",
+                "warning",
+            )
         if errors:
             self.statusBar().showMessage(
                 f"已切换为 {runtime_machine_label(machine_id)}，但2001点表不可用："
@@ -2471,11 +2819,15 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         note = runtime_parameter_note(machine_id)
         if machine_id == "machine_2":
             note += "；9峰/3峰路线仍需二号机单独采集"
+        try:
+            lan_target = self.ota_settings_store.lan_board_ip(machine_id)
+        except ValueError:
+            lan_target = "未设置（请在 OTA 页面填写板卡 IP）"
         self.device_version.setText(
-            f"{note}\n统一控制 · ADC 光谱 · 3D 定位"
+            f"{note}\n局域网目标：{lan_target}\n统一控制 · ADC 光谱 · 3D 定位"
         )
         self.setWindowTitle(
-            f"FBG OptiSense Studio {APP_VERSION} — {machine_label} · "
+            f"FBG OptiSense Studio {APP_VERSION}{' Beta（开发测试）' if beta_enabled() else ''} — {machine_label} · "
             "光栅解调与机械手指应力定位"
         )
 
@@ -2484,6 +2836,265 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             QtCore.QPoint(0, self.device_options_button.height() + 5)
         )
         self.device_options_menu.exec_(origin)
+
+    def _open_ota_developer_settings(self):
+        self.ota_page.set_developer_mode(True)
+        self.workspace_tabs.setCurrentIndex(3)
+
+    def _set_update_bubble(self, available: bool, message: str):
+        if not IN_APP_UPDATES_ENABLED:
+            self.update_bubble.hide()
+            return
+        self.update_bubble.setText(
+            "● 发现固件发布\n查看更新" if "确认是否需要更新" in message
+            else "● 固件有新版本\n点击一键更新"
+        )
+        self.update_bubble.setToolTip(message)
+        self.update_bubble.setVisible(bool(available))
+        if available and message != self._firmware_toast_message:
+            self._firmware_toast_message = message
+            if not self.demo and self.isVisible():
+                QtWidgets.QToolTip.showText(
+                    self.update_bubble.mapToGlobal(QtCore.QPoint(8, 8)),
+                    message, self.update_bubble, QtCore.QRect(), 5000,
+                )
+
+    def _poll_firmware_update(self):
+        """Use already received status frames; never probe or seize a LAN port."""
+
+        if self.demo or self.current_source not in (SOURCE_LOCAL, NETWORK_LAN):
+            return
+        for page in (
+            self.local_controller.page_peak,
+            self.local_controller.page_temperature_peak,
+            self.local_controller.page_temporary_test,
+        ):
+            observed_at = getattr(page, "board_firmware_seen_monotonic", 0.0)
+            version = getattr(page, "board_firmware_version", None)
+            if version is not None and time.monotonic() - observed_at < 10.0:
+                self.ota_page.set_observed_firmware_version(
+                    self.ota_page.current_machine_id, version
+                )
+                return
+
+    def _clear_thermal_display(self):
+        self._thermal_reset_monotonic = time.monotonic()
+        self._thermal_received_monotonic = None
+        self._thermal_full_received_monotonic = None
+        for endpoint in (self.usb_serial, self.lan_serial):
+            observer = getattr(endpoint, 'thermal_observer', None)
+            if observer is not None:
+                observer.reset()
+        self.board_temperature_label.setText("板温：— °C")
+        self.fan_speed_label.setText("风扇：— RPM")
+        for label in (self.board_temperature_label, self.fan_speed_label):
+            label.setToolTip("等待设备实测数据；当前模式未回传或数据过期时显示 —")
+
+    def _display_thermal(self, values):
+        """Render a passive, fresh board snapshot; never substitute setpoints."""
+        try:
+            received = float(values.get("received_monotonic", time.monotonic()))
+            temperature = float(values["temperature_c"])
+            flags = values.get("thermal_flags")
+            flags = None if flags is None else int(flags)
+            rpm = values.get("fan_rpm")
+            rpm = None if rpm is None else int(rpm)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return
+        now = time.monotonic()
+        if (not math.isfinite(received)
+                or received < self._thermal_reset_monotonic
+                or received > now + 0.1 or now - received > 10.0
+                or (self._thermal_received_monotonic is not None
+                    and received < self._thermal_received_monotonic)):
+            return
+        self._thermal_received_monotonic = received
+        valid_temperature = (math.isfinite(temperature) and -55 <= temperature <= 125
+                             and (flags is None or flags & 0x01 and not flags & 0x04))
+        self.board_temperature_label.setText(
+            f"板温：{temperature:.1f} °C" if valid_temperature else "板温：— °C")
+        self.board_temperature_label.setToolTip(
+            "设备回传的板温；当前协议未回传传感器有效标志"
+            if flags is None else
+            "设备实测板温" if valid_temperature else "温度传感器故障或读数无效")
+        if flags is not None and flags & 0x08:
+            self.fan_speed_label.setText("风扇：反馈异常")
+            self.fan_speed_label.setToolTip("设备报告风扇转速反馈故障，RPM不可信")
+        elif flags and rpm is not None and 0 <= rpm <= 65535:
+            self.fan_speed_label.setText(f"风扇：{rpm} RPM")
+            self.fan_speed_label.setToolTip("风扇FG测速反馈，非PWM控制百分比")
+        else:
+            self.fan_speed_label.setText("风扇：— RPM")
+            self.fan_speed_label.setToolTip("当前数据包未回传可用的风扇测速状态")
+
+    def _local_thermal_received(self, mode, values):
+        if self._uses_local_pages() and self.local_controller.MCU_mode == mode:
+            self._display_thermal(values)
+
+    @QtCore.pyqtSlot(float)
+    def _single_value_temperature_received(self, temperature):
+        if self._uses_local_pages() and self.local_controller.MCU_mode == 3:
+            # The legacy temp-only signal follows the same read as TH1. Do
+            # not overwrite genuine RPM/validity flags with an empty trailer.
+            full = self._thermal_full_received_monotonic
+            if full is not None and time.monotonic() - full <= 10.0:
+                return
+            self._display_thermal({"temperature_c": temperature})
+
+    @QtCore.pyqtSlot(str, object)
+    def _native_thermal_received(self, source, values):
+        if self._closing or source != self.current_source or not self._uses_local_pages():
+            return
+        mode = self.local_controller.MCU_mode
+        expected_state = 1 if mode == 2 else 2
+        if mode not in (2, 3, 4, 5, 6) or values.get('work_state') != expected_state:
+            return
+        self._display_thermal(values)
+        received = values['received_monotonic']
+        if self._thermal_received_monotonic == received:
+            self._thermal_full_received_monotonic = received
+
+    @QtCore.pyqtSlot(object)
+    def _remote_thermal_received(self, frame):
+        if self._uses_local_pages() or self.current_source is None or self.demo:
+            return
+        self._display_thermal({
+            "temperature_c": frame.temperature_mC / 1000.0,
+            "fan_rpm": frame.fan_rpm,
+            "thermal_flags": frame.thermal_flags,
+        })
+
+    def _expire_thermal_display(self):
+        received = self._thermal_received_monotonic
+        if received is not None and time.monotonic() - received > 10.0:
+            self._clear_thermal_display()
+
+    def _check_for_updates(self):
+        if not IN_APP_UPDATES_ENABLED or self.demo or self._closing or (
+            self._release_check_thread is not None
+            and self._release_check_thread.isRunning()
+        ):
+            return
+        worker = ReleaseCheckWorker(self)
+        self._release_check_thread = worker
+        worker.completed.connect(self._release_offers_ready)
+        worker.failed.connect(self._release_check_failed)
+        worker.finished.connect(self._release_check_finished)
+        worker.start()
+
+    def _release_check_finished(self):
+        self._release_check_thread = None
+
+    def _release_offers_ready(self, offers: UpdateOffers):
+        if not IN_APP_UPDATES_ENABLED:
+            self.software_update_bubble.hide()
+            self.update_bubble.hide()
+            return
+        self._update_offers = offers
+        self.software_update_page.set_offer(offers.desktop)
+        self.software_update_bubble.setVisible(
+            self.software_update_page.offer is not None
+        )
+        if (self.software_update_page.offer is not None
+                and self.software_update_page.offer.version != self._software_toast_version):
+            self._software_toast_version = self.software_update_page.offer.version
+            if not self.demo and self.isVisible():
+                QtWidgets.QToolTip.showText(
+                    self.software_update_bubble.mapToGlobal(QtCore.QPoint(8, 8)),
+                    f"客户端 v{self._software_toast_version} 可更新",
+                    self.software_update_bubble, QtCore.QRect(), 5000,
+                )
+        self._prepare_selected_firmware_offer()
+
+    def _release_check_failed(self, message: str):
+        self._update_offers = None
+        self.software_update_page.offer = None
+        self.software_update_page.update_button.setEnabled(False)
+        self.software_update_bubble.hide()
+        self.software_update_page.status.setText(
+            f"暂时无法检查客户端更新，请稍后重试。详细信息：{message}"
+        )
+        self.ota_page.set_release_check_failed(message)
+
+    def _prepare_selected_firmware_offer(self):
+        if not IN_APP_UPDATES_ENABLED or self._update_offers is None or self._closing:
+            return
+        if self._generated_mode_table_package_path:
+            return
+        machine_id = self.ota_page.current_machine_id
+        asset = self._update_offers.firmware.get(machine_id)
+        self.ota_page.set_available_release_version(
+            asset.version if asset is not None else None
+        )
+        if asset is None:
+            return
+        current = self.ota_page.package
+        if current is not None and current.firmware_version >= parse_version(asset.version):
+            self.ota_page.refresh_update_offer()
+            return
+        if (self._firmware_download_thread is not None
+                and self._firmware_download_thread.isRunning()):
+            return
+        # Never present an older locally remembered image while a newer
+        # machine-specific Release package is being verified in the background.
+        self.ota_page.package = None
+        self.ota_page.refresh_update_offer()
+        worker = AssetDownloadWorker(asset, self)
+        self._firmware_download_thread = worker
+        self._firmware_download_machine_id = machine_id
+        worker.completed.connect(
+            lambda path, owner=machine_id, item=asset:
+                self._firmware_downloaded(owner, item, path)
+        )
+        worker.failed.connect(self._firmware_download_failed)
+        worker.finished.connect(self._firmware_download_finished)
+        worker.start()
+
+    def _firmware_downloaded(self, machine_id, asset, path):
+        try:
+            package = load_package(path)
+            if package.firmware_version != parse_version(asset.version):
+                raise ValueError("固件包版本与 GitHub Release 不一致")
+        except (OSError, ValueError) as exc:
+            self._firmware_download_failed(str(exc))
+            return
+        if (machine_id == self.ota_page.current_machine_id
+                and not self._generated_mode_table_package_path):
+            self.ota_page.set_package_path(path, published=True)
+
+    def _firmware_download_failed(self, message: str):
+        self.ota_page.update_offer.setText(f"固件更新包尚未就绪：{message}")
+
+    def _firmware_download_finished(self):
+        previous_machine_id = self._firmware_download_machine_id
+        self._firmware_download_thread = None
+        self._firmware_download_machine_id = None
+        if previous_machine_id != self.ota_page.current_machine_id:
+            self._prepare_selected_firmware_offer()
+
+    def _install_desktop_update(self, installer_path: str):
+        if not getattr(sys, "frozen", False):
+            self.software_update_page.status.setText(
+                f"安装包已校验并下载到 {installer_path}。"
+                "当前是源码开发版，请从该文件手动安装。"
+            )
+            return
+        if not self.close():
+            self.software_update_page.status.setText(
+                "已取消安装；未保存数据保留在当前程序中。"
+            )
+            return
+        started, _pid = QtCore.QProcess.startDetached(
+            installer_path,
+            ["/SILENT", "/CLOSEAPPLICATIONS", "/NORESTART"],
+            str(Path(installer_path).parent),
+        )
+        if not started:
+            self._closing = False
+            self.show()
+            QtWidgets.QMessageBox.warning(
+                None, "客户端更新", f"安装程序未能启动，请手动运行：\n{installer_path}"
+            )
 
     @staticmethod
     def _display_label(screen, index: int, *, primary=False, current=False):
@@ -2530,6 +3141,19 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         )
         menu.exec_(origin)
 
+    def _fit_initial_window(self, screen=None):
+        """Fit the first window to logical work-area pixels, including high DPI."""
+        screen = screen or QtWidgets.QApplication.primaryScreen()
+        if screen is None:
+            return
+        available = screen.availableGeometry()
+        # Leave room for the normal Windows title bar, borders and taskbar.
+        width = max(self.minimumWidth(), min(1640, available.width()-24))
+        height = max(self.minimumHeight(), min(980, available.height()-48))
+        self.resize(width, height)
+        self.move(available.x()+max(0,(available.width()-width)//2),
+                  available.y()+max(0,(available.height()-height-32)//2))
+
     def _maximize_on_screen(self, screen):
         if screen is None or screen not in QtWidgets.QApplication.screens():
             self.statusBar().showMessage("目标显示器已断开，请重新选择屏幕")
@@ -2552,6 +3176,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
 
     def _workspace_changed(self, index: int):
         index = max(0, min(int(index), len(PAGE_INFO) - 1))
+        if not IN_APP_UPDATES_ENABLED and index in (3, 4):
+            self.workspace_tabs.setCurrentIndex(0)
+            return
         title, subtitle, _icon_kind = PAGE_INFO[index]
         self.page_title.setText(title)
         self.page_subtitle.setText(subtitle)
@@ -2565,7 +3192,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         # Mode controls are meaningful beside live spectra and the 3-D stress
         # view, while configuration/OTA pages stay deliberately calm.
         self.workflow_strip.setVisible(index < 2)
-        self.open_finger_button.setVisible(index == 0)
+        self.open_finger_button.hide()
         if hasattr(self, "mach3_position_timer") and not self.demo:
             if index < 2:
                 if not self.mach3_position_timer.isActive():
@@ -2590,6 +3217,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         )
 
     def _connect_signals(self):
+        self.ota_page.update_available_changed.connect(self._set_update_bubble)
         for source, button in self.source_buttons.items():
             button.clicked.connect(
                 lambda checked=False, value=source: (
@@ -2723,6 +3351,14 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         selected = self.current_source if source is None else source
         return selected == SOURCE_LOCAL or (selected == NETWORK_LAN and not self.demo)
 
+    def _configure_lan_target(self) -> str:
+        """Pin LAN control to the selected unit; never discover an arbitrary peer."""
+
+        machine_id = self.ota_page.current_machine_id
+        target = self.ota_settings_store.lan_board_ip(machine_id)
+        self.lan_serial.board_host = target
+        return target
+
     def _select_local_transport(self, source: str):
         """Point the legacy pages at CDC or at the same-LAN byte stream."""
 
@@ -2733,6 +3369,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             self.usb_serial.baudrate = self.local_controller.baud
             return
         if source == NETWORK_LAN and not self.demo:
+            self._configure_lan_target()
             local_app.ser = self.lan_serial
             self.local_controller.port = "LAN"
             return
@@ -2758,6 +3395,10 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
     def switch_source(self, source: str, force: bool = False):
         if source not in SOURCE_NAMES:
             raise ValueError(f"不支持的数据来源：{source}")
+        if self.ota_page.busy:
+            self._set_checked_source(self.current_source)
+            self.statusBar().showMessage("固件更新占用设备，请等待完成后再选择数据来源")
+            return
         if source == NETWORK_WAN and not self.source_buttons[source].isEnabled():
             self._set_checked_source(self.current_source)
             return
@@ -2769,6 +3410,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
                 return
 
         previous = self.current_source
+        self._clear_thermal_display()
         transport_open_failed = False
         try:
             if self._uses_local_pages(previous):
@@ -2791,7 +3433,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
                     route = "本地 USB"
                 else:
                     self._update_source_status(
-                        "局域网全功能通道：正在寻找板卡", "warning"
+                        f"局域网全功能通道：正在连接"
+                        f"{runtime_machine_label()} {self.lan_serial.board_host}",
+                        "warning",
                     )
                     route = "局域网 TCP（USB 同构）"
                 self.finger_controller.source_label.setText(
@@ -2883,6 +3527,10 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
     def _sync_local_mode(self):
         if self.current_source is not None and not self._uses_local_pages():
             return
+        mode = int(self.local_controller.MCU_mode)
+        if mode != self._thermal_mode:
+            self._thermal_mode = mode
+            self._clear_thermal_display()
         self._set_checked_mode(int(self.local_controller.MCU_mode))
         self._sync_mode_availability()
 
@@ -2915,6 +3563,8 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
     def _lan_connection_changed(self, connected: bool, detail: str):
         if self.current_source != NETWORK_LAN or self.demo:
             return
+        if not connected:
+            self._clear_thermal_display()
         self._update_source_status(detail, "ok" if connected else "warning")
 
     def open_finger_tab(self):
@@ -2940,14 +3590,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         return True
 
     def _prepare_ota(self) -> bool:
-        """Give the OTA socket exclusive ownership of the board's LAN port."""
+        """Release local acquisition before a LAN or WAN firmware update."""
         if self._uses_local_pages() and not self._can_leave_local():
             return False
-        learned_ip = self.lan_serial.board_ip or getattr(
-            self.transport, "board_ip", None
-        )
-        if learned_ip:
-            self.ota_page.set_board_ip(learned_ip)
         self.remote_controller.deactivate_network()
         self._release_local_control()
         self.current_source = None
@@ -2956,7 +3601,7 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._set_local_menus_enabled(False)
         self._update_source_status("OTA 升级模式：激光与数据链路已暂停", "warning")
         self.statusBar().showMessage(
-            "OTA 独占局域网端口；升级完成后在顶部重新选择数据来源"
+            "固件 OTA 正在运行；升级完成后在顶部重新选择数据来源"
         )
         return True
 
@@ -2967,11 +3612,6 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
         self._generated_mode_table_package_path = str(Path(package_path).resolve())
         self.workspace_tabs.setCurrentIndex(3)
         self._workspace_changed(3)
-        learned_ip = self.lan_serial.board_ip or getattr(
-            self.transport, "board_ip", None
-        )
-        if learned_ip:
-            self.ota_page.set_board_ip(learned_ip)
         self.statusBar().showMessage(
             "新点表固件包已校验；输入OTA密码后仍需点击“开始安全升级”确认上传"
         )
@@ -3057,6 +3697,26 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             event.ignore()
             return
         self._closing = True
+        identity_timer = getattr(self, '_machine_identity_timer', None)
+        if identity_timer is not None:
+            identity_timer.stop()
+        if local_app.serial_identity_guard is getattr(self, '_usb_identity_guard', None):
+            local_app.serial_identity_guard = getattr(self, '_previous_usb_identity_guard', None)
+        for source, port in ((SOURCE_LOCAL, self.usb_serial), (NETWORK_LAN, self.lan_serial)):
+            observer = getattr(port, 'thermal_observer', None)
+            callback = getattr(self, '_thermal_callbacks', {}).get(source)
+            if observer is not None and callback is not None and observer.callback is callback:
+                observer.callback = None
+        software_page = getattr(self, "software_update_page", None)
+        if software_page is not None:
+            software_page.cancel_download()
+        for worker in (
+            getattr(self, "_release_check_thread", None),
+            getattr(self, "_firmware_download_thread", None),
+        ):
+            if worker is not None and worker.isRunning():
+                worker.requestInterruption()
+                worker.wait(35000)
         try:
             # Seal any in-progress dataset before Qt destroys the timer and UI.
             # This only drains the background file queue; it never issues a CNC
@@ -3065,6 +3725,9 @@ class UnifiedFbgStudio(QtWidgets.QMainWindow):
             if self._coverage_active or self._coverage_writer is not None:
                 self._finish_coverage_run(False, "软件关闭，采集会话已安全封存")
             self.mach3_position_timer.stop()
+            thermal_timer = getattr(self, "_thermal_display_timer", None)
+            if thermal_timer is not None:
+                thermal_timer.stop()
             self.remote_controller.deactivate_network()
             self.local_controller.close()
             self.lan_serial.close()
@@ -3126,6 +3789,7 @@ def main(argv=None):
         demo=args.demo,
     )
     polish_plots(window)
+    window._fit_initial_window()
     window.show()
 
     view_indexes = {"spectrum": 0, "finger": 1, "settings": 2, "ota": 3}

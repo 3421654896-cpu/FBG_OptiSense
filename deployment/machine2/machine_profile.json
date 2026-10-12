@@ -1,0 +1,21 @@
+{
+  "schema": "fbg_machine_profile_v1",
+  "machine_id": "machine_2",
+  "machine_label": "二号机",
+  "parameter_owner": "二号机",
+  "parameter_note": "二号机客户版；2001点使用2号解调仪第一次校准，9峰/3峰路线待当前设备采集",
+  "parameter_groups": {
+    "fullband_2001": [
+      "calibration_backups/2号解调仪第一次校准/2号解调仪第一次校准_2001点.json"
+    ],
+    "nine_peak": [],
+    "three_peak": []
+  },
+  "artifacts": [
+    {
+      "path": "calibration_backups/2号解调仪第一次校准/2号解调仪第一次校准_2001点.json",
+      "sha256": "37f3be1364c9ea3fca6ce616d9cddcf5364ec5e466ec5ccc5f2ac841a7c10f02",
+      "bytes": 18157158
+    }
+  ]
+}

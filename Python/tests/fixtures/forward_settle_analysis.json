@@ -1,0 +1,17 @@
+{
+  "schema": "synthetic_forward_settle_test_fixture",
+  "transitions": [
+    {
+      "source_index": 0,
+      "target_index": 1,
+      "category": "synthetic_test_only",
+      "channels": {
+        "CH1": {
+          "settle_5pct_us": 670,
+          "main_edge_10_90_us": 240,
+          "meaningful_step": true
+        }
+      }
+    }
+  ]
+}

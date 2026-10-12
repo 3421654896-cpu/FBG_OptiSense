@@ -1080,9 +1080,9 @@ class RemoteViewer(QtWidgets.QMainWindow):
         if frame.thermal_flags & 0x0004:
             control = "温度传感器故障，安全满速"
         elif frame.thermal_flags & 0x0002:
-            control = "≥33℃，满速锁定"
+            control = "高于温控目标，连续 PID 调速"
         else:
-            control = "33℃ PID"
+            control = "连续温控 PID"
         tach = "，转速反馈异常" if frame.thermal_flags & 0x0008 else ""
         self.fan_status_label.setText(
             f"风扇：{duty:.1f}% / {frame.fan_rpm} RPM，{control}{tach}"

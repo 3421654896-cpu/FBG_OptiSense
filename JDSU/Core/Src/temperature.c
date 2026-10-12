@@ -16,7 +16,9 @@
 #define FAN_TACH_MIN_RPM                  300U
 #define FAN_TACH_FAULT_WINDOWS            3U
 
-#define FAN_TARGET_C                      33.0f
+/* Universal product policy (2026-10-09): every machine and future firmware
+ * uses the same 40 C target; do not introduce per-machine/mode overrides. */
+#define FAN_TARGET_C                      40.0f
 #define FAN_PID_BASE_PERCENT              52.0f
 #define FAN_PID_KP                        24.0f
 #define FAN_PID_KI                        0.55f
@@ -259,8 +261,10 @@ static float MedianTemperature(void)
     return sorted[count / 2U];
 }
 
-void Set_Soft_PWM_Duty(uint8_t cooling_percent)
+static void Set_Soft_PWM_Duty(uint8_t cooling_percent)
 {
+    /* A latched DMA/PWM fault must not be overwritten by a later PID step. */
+    if(fanPwmFault) cooling_percent = 100U;
     if(cooling_percent > 100U) cooling_percent = 100U;
     fanCoolingPercent = cooling_percent;
 
@@ -284,6 +288,10 @@ static void ApplyFanCommand(float requestedPercent, float dt, uint8_t forceFull)
     if(requestedPercent < (float)FAN_MIN_EFFECTIVE_PERCENT)
         requestedPercent = (float)FAN_MIN_EFFECTIVE_PERCENT;
     if(requestedPercent > 100.0f) requestedPercent = 100.0f;
+
+    /* All acquisition, calibration and idle modes share this temperature
+     * controller.  Only safety conditions may override PID cooling. */
+    if(fanPwmFault) forceFull = 1U;
 
     if(forceFull)
     {

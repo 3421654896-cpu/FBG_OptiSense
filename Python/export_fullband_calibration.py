@@ -1,8 +1,8 @@
 """Export the measured 1525--1565 nm equal-power calibration for operation.
 
-The source JSON contains the complete measurement history.  This exporter keeps
-that audit trail, adds the forward-only transition guards found by live replay,
-and emits compact CSV/C forms for analysis and firmware integration.
+The source JSON contains the complete measurement history. This exporter keeps
+that audit trail and emits compact CSV/C forms for analysis and firmware
+integration. Legacy forward-only transition guards require explicit opt-in.
 """
 
 from __future__ import annotations
@@ -23,9 +23,9 @@ LIMIT_PROFILE = "fullband_2001_145mA_v1"
 FULLBAND_CODE_LIMITS = (63351, 63351, 32767, 24575, 24575)
 POWER_REL_TOLERANCE = 0.005
 
-# These branch-conditioning codes were replayed on the real laser in forward
-# scan order.  The former 1527.44-nm guard was removed after its replacement
-# point passed five direct forward-path replays without any precondition.
+# Legacy branch-conditioning codes from a previous laser.  They must never be
+# silently copied into a new machine's from-zero calibration; selecting them
+# requires an explicit exporter option.
 FORWARD_GUARDS = (
     {
         "target_nm": 1529.82,
@@ -264,6 +264,7 @@ def make_operational_json(
     feedback_rows: list[dict] | None = None,
     feedback_source: Path | None = None,
     power_relative_tolerance: float = POWER_REL_TOLERANCE,
+    transition_guards: tuple[dict, ...] = (),
 ) -> dict:
     target_power_mw = float(source["target_power_mw"])
     result = dict(source)
@@ -276,10 +277,10 @@ def make_operational_json(
         "step_nm": STEP_NM,
         "point_count": len(rows),
         "limit_profile": LIMIT_PROFILE,
-        "transition_guards": list(FORWARD_GUARDS),
+        "transition_guards": list(transition_guards),
         "total_guard_hold_ms_per_full_scan": sum(
             int(guard["hold_ms_per_stage"]) * len(guard["precondition_codes"])
-            for guard in FORWARD_GUARDS
+            for guard in transition_guards
         ),
         "power_control_note": (
             "Static wavelength-meter equalization is the feed-forward baseline. "
@@ -328,6 +329,7 @@ def write_csv(
     rows: list[dict],
     target_power_mw: float,
     feedback_by_target: dict[float, dict] | None = None,
+    transition_guards: tuple[dict, ...] = (),
 ) -> None:
     fields = [
         "limit_profile", "index", "target_wavelength_nm", "measured_wavelength_nm",
@@ -340,7 +342,7 @@ def write_csv(
         "power_feedback_hardware_eligible",
         "guard_stage_count", "guard_hold_ms_per_stage",
     ]
-    guards = {round(float(g["target_nm"]), 6): g for g in FORWARD_GUARDS}
+    guards = {round(float(g["target_nm"]), 6): g for g in transition_guards}
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
@@ -395,6 +397,7 @@ def write_header(
     path: Path,
     rows: list[dict],
     feedback_by_target: dict[float, dict] | None = None,
+    transition_guards: tuple[dict, ...] = (),
 ) -> None:
     lines = [
         "/* Auto-generated from live AQ6150B calibration. Do not hand edit. */",
@@ -407,7 +410,7 @@ def write_header(
         "#define LASER_CAL_STEP_PM         20U",
         f"#define LASER_CAL_POINT_COUNT     {len(rows)}U",
         "#define LASER_CAL_CHANNEL_COUNT   5U",
-        f"#define LASER_CAL_GUARD_COUNT     {len(FORWARD_GUARDS)}U",
+        f"#define LASER_CAL_GUARD_COUNT     {len(transition_guards)}U",
         "",
         "typedef struct {",
         "    uint16_t code[LASER_CAL_CHANNEL_COUNT];",
@@ -443,8 +446,8 @@ def write_header(
             f"{feedback_margin}U, {channel_id}U, {eligible}U}}, "
             f"/* {float(row['target_nm']):.2f} nm */"
         )
-    lines.extend(["};", "", "static const LaserTransitionGuard_t g_laser_transition_guards[LASER_CAL_GUARD_COUNT] = {"])
-    for guard in FORWARD_GUARDS:
+    lines.extend(["};", "", "static const LaserTransitionGuard_t g_laser_transition_guards[(LASER_CAL_GUARD_COUNT > 0U) ? LASER_CAL_GUARD_COUNT : 1U] = {"])
+    for guard in transition_guards:
         target_index = int(round((float(guard["target_nm"]) - START_NM) / STEP_NM))
         stages = list(guard["precondition_codes"])
         padded = stages + [[0, 0, 0, 0, 0]] * (2 - len(stages))
@@ -454,19 +457,23 @@ def write_header(
             f"    {{{target_index}U, {len(stages)}U, {int(guard['hold_ms_per_stage']) * 1000}U, "
             f"{{{{{first}}}, {{{second}}}}}}}, /* {float(guard['target_nm']):.2f} nm */"
         )
+    if not transition_guards:
+        lines.append("    {0}, /* no transition guards for this machine */")
     lines.extend(["};", "", "#endif /* FULLBAND_EQUAL_POWER_2001_H */", ""])
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def write_guard_file(path: Path, source_name: str) -> None:
+def write_guard_file(
+    path: Path, source_name: str, transition_guards: tuple[dict, ...] = (),
+) -> None:
     payload = {
         "source_table": source_name,
         "limit_profile": LIMIT_PROFILE,
         "scan_direction": "forward",
-        "guards": list(FORWARD_GUARDS),
+        "guards": list(transition_guards),
         "total_guard_hold_ms_per_full_scan": sum(
             int(g["hold_ms_per_stage"]) * len(g["precondition_codes"])
-            for g in FORWARD_GUARDS
+            for g in transition_guards
         ),
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -497,6 +504,10 @@ def main() -> None:
         default=POWER_REL_TOLERANCE,
         help="single-point power acceptance tolerance as a fraction",
     )
+    parser.add_argument(
+        "--legacy-forward-guards", action="store_true",
+        help="explicitly reuse the previous laser's two validated forward guards",
+    )
     args = parser.parse_args()
     if not math.isfinite(args.power_relative_tolerance) or not (
         0.0 < args.power_relative_tolerance <= 0.10
@@ -505,6 +516,7 @@ def main() -> None:
 
     source = load_source(args.source, args.power_relative_tolerance)
     rows = ordered_rows(source)
+    transition_guards = FORWARD_GUARDS if args.legacy_forward_guards else ()
     target_power_mw = float(source["target_power_mw"])
     certification = {
         "mode": args.certification_mode,
@@ -538,6 +550,7 @@ def main() -> None:
         source, rows, args.source, feedback_rows,
         args.feedback if feedback_rows else None,
         args.power_relative_tolerance,
+        transition_guards,
     )
     operational["independent_repeatability_certification"] = certification
 
@@ -546,9 +559,9 @@ def main() -> None:
     header_path = args.prefix.with_suffix(".h")
     guard_path = args.prefix.with_name(args.prefix.name + "_transition_guards").with_suffix(".json")
     json_path.write_text(json.dumps(operational, ensure_ascii=False, indent=2), encoding="utf-8")
-    write_csv(csv_path, rows, target_power_mw, feedback_by_target)
-    write_header(header_path, rows, feedback_by_target)
-    write_guard_file(guard_path, json_path.name)
+    write_csv(csv_path, rows, target_power_mw, feedback_by_target, transition_guards)
+    write_header(header_path, rows, feedback_by_target, transition_guards)
+    write_guard_file(guard_path, json_path.name, transition_guards)
 
     for path in (json_path, csv_path, header_path, guard_path):
         digest = hashlib.sha256(path.read_bytes()).hexdigest()

@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
 #include "wifi_transport.h"
+#include "ota_update.h"
 
 /* USER CODE END Includes */
 
@@ -150,9 +151,9 @@ int main(void)
 #endif
   MX_TIM1_Init();
   MX_I2C1_Init();
-  /* Probe the real PI11210, preload its bounded SOA shutter current and keep
-     the active-high CLR line deasserted.  A failed probe is reported through
-     the status telemetry; no laser-current write is accepted until it recovers. */
+  /* Probe the PI11210 with SOA gated and initialise its source code to zero.
+     A failed probe is reported through status telemetry; no laser-current
+     write is accepted until it recovers. */
   (void)PI11210_Init();
   /* Select the STM32 while its USB pull-up is still disabled.  Holding this
      state creates a real bus disconnect before the CDC device is started. */
@@ -255,6 +256,7 @@ int main(void)
 		usbControlWasActive = usbCdcHostOpen ? 1U : 0U;
 		WifiTransport_SetLocalControlActive(usbCdcHostOpen);
 		WifiTransport_Process();
+		OtaUpdate_ProcessUsb();
 		if(WifiTransport_IsOtaActive())
 		{
 			/* OTA owns the board exclusively.  Stop wavelength switching and
@@ -281,6 +283,7 @@ int main(void)
 		
 		switch(workState)
 		{
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 			case TABLE_STATE:
 			{
 				write_ms5614t_table();
@@ -291,6 +294,7 @@ int main(void)
 				write_ms5614t_table();
 				break;
 			}
+#endif
 			case MANUAL_STATE:
 			{
 				write_ms5614t_manual();
@@ -756,9 +760,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
-  /* PI11210 CLR is active high.  Keep normal source operation selected from
-     the first instant PB5 becomes an output. */
-  HAL_GPIO_WritePin(PI11210_CLR_PORT, PI11210_CLR_PIN, GPIO_PIN_RESET);
+  /* PI11210 CLR is active high.  Keep SOA gated until its source code has
+     explicitly been initialised; a power-on must not enable an old bias. */
+  HAL_GPIO_WritePin(PI11210_CLR_PORT, PI11210_CLR_PIN, GPIO_PIN_SET);
 
   /*Configure GPIO pins : PC0 PC1 PC9 PC11 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_9|GPIO_PIN_11;

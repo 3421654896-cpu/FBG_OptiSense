@@ -20,10 +20,13 @@ from typing import Callable, Optional
 
 from fbg_lan_transport import LAN_BOARD_PORT, _candidate_hosts
 from frame_telemetry import RAW_SCAN_MAX_POINTS, extract_raw_scan_frames
+from board_thermal_protocol import ThermalReadObserver
 
 
 RAW_HELLO = b"FBGL1|RAW"
 RAW_COMPACT_ENABLE = b"FBGL1|CAPS|CS1"
+RAW_TEMPORARY_BATCH_ENABLE = b"FBGL1|CAPS|TB4"
+RAW_TEMPORARY_COMPACT_ENABLE = b"FBGL1|CAPS|TC4"
 RAW_COMMAND_PREFIX = b"FUSB1|"
 RAW_RESPONSE_MAGIC = b"FBR1"
 RAW_RESPONSE_HEADER = struct.Struct(">4sBBIH")
@@ -34,6 +37,10 @@ RAW_KIND_READY = 2
 RAW_KIND_COMPACT_SCAN = 3
 RAW_KIND_COMPACT_F45 = 4
 RAW_KIND_COMPACT_F45_BATCH = 5
+RAW_KIND_TEMPORARY_BATCH = 6
+RAW_KIND_TEMPORARY_CAP_ACK = 7
+RAW_KIND_COMPACT_TEMPORARY_BATCH = 8
+RAW_KIND_TEMPORARY_COMPACT_CAP_ACK = 9
 RAW_COMPACT_SCAN_HEADER = struct.Struct(">BBHH")
 RAW_COMPACT_SCAN_VERSION = 1
 RAW_COMPACT_F45_SIZE = 128
@@ -159,6 +166,81 @@ def expand_compact_f45_batch(payload: bytes) -> tuple[bytes, ...] | None:
     return tuple(frames)
 
 
+def expand_temporary_batch(payload: bytes) -> tuple[bytes, ...] | None:
+    """Unpack complete native temporary frames without altering any samples."""
+
+    if len(payload) < 4 or payload[0] != 1 or not 1 <= payload[1] <= 4:
+        return None
+    count = payload[1]
+    frame_length = int.from_bytes(payload[2:4], "big")
+    if frame_length < 46 or len(payload) != 4 + count * frame_length:
+        return None
+    frames = []
+    for index in range(count):
+        start = 4 + index * frame_length
+        frame = payload[start : start + frame_length]
+        point_count = frame[29]
+        if (
+            frame[:3] != b"\xD9\x9D\x0E"
+            or frame[-2:] != b"\x9D\xD9"
+            or point_count not in range(15, 46, 5)
+            or frame_length != 46 + point_count * (13 if frame[3] & 2 else 9)
+            or int.from_bytes(frame[-6:-2], "big")
+            != zlib.crc32(frame[:-6]) & 0xFFFFFFFF
+        ):
+            return None
+        frames.append(frame)
+    return tuple(frames)
+
+
+def expand_compact_temporary_batch(payload: bytes) -> tuple[bytes, ...] | None:
+    """Rebuild exact native temporary frames; keep both ADC codes and times."""
+
+    if len(payload) < 6 or payload[0] != 1 or not 1 <= payload[1] <= 4:
+        return None
+    count = payload[1]
+    native_length = int.from_bytes(payload[2:4], "big")
+    compact_length = int.from_bytes(payload[4:6], "big")
+    if compact_length < 44 or len(payload) != 6 + count * compact_length:
+        return None
+    frames = []
+    for index in range(count):
+        start = 6 + index * compact_length
+        compact = payload[start : start + compact_length]
+        point_count = compact[29]
+        wide = bool(compact[3] & 2)
+        timestamp_bytes = 6 if wide else 4
+        record_length = 3 + timestamp_bytes
+        if (
+            compact[:3] != b"\xD9\x9D\x0E"
+            or point_count not in range(15, 46, 5)
+            or native_length != 46 + point_count * (13 if wide else 9)
+            or compact_length != 44 + point_count * record_length
+        ):
+            return None
+        native = bytearray(native_length)
+        native[:40] = compact[:40]
+        native[40 : 40 + point_count] = bytes(range(point_count))
+        for point in range(point_count):
+            source = 40 + point * record_length
+            destination = 40 + point_count + point * (12 if wide else 8)
+            first = (compact[source] << 4) | (compact[source + 1] >> 4)
+            second = ((compact[source + 1] & 15) << 8) | compact[source + 2]
+            native[destination : destination + 2] = first.to_bytes(2, "big")
+            native[destination + 2 : destination + 4] = second.to_bytes(2, "big")
+            if wide:
+                native[destination + 4 : destination + 8] = b"\x00" + compact[source + 3 : source + 6]
+                native[destination + 8 : destination + 12] = b"\x00" + compact[source + 6 : source + 9]
+            else:
+                native[destination + 4 : destination + 8] = compact[source + 3 : source + 7]
+        native[-6:-2] = compact[-4:]
+        native[-2:] = b"\x9D\xD9"
+        if zlib.crc32(native[:-6]) & 0xFFFFFFFF != int.from_bytes(native[-6:-2], "big"):
+            return None
+        frames.append(bytes(native))
+    return tuple(frames)
+
+
 class FbgLanSerial:
     """Small subset of ``serial.Serial`` used by ``app_JDSU``."""
 
@@ -185,6 +267,7 @@ class FbgLanSerial:
         self.connect_timeout = float(connect_timeout)
         self.discovery_interval = float(discovery_interval)
         self.on_connection = on_connection
+        self.thermal_observer = ThermalReadObserver()
 
         self._socket: socket.socket | None = None
         self._thread: threading.Thread | None = None
@@ -203,6 +286,10 @@ class FbgLanSerial:
         self._request_id = int(time.time_ns()) & 0xFFFFFFFF
         self._board_ip: str | None = None
         self._compact_capability_sent = False
+        self._temporary_batch_capability_sent = False
+        self._temporary_batch_capability_ready = threading.Event()
+        self._temporary_compact_capability_sent = False
+        self._temporary_compact_capability_ready = threading.Event()
         self._wire_data_bytes = 0
         self._native_data_bytes = 0
         self._raw_data_packets = 0
@@ -210,6 +297,10 @@ class FbgLanSerial:
         self._invalid_compact_packets = 0
         self._compact_f45_packets = 0
         self._invalid_compact_f45_packets = 0
+        self._temporary_batch_frames = 0
+        self._invalid_temporary_batch_packets = 0
+        self._compact_temporary_frames = 0
+        self._invalid_compact_temporary_packets = 0
 
     @property
     def is_open(self) -> bool:
@@ -253,6 +344,10 @@ class FbgLanSerial:
                 "invalid_compact_packets": self._invalid_compact_packets,
                 "compact_f45_packets": self._compact_f45_packets,
                 "invalid_compact_f45_packets": self._invalid_compact_f45_packets,
+                "temporary_batch_frames": self._temporary_batch_frames,
+                "invalid_temporary_batch_packets": self._invalid_temporary_batch_packets,
+                "compact_temporary_frames": self._compact_temporary_frames,
+                "invalid_compact_temporary_packets": self._invalid_compact_temporary_packets,
             }
 
     @property
@@ -292,6 +387,10 @@ class FbgLanSerial:
             self._invalid_compact_packets = 0
             self._compact_f45_packets = 0
             self._invalid_compact_f45_packets = 0
+            self._temporary_batch_frames = 0
+            self._invalid_temporary_batch_packets = 0
+            self._compact_temporary_frames = 0
+            self._invalid_compact_temporary_packets = 0
 
     def _notify(self, connected: bool, detail: str) -> None:
         if self.on_connection is not None:
@@ -303,6 +402,7 @@ class FbgLanSerial:
     def open(self) -> None:
         if self.is_open:
             return
+        self.thermal_observer.reset()
         self._stop.clear()
         self._connected.clear()
         self._raw_ready.clear()
@@ -317,6 +417,7 @@ class FbgLanSerial:
 
     def close(self) -> None:
         self._stop.set()
+        self.thermal_observer.reset()
         self._close_socket()
         thread, self._thread = self._thread, None
         if thread is not None and thread is not threading.current_thread():
@@ -386,9 +487,16 @@ class FbgLanSerial:
                     return
                 self._socket = sock
             self._network_buffer.clear()
+            # A reconnect must not concatenate a partial packet from the old
+            # socket with new data, or display its buffered temperature.
+            self.reset_input_buffer()
             self._board_ip = host
             self._raw_ready.clear()
             self._compact_capability_sent = False
+            self._temporary_batch_capability_sent = False
+            self._temporary_batch_capability_ready.clear()
+            self._temporary_compact_capability_sent = False
+            self._temporary_compact_capability_ready.clear()
             next_hello = 0.0
             while not self._stop.is_set() and self._socket is sock:
                 now = time.monotonic()
@@ -492,10 +600,33 @@ class FbgLanSerial:
                 compact_f45_frames = expanded_batch
                 payload = b"".join(expanded_batch)
                 kind = RAW_KIND_DATA
+            temporary_frames: tuple[bytes, ...] = ()
+            if kind == RAW_KIND_TEMPORARY_BATCH:
+                expanded_temporary = expand_temporary_batch(payload)
+                if expanded_temporary is None:
+                    with self._receive_condition:
+                        self._invalid_temporary_batch_packets += 1
+                    continue
+                temporary_frames = expanded_temporary
+                payload = b"".join(expanded_temporary)
+                kind = RAW_KIND_DATA
+            compact_temporary_frames: tuple[bytes, ...] = ()
+            if kind == RAW_KIND_COMPACT_TEMPORARY_BATCH:
+                expanded_compact = expand_compact_temporary_batch(payload)
+                if expanded_compact is None:
+                    with self._receive_condition:
+                        self._invalid_compact_temporary_packets += 1
+                    continue
+                compact_temporary_frames = expanded_compact
+                payload = b"".join(expanded_compact)
+                kind = RAW_KIND_DATA
             with self._receive_condition:
                 if kind == RAW_KIND_DATA:
                     self._receive_buffer.extend(payload)
-                    arrival_frames = compact_f45_frames or (payload,)
+                    arrival_frames = (
+                        compact_f45_frames or temporary_frames
+                        or compact_temporary_frames or (payload,)
+                    )
                     for arrival_frame in arrival_frames:
                         self._frame_arrivals.append(
                             (
@@ -512,6 +643,10 @@ class FbgLanSerial:
                         self._compact_scan_packets += 1
                     if compact_f45_frames:
                         self._compact_f45_packets += len(compact_f45_frames)
+                    if temporary_frames:
+                        self._temporary_batch_frames += len(temporary_frames)
+                    if compact_temporary_frames:
+                        self._compact_temporary_frames += len(compact_temporary_frames)
                 elif kind == RAW_KIND_COMMAND_ACK and len(payload) == 2:
                     self._ack_offsets[sequence] = int.from_bytes(payload, "big")
                 elif kind == RAW_KIND_READY and not payload:
@@ -519,6 +654,10 @@ class FbgLanSerial:
                     if not self._compact_capability_sent:
                         self._compact_capability_sent = True
                         request_compact = True
+                elif kind == RAW_KIND_TEMPORARY_CAP_ACK and not payload:
+                    self._temporary_batch_capability_ready.set()
+                elif kind == RAW_KIND_TEMPORARY_COMPACT_CAP_ACK and not payload:
+                    self._temporary_compact_capability_ready.set()
                 self._receive_condition.notify_all()
             if request_compact:
                 try:
@@ -571,6 +710,25 @@ class FbgLanSerial:
             offset = end_offset
         with self._receive_condition:
             self._ack_offsets.pop(request_id, None)
+        if self._compact_capability_sent and not self._temporary_batch_capability_sent:
+            try:
+                self._send(RAW_TEMPORARY_BATCH_ENABLE)
+            except OSError:
+                pass  # Legacy/raw mode remains valid; a later write may retry.
+            else:
+                self._temporary_batch_capability_sent = True
+                # Keep the following native command out of the capability's
+                # TCP receive chunk; old firmware safely ignores the timeout.
+                self._temporary_batch_capability_ready.wait(timeout=0.5)
+        if (self._temporary_batch_capability_ready.is_set()
+                and not self._temporary_compact_capability_sent):
+            try:
+                self._send(RAW_TEMPORARY_COMPACT_ENABLE)
+            except OSError:
+                pass  # A later write can retry; the native batch stays valid.
+            else:
+                self._temporary_compact_capability_sent = True
+                self._temporary_compact_capability_ready.wait(timeout=0.5)
         return len(raw)
 
     def read(self, size: int = 1) -> bytes:
@@ -584,9 +742,11 @@ class FbgLanSerial:
                 self._receive_condition.wait(timeout=remaining)
             data = bytes(self._receive_buffer[:size])
             del self._receive_buffer[:size]
-            return data
+        self.thermal_observer.feed(data)
+        return data
 
     def reset_input_buffer(self) -> None:
+        self.thermal_observer.reset()
         with self._receive_condition:
             self._receive_buffer.clear()
             self._frame_arrivals.clear()
@@ -595,6 +755,12 @@ class FbgLanSerial:
             self._raw_data_packets = 0
             self._compact_scan_packets = 0
             self._invalid_compact_packets = 0
+            self._compact_f45_packets = 0
+            self._invalid_compact_f45_packets = 0
+            self._temporary_batch_frames = 0
+            self._invalid_temporary_batch_packets = 0
+            self._compact_temporary_frames = 0
+            self._invalid_compact_temporary_packets = 0
 
     def reset_output_buffer(self) -> None:
         return
@@ -607,13 +773,20 @@ __all__ = [
     "FbgLanSerial",
     "RAW_CHUNK_SIZE",
     "RAW_COMPACT_ENABLE",
+    "RAW_TEMPORARY_BATCH_ENABLE",
+    "RAW_TEMPORARY_COMPACT_ENABLE",
     "RAW_COMMAND_SIZE",
     "RAW_HELLO",
     "RAW_KIND_COMPACT_F45_BATCH",
+    "RAW_KIND_TEMPORARY_BATCH",
+    "RAW_KIND_COMPACT_TEMPORARY_BATCH",
+    "RAW_KIND_TEMPORARY_COMPACT_CAP_ACK",
     "RAW_KIND_COMPACT_F45",
     "RAW_KIND_COMPACT_SCAN",
     "RAW_RESPONSE_HEADER",
     "expand_compact_f45",
     "expand_compact_f45_batch",
     "expand_compact_scan",
+    "expand_compact_temporary_batch",
+    "expand_temporary_batch",
 ]

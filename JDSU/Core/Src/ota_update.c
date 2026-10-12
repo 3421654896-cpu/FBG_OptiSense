@@ -2,6 +2,8 @@
 #include "ota_layout.h"
 #include "ota_update.h"
 #include "sha256.h"
+#include "firmware_version.h"
+#include "usbd_cdc_if.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +12,16 @@
 #define OTA_COMMAND_MAX       500U
 #define OTA_DATA_MAX          180U
 #define OTA_NONCE_LENGTH       16U
-#define OTA_HMAC_HEX_LENGTH    64U
+#define OTA_TRANSPORT_USB       3U
+#define OTA_USB_FRAME_SIZE    808U
+
+extern USBD_HandleTypeDef hUsbDeviceFS;
+static uint8_t usbUpdateFrame[OTA_USB_FRAME_SIZE];
+static volatile uint8_t usbUpdatePending;
+static char usbUpdateResponse[192];
+static uint16_t usbUpdateResponseLength;
+static uint8_t usbUpdateResponseInFlight;
+static uint8_t usbUpdateReboot;
 
 typedef struct
 {
@@ -20,10 +31,13 @@ typedef struct
     uint32_t image_size;
     uint32_t image_crc32;
     uint32_t offset;
+    uint8_t transport_kind;
+    uint8_t committed;
     char nonce[OTA_NONCE_LENGTH + 1U];
 } OtaSession;
 
 static OtaSession otaSession;
+static uint8_t otaPendingCommitted;
 static uint8_t configPreserve[OTA_CONFIG_PRESERVE_SIZE];
 static uint32_t otaRuntimeBootId;
 
@@ -233,6 +247,7 @@ static void ErrorResponse(char *response, uint16_t capacity,
 }
 
 static uint8_t HandleBegin(char *command, const char *authorizationKey,
+                           uint8_t transportKind,
                            char *response, uint16_t capacity)
 {
     char original[OTA_COMMAND_MAX];
@@ -242,7 +257,6 @@ static uint8_t HandleBegin(char *command, const char *authorizationKey,
     uint32_t fieldCount = 0U;
     uint8_t supplied[32];
     uint8_t expected[32];
-    uint8_t restoreSourceAfterFailure;
     uint32_t version, size, crc;
     strncpy(original, command, sizeof(original) - 1U);
     original[sizeof(original) - 1U] = '\0';
@@ -288,6 +302,18 @@ static uint8_t HandleBegin(char *command, const char *authorizationKey,
         ErrorResponse(response, capacity, "SIZE", "image-out-of-range");
         return 1U;
     }
+    /* Metadata already points at this staging area. Erasing it before the
+     * coordinated reset could invalidate a fully committed update. */
+    if(otaPendingCommitted)
+    {
+        ErrorResponse(response, capacity, "SESSION", "reboot-pending");
+        return 1U;
+    }
+    if(otaSession.active && otaSession.transport_kind != transportKind)
+    {
+        ErrorResponse(response, capacity, "SESSION", "different-transport-owner");
+        return 1U;
+    }
     if(otaSession.active && otaSession.image_version == version &&
        otaSession.image_size == size && otaSession.image_crc32 == crc &&
        strcmp(otaSession.nonce, fields[6]) == 0)
@@ -301,17 +327,19 @@ static uint8_t HandleBegin(char *command, const char *authorizationKey,
     /* BEGIN erases two large flash sectors synchronously.  Close the optical
      * path before that first blocking flash operation; the main loop only gets
      * a chance to observe otaSession.active after this function returns. */
-    restoreSourceAfterFailure =
-        (PI11210_GetStatus().soaMode == PI11210_SOA_SOURCE) ? 1U : 0U;
-    (void)PI11210_SetSOAShutter(1U);
+    if(PI11210_SetSOAShutter(1U) != HAL_OK)
+    {
+        ErrorResponse(response, capacity, "SAFETY", "shutter-not-confirmed");
+        return 1U;
+    }
     if(!EraseStaging())
     {
-        if(restoreSourceAfterFailure) (void)PI11210_SetSOAShutter(0U);
         ErrorResponse(response, capacity, "FLASH", "staging-erase-failed");
         return 1U;
     }
     memset(&otaSession, 0, sizeof(otaSession));
     otaSession.active = 1U;
+    otaSession.transport_kind = transportKind;
     otaSession.image_version = version;
     otaSession.image_size = size;
     otaSession.image_crc32 = crc;
@@ -327,7 +355,10 @@ static uint8_t HandleBegin(char *command, const char *authorizationKey,
     return 1U;
 }
 
-static uint8_t HandleData(char *command, char *response, uint16_t capacity)
+
+
+static uint8_t HandleData(char *command, uint8_t transportKind,
+                          char *response, uint16_t capacity)
 {
     char *fields[6];
     char *token;
@@ -353,14 +384,10 @@ static uint8_t HandleData(char *command, char *response, uint16_t capacity)
         ErrorResponse(response, capacity, "FORMAT", "invalid-data-number");
         return 1U;
     }
-    if(!otaSession.active || session != otaSession.session)
+    if(!otaSession.active || session != otaSession.session ||
+       otaSession.transport_kind != transportKind)
     {
         ErrorResponse(response, capacity, "SESSION", "session-not-active");
-        return 1U;
-    }
-    if(offset != otaSession.offset)
-    {
-        ErrorResponse(response, capacity, "OFFSET", "restart-begin-to-resume");
         return 1U;
     }
     if(!DecodeBase64(fields[5], decoded, sizeof(decoded), &decodedLength) ||
@@ -372,6 +399,23 @@ static uint8_t HandleData(char *command, char *response, uint16_t capacity)
        OtaCrc32(decoded, decodedLength) != expectedCrc)
     {
         ErrorResponse(response, capacity, "CRC", "invalid-data-block");
+        return 1U;
+    }
+    /* QoS-1 may redeliver any previously committed block after later blocks.
+     * Confirm the actual flash bytes before returning the current offset. */
+    if(offset != otaSession.offset)
+    {
+        if(offset < otaSession.offset &&
+           decodedLength <= otaSession.offset - offset &&
+           memcmp((const void *)(OTA_STAGING_ADDRESS + offset),
+                  decoded, decodedLength) == 0)
+        {
+            snprintf(response, capacity, "FOTA1|ACK|%08lX|%08lX\n",
+                     (unsigned long)otaSession.session,
+                     (unsigned long)otaSession.offset);
+            return 1U;
+        }
+        ErrorResponse(response, capacity, "OFFSET", "restart-begin-to-resume");
         return 1U;
     }
     if(!ProgramStaging(offset, decoded, decodedLength))
@@ -386,20 +430,23 @@ static uint8_t HandleData(char *command, char *response, uint16_t capacity)
     return 1U;
 }
 
-static uint8_t HandleEnd(char *command, char *response, uint16_t capacity,
+static uint8_t HandleEnd(char *command,
+                         uint8_t transportKind,
+                         char *response, uint16_t capacity,
                          uint8_t *rebootAfterResponse)
 {
-    char *fields[5];
+    char *fields[6];
     char *token;
     uint32_t fieldCount = 0U;
     uint32_t session, size, crc;
     token = strtok(command, "|");
-    while(token != NULL && fieldCount < 5U)
+    while(token != NULL && fieldCount < 6U)
     {
         fields[fieldCount++] = token;
         token = strtok(NULL, "|");
     }
-    if(fieldCount != 5U || token != NULL || strcmp(fields[0], "FOTA1") != 0 ||
+    if(fieldCount != 5U ||
+       token != NULL || strcmp(fields[0], "FOTA1") != 0 ||
        strcmp(fields[1], "END") != 0)
     {
         ErrorResponse(response, capacity, "FORMAT", "invalid-end");
@@ -413,10 +460,18 @@ static uint8_t HandleEnd(char *command, char *response, uint16_t capacity,
         return 1U;
     }
     if(!otaSession.active || session != otaSession.session ||
+       otaSession.transport_kind != transportKind ||
        size != otaSession.image_size || crc != otaSession.image_crc32 ||
        otaSession.offset != otaSession.image_size)
     {
         ErrorResponse(response, capacity, "SESSION", "incomplete-image");
+        return 1U;
+    }
+    if(otaSession.committed)
+    {
+        snprintf(response, capacity, "FOTA1|REBOOT|%08lX\n",
+                 (unsigned long)otaSession.image_version);
+        *rebootAfterResponse = 1U;
         return 1U;
     }
     if(OtaCrc32((const uint8_t *)OTA_STAGING_ADDRESS, size) != crc ||
@@ -430,6 +485,8 @@ static uint8_t HandleEnd(char *command, char *response, uint16_t capacity,
         ErrorResponse(response, capacity, "FLASH", "metadata-commit-failed");
         return 1U;
     }
+    otaSession.committed = 1U;
+    otaPendingCommitted = 1U;
     snprintf(response, capacity, "FOTA1|REBOOT|%08lX\n",
              (unsigned long)otaSession.image_version);
     *rebootAfterResponse = 1U;
@@ -439,11 +496,13 @@ static uint8_t HandleEnd(char *command, char *response, uint16_t capacity,
 void OtaUpdate_Init(uint32_t runtimeBootId)
 {
     memset(&otaSession, 0, sizeof(otaSession));
+    otaPendingCommitted = 0U;
     otaRuntimeBootId = runtimeBootId;
 }
 
-uint8_t OtaUpdate_HandleCommand(const char *payload, uint32_t payloadLength,
+static uint8_t OtaUpdate_HandleCommand(const char *payload, uint32_t payloadLength,
                                 const char *authorizationKey,
+                                uint8_t transportKind,
                                 char *response, uint16_t responseCapacity,
                                 uint8_t *rebootAfterResponse)
 {
@@ -453,6 +512,7 @@ uint8_t OtaUpdate_HandleCommand(const char *payload, uint32_t payloadLength,
     uint32_t length;
     uint32_t index;
     if(payload == NULL || response == NULL || responseCapacity == 0U ||
+       transportKind != OTA_TRANSPORT_USB ||
        rebootAfterResponse == NULL) return 0U;
     for(index = 0U; index + sizeof(prefix) - 1U <= payloadLength; index++)
     {
@@ -480,12 +540,14 @@ uint8_t OtaUpdate_HandleCommand(const char *payload, uint32_t payloadLength,
             ErrorResponse(response, responseCapacity, "AUTH", "key-not-configured");
             return 1U;
         }
-        return HandleBegin(command, authorizationKey, response, responseCapacity);
+        return HandleBegin(command, authorizationKey, transportKind,
+                           response, responseCapacity);
     }
     if(strncmp(command, "FOTA1|DATA|", 11U) == 0)
-        return HandleData(command, response, responseCapacity);
+        return HandleData(command, transportKind, response, responseCapacity);
     if(strncmp(command, "FOTA1|END|", 10U) == 0)
-        return HandleEnd(command, response, responseCapacity, rebootAfterResponse);
+        return HandleEnd(command, transportKind,
+                         response, responseCapacity, rebootAfterResponse);
     ErrorResponse(response, responseCapacity, "FORMAT", "unknown-command");
     return 1U;
 }
@@ -495,22 +557,126 @@ uint8_t OtaUpdate_IsActive(void)
     return otaSession.active;
 }
 
-uint32_t OtaUpdate_ReceivedBytes(void)
+
+
+void OtaUpdate_AbortUncommittedSession(void)
 {
-    return otaSession.offset;
+    if(otaSession.active && !otaPendingCommitted)
+        memset(&otaSession, 0, sizeof(otaSession));
 }
 
-void OtaUpdate_OnClientDisconnected(void)
+
+
+
+uint8_t OtaUpdate_QueueUsbFrame(const uint8_t *frame, uint16_t length)
 {
-    /* Keep the staged offset in RAM.  A reconnect authenticated with the same
-     * package and nonce resumes exactly at the next unprogrammed byte. */
+    if(frame == NULL || length != OTA_USB_FRAME_SIZE ||
+       frame[0] != 0xFFU || frame[1] != 0xFFU ||
+       frame[2] != EXTRA_STATE || frame[3] != 0x22U) return 0U;
+    if(!usbUpdatePending)
+    {
+        memcpy(usbUpdateFrame, frame, OTA_USB_FRAME_SIZE);
+        __DMB();
+        usbUpdatePending = 1U;
+    }
+    return 1U;
 }
 
-void OtaUpdate_ReleaseCommittedSession(void)
+void OtaUpdate_ProcessUsb(void)
 {
-    /* HandleEnd calls this only after CommitMetadata() succeeded.  Clearing
-     * the RAM session lets the normal Wi-Fi state machine recover if the BW20
-     * cannot be proven ready for the coordinated reset.  Do not erase staging
-     * or metadata: the next safe reset must still install the verified image. */
-    memset(&otaSession, 0, sizeof(otaSession));
+    USBD_CDC_HandleTypeDef *cdc =
+        (USBD_CDC_HandleTypeDef *)hUsbDeviceFS.pClassData;
+    uint16_t length;
+    uint32_t expectedCrc;
+    static char command[OTA_COMMAND_MAX];
+    char serial[13], key[20];
+    uint32_t uid0, uid1, uid2;
+    uint8_t reboot = 0U;
+    if(usbUpdateResponseInFlight)
+    {
+        if(cdc == NULL || cdc->TxState != 0U) return;
+        usbUpdateResponseInFlight = 0U;
+        /* Metadata is committed only after complete image verification.
+         * Reset only after the REBOOT reply has actually left the endpoint. */
+        if(usbUpdateReboot) NVIC_SystemReset();
+    }
+    if(usbUpdateResponseLength)
+    {
+        if(CDC_Transmit_FS((uint8_t *)usbUpdateResponse,
+                           usbUpdateResponseLength) == USBD_OK)
+        {
+            usbUpdateResponseLength = 0U;
+            usbUpdateResponseInFlight = 1U;
+        }
+        return;
+    }
+    if(!usbUpdatePending) return;
+    if(workState != EXTRA_STATE) ApplyWorkState(EXTRA_STATE);
+    /* INFO also pauses acquisition. EXTRA alone does not gate optical output:
+     * explicitly close the shutter even for a rejected USB wrapper. */
+    (void)PI11210_SetSOAShutter(1U);
+    ReceEndFlag = 0U;
+    USB_ResetQueue();
+    length = ((uint16_t)usbUpdateFrame[6] << 8) | usbUpdateFrame[7];
+    expectedCrc = ((uint32_t)usbUpdateFrame[804] << 24) |
+                  ((uint32_t)usbUpdateFrame[805] << 16) |
+                  ((uint32_t)usbUpdateFrame[806] << 8) | usbUpdateFrame[807];
+    if(usbUpdateFrame[4] != 1U || usbUpdateFrame[5] != 0U ||
+       length == 0U || length >= OTA_COMMAND_MAX ||
+       OtaCrc32(usbUpdateFrame, 804U) != expectedCrc ||
+       memchr(&usbUpdateFrame[8], '\0', length) != NULL)
+    {
+        ErrorResponse(usbUpdateResponse, sizeof(usbUpdateResponse),
+                      "USB_FRAME", "invalid-wrapper");
+    }
+    else
+    {
+        memcpy(command, &usbUpdateFrame[8], length);
+        command[length] = '\0';
+        uid0 = *(const uint32_t *)0x1FFF7A10UL;
+        uid1 = *(const uint32_t *)0x1FFF7A14UL;
+        uid2 = *(const uint32_t *)0x1FFF7A18UL;
+        snprintf(serial, sizeof(serial), "%08lX%04lX",
+                 (unsigned long)(uid0 + uid2), (unsigned long)(uid1 >> 16));
+        /* This is an identity binding, NOT a secret. Physical USB access is
+         * the only update trust boundary; network firmware updates are removed. */
+        snprintf(key, sizeof(key), "USB:%s", serial);
+        if(strcmp(command, "FUSB1|INFO") == 0)
+        {
+            uint32_t sp = *(const uint32_t *)OTA_BOOT_ADDRESS;
+            uint32_t reset = *(const uint32_t *)(OTA_BOOT_ADDRESS + 4U);
+            uint8_t bootValid = (sp >= 0x20000000UL && sp <= 0x20020000UL &&
+                !(sp & 3U) && (reset & 1U) &&
+                (reset & ~1UL) >= OTA_BOOT_ADDRESS &&
+                (reset & ~1UL) < OTA_CONFIG_ADDRESS &&
+                SCB->VTOR == OTA_APPLICATION_ADDRESS) ? 1U : 0U;
+            snprintf(usbUpdateResponse, sizeof(usbUpdateResponse),
+                "FUSB1|INFO|%s|%08lX|%08lX|%08lX|%08lX\n", serial,
+                (unsigned long)APP_FIRMWARE_VERSION,
+                (unsigned long)otaRuntimeBootId,
+                (unsigned long)OTA_APPLICATION_MAX_SIZE, (unsigned long)bootValid);
+        }
+        else if(strcmp(command, "FUSB1|ABORT") == 0)
+        {
+            if(otaPendingCommitted || (otaSession.active &&
+               otaSession.transport_kind != OTA_TRANSPORT_USB))
+                ErrorResponse(usbUpdateResponse, sizeof(usbUpdateResponse),
+                              "SESSION", "abort-not-permitted");
+            else
+            {
+                OtaUpdate_AbortUncommittedSession();
+                (void)PI11210_SetSOAShutter(1U);
+                snprintf(usbUpdateResponse, sizeof(usbUpdateResponse),
+                         "FUSB1|ABORTED\n");
+            }
+        }
+        else if(!OtaUpdate_HandleCommand(command, length, key, OTA_TRANSPORT_USB,
+                    usbUpdateResponse, sizeof(usbUpdateResponse), &reboot))
+            ErrorResponse(usbUpdateResponse, sizeof(usbUpdateResponse),
+                          "FORMAT", "unknown-usb-command");
+    }
+    usbUpdateReboot = reboot;
+    usbUpdateResponseLength = (uint16_t)strlen(usbUpdateResponse);
+    __DMB();
+    usbUpdatePending = 0U;
 }

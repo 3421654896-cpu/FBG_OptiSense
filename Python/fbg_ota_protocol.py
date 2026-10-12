@@ -305,8 +305,8 @@ class OtaClient:
         reconnect_delay_s: float = 30.0,
         recovery_quiet_s: float = 150.0,
         reboot_timeout_s: float = 600.0,
-        reboot_initial_delay_s: float = 5.0,
-        reboot_poll_s: float = 1.0,
+        reboot_initial_delay_s: float = 15.0,
+        reboot_poll_s: float = 12.0,
         reboot_disconnect_timeout_s: float = 8.0,
         retry_owner_timeout_s: float = 12.0,
         chunk_delay_s: float = 0.0,
@@ -333,6 +333,9 @@ class OtaClient:
             max(0.0, float(reboot_initial_delay_s)),
             self.reboot_timeout_s * 0.25,
         )
+        # A failed RAW probe may itself leave a BW20 TCPServer seed behind.
+        # Give firmware time to delete that child and recreate the parent
+        # before opening another socket, or polling can prolong recovery.
         self.reboot_poll_s = max(0.05, float(reboot_poll_s))
         self.reboot_disconnect_timeout_s = max(
             0.1, float(reboot_disconnect_timeout_s)
@@ -652,10 +655,16 @@ class OtaClient:
         progress: Optional[Callable[[OtaProgress], None]] = None,
         cancelled: Optional[Callable[[], bool]] = None,
         verify_reboot: bool = True,
+        verified_resume_nonce: Optional[str] = None,
     ) -> None:
         if not self.password:
             raise OtaError("请输入 OTA 授权密码（默认与板卡 Wi-Fi 密码相同）")
-        nonce = secrets.token_hex(8).upper()
+        if verified_resume_nonce is not None:
+            nonce = str(verified_resume_nonce).upper()
+            if len(nonce) != 16 or any(ch not in "0123456789ABCDEF" for ch in nonce):
+                raise ValueError("verified_resume_nonce must be exactly 16 hex digits")
+        else:
+            nonce = secrets.token_hex(8).upper()
         image = package.image
         sent = 0
 
@@ -926,11 +935,11 @@ class OtaClient:
             notify("已核对重启版本，正在释放旧连接并等待新固件启动")
             self._close(reboot_socket)
             reboot_socket = None
-            # The firmware intentionally spends one second draining the signed
-            # REBOOT reply and deleting the accepted OTA seed.  Connecting a
-            # RAW probe inside that window lets the old application accept a
-            # new seed which then survives the MCU-only reset.  Stay silent
-            # until the new generation has started its bounded socket cleanup.
+            # The BW20 stays powered while the STM32 resets and installs the
+            # image.  A RAW probe opened before the new application has queried
+            # the retained TCPServer becomes another stale seed; deleting that
+            # parent then makes BW20 P1.0.22 reject same-port rebinding for
+            # about two minutes.  Stay quiet through boot and Wi-Fi startup.
             notify("旧连接已释放，静默等待板卡完成重启前的 seed 清理")
             self._cancelable_sleep(self.reboot_initial_delay_s, cancelled)
             self.final_boot_id = self.wait_for_raw_ready(

@@ -107,6 +107,16 @@ class FlowLayout(QtWidgets.QLayout):
         x = effective.x()
         y = effective.y()
         line_height = 0
+        line = []
+
+        def place_line():
+            # Labels, fields and buttons have different size hints. Align the
+            # whole row on its vertical centre rather than pinning text to
+            # the top edge of the tallest editor.
+            if not test_only:
+                for row_item, row_x, width, height in line:
+                    row_item.setGeometry(QtCore.QRect(
+                        row_x, y + (line_height - height) // 2, width, height))
 
         for item in self._items:
             if item.isEmpty():
@@ -119,6 +129,8 @@ class FlowLayout(QtWidgets.QLayout):
                 x > effective.x()
                 and next_x - self._horizontal_spacing > effective.right() + 1
             ):
+                place_line()
+                line.clear()
                 x = effective.x()
                 y += line_height + self._vertical_spacing
                 next_x = x + item_width + self._horizontal_spacing
@@ -127,13 +139,11 @@ class FlowLayout(QtWidgets.QLayout):
             item_height = max(1, hint.height())
             if item.hasHeightForWidth():
                 item_height = max(item_height, item.heightForWidth(item_width))
-            if not test_only:
-                item.setGeometry(
-                    QtCore.QRect(x, y, item_width, item_height)
-                )
+            line.append((item, x, item_width, item_height))
             x = next_x
             line_height = max(line_height, item_height)
 
+        place_line()
         return y + line_height - rect.y() + margins.bottom()
 
 
@@ -156,10 +166,43 @@ class ScrollContentWidget(QtWidgets.QWidget):
     def sizeHint(self):  # noqa: N802 - Qt virtual method name
         layout = self.layout()
         if layout is not None:
-            hint = layout.minimumSize()
+            hint = self._width_aware_minimum()
             if hint.isValid():
                 return hint
         return super().sizeHint()
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt virtual method name
+        return self._width_aware_minimum() if self.layout() else super().minimumSizeHint()
+
+    def _width_aware_minimum(self):
+        layout = self.layout()
+        hint = layout.minimumSize()
+        if not isinstance(layout, QtWidgets.QVBoxLayout):
+            return hint
+        # QVBoxLayout.minimumSize measures nested wrapping rows at their
+        # *minimum width*, not at the viewport width. That produced a sticky
+        # 800 px page even on a wide monitor. Measure each visible row where
+        # it will actually be laid out; keep the plot/table real minimum.
+        viewport = self.parentWidget()
+        width = viewport.width() if viewport is not None else self.width()
+        margins = layout.contentsMargins()
+        inner_width = max(1, width - margins.left() - margins.right())
+        heights = []
+        for index in range(layout.count()):
+            item = layout.itemAt(index)
+            if item.isEmpty():
+                continue
+            if item.hasHeightForWidth():
+                height = item.heightForWidth(inner_width)
+            elif item.widget() is not None:
+                widget = item.widget()
+                height = max(widget.minimumHeight(), widget.minimumSizeHint().height())
+            else:
+                height = item.minimumSize().height()
+            heights.append(max(0, height))
+        hint.setHeight(sum(heights) + max(0, len(heights)-1)*layout.spacing()
+                       + margins.top() + margins.bottom())
+        return hint
 
     def event(self, event):
         result = super().event(event)
@@ -176,7 +219,7 @@ class ScrollContentWidget(QtWidgets.QWidget):
         layout = self.layout()
         if layout is None:
             return
-        hint = layout.minimumSize()
+        hint = self._width_aware_minimum()
         if not hint.isValid():
             return
         if hint != self.minimumSize():
@@ -213,7 +256,11 @@ class ResponsiveScrollArea(QtWidgets.QScrollArea):
         widget = self.widget()
         if widget is None:
             return
-        minimum = widget.minimumSize().expandedTo(widget.minimumSizeHint())
+        if isinstance(widget, ScrollContentWidget):
+            minimum = widget._width_aware_minimum()
+            widget.setMinimumSize(minimum)
+        else:
+            minimum = widget.minimumSize().expandedTo(widget.minimumSizeHint())
         target = self.viewport().size().expandedTo(minimum)
         if widget.size() != target:
             widget.resize(target)

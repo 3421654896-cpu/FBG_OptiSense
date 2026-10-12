@@ -63,6 +63,10 @@ def save_checkpoint(path: Path, payload: dict[str, Any]) -> None:
     scan from being abandoned.
     """
 
+    # Fresh Beta/install data roots may not have this particular record folder.
+    # Do this on every checkpoint, before save_json opens its .json.tmp file.
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
     deadline = time.monotonic() + CHECKPOINT_RETRY_TIMEOUT_S
     delay_s = 0.01
     while True:

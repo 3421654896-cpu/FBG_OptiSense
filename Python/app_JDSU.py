@@ -42,6 +42,7 @@ from PyQt5.QtCore import (
     QThread, pyqtSignal
 )
 from serial.tools import list_ports
+from thermal_serial import ThermalSerial
 from datetime import datetime
 from collections import deque
 from queue import Queue
@@ -178,12 +179,15 @@ tx_size = 808  # 固定控制命令长度（所有控制/差异点帧统一为 8
 # 每通道最多 100 个差异点，索引用 2 字节编码。
 # ==========================
 
-ser = serial.Serial(timeout=0.2)
+ser = ThermalSerial(timeout=0.2)
 local_control_session = False
+serial_identity_guard = None
 
 
 def ensure_serial_open():
     """Open the selected CDC port and keep DTR asserted for local ownership."""
+    if serial_identity_guard is not None:
+        serial_identity_guard(ser)
     if not ser.is_open:
         ser.open()
     ser.dtr = True
@@ -2017,11 +2021,10 @@ def enter_stress_multirate_and_verify_first_map(
 
 
 def set_soa_shutter_and_verify(port, timeout_s=3.0):
-    """Enter EXTRA and prove that PI11210's hardware SOA gate is closed.
+    """Enter EXTRA and verify the MCU's SOA zero-code/shutter acknowledgement.
 
-    A successful serial write is not sufficient for this safety operation.
-    The function accepts only the exact five returned zero codes, the shutter
-    mode byte, and an online/identified/initialised PI11210 status report.
+    This checks the command and PI11210 I2C status, not OP6 current or the
+    optical output.  A physical load/optical measurement is still required.
     """
 
     if not getattr(port, "is_open", False):
@@ -3165,7 +3168,14 @@ class UnlimitedAccuracyWorker(QThread):
 
     def _read_available_frames(self):
         waiting = int(getattr(self.port, "in_waiting", 0) or 0)
-        data = self.port.read(min(max(waiting, 64), 4096))
+        # Native ACK/monitor frames are only 20 bytes. Asking pyserial for at
+        # least 64 bytes delays a complete frame until later monitor frames
+        # arrive or the port timeout expires. Read only bytes already queued;
+        # keep partial frames in _rx_buffer and yield while the link is idle.
+        if waiting <= 0:
+            time.sleep(0.001)
+            return ()
+        data = self.port.read(min(waiting, 4096))
         if not data:
             return ()
         self._rx_buffer.extend(data)
@@ -3465,7 +3475,6 @@ class EqualIntervalWorker(UnlimitedAccuracyWorker):
                 break
             if sample is not None:
                 break
-            time.sleep(0.001)
 
         if not self.running:
             self.cancelled = True
@@ -5079,6 +5088,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.auto_acquire_local = bool(auto_acquire_local)
+        self.before_local_control = None
 
         self.setWindowTitle("可调谐激光器")
         self.resize(1400, 800)
@@ -5166,7 +5176,7 @@ class MainWindow(QMainWindow):
             "单值模式",
             "无限准确模式",
             "等间隔模式",
-            "临时测试模式",
+            "手指应力测试模式",
         ]
         for i, mode_str in enumerate(work_mode):
             action = QAction(mode_str,self)
@@ -5174,6 +5184,8 @@ class MainWindow(QMainWindow):
             action.setData(i)
             action.triggered.connect(self.set_page)
             self.menu_page.addAction(action)
+            if i == 5:
+                action.setVisible(False)
             if i == self.MCU_mode:
                 self.mode_act = action
                 action.setChecked(True)
@@ -5287,6 +5299,8 @@ class MainWindow(QMainWindow):
         """Claim the selected CDC port and report whether ownership succeeded."""
         global local_control_session
         try:
+            if self.before_local_control is not None and not self.before_local_control(self.port):
+                return False
             local_control_session = True
             ensure_serial_open()
             ser.reset_input_buffer()
@@ -5344,15 +5358,21 @@ class MainWindow(QMainWindow):
 
     def set_com_port(self):
         global ser
+        global local_control_session
         action = self.sender()
         if switch_mode_enable:
+            was_local_owner = local_control_session
+            if (self.before_local_control is not None
+                    and not self.before_local_control(action.data(), explicit=True)):
+                action.setChecked(False)
+                return
             was_open = ser.is_open
             if was_open:
                 ser.close()
             self.port = action.data()
             ser.port = self.port
-            if local_control_session:
-                ensure_serial_open()
+            if was_local_owner:
+                self.acquire_local_control()
             if self.port_act is not None:
                 self.port_act.setChecked(False)
             action.setChecked(True)
@@ -5450,6 +5470,8 @@ class MainWindow(QMainWindow):
         QtCore.QTimer.singleShot(0, self.close)
 
 class GraphWindow(QtWidgets.QWidget):
+    thermal_telemetry = pyqtSignal(object)
+
     @staticmethod
     def detect_wave_gaps(waves, gap_ratio=1.75, local_radius=4):
         """Return indices after which the YAML wavelength sequence is discontinuous."""
@@ -7409,13 +7431,26 @@ class GraphWindow(QtWidgets.QWidget):
         pi_i2c_errors=None,
         firmware_version=None,
     ):
+        # Forward only telemetry already received with the spectrum.  The
+        # studio sidebar must never poll OTA INFO: that command stops scanning.
+        self.thermal_telemetry.emit({
+            "temperature_c": self.temperature,
+            "fan_rpm": fan_rpm,
+            "fan_duty_permille": fan_duty_permille,
+            "thermal_flags": thermal_flags,
+            "received_monotonic": (
+                self.pending_frame_received_ns / 1e9
+                if self.pending_frame_received_ns is not None
+                else time.monotonic()
+            ),
+        })
         duty = min(max(fan_duty_permille / 10.0, 0.0), 100.0)
         if thermal_flags & 0x0004:
             control = "温度传感器故障，安全满速"
         elif thermal_flags & 0x0002:
-            control = "≥33℃，连续 PID 增速"
+            control = "高于温控目标，连续 PID 调速"
         else:
-            control = "33℃ 连续 PID"
+            control = "连续温控 PID"
         tach = "，转速反馈异常" if thermal_flags & 0x0008 else ""
         self.fan_status_label.setText(
             f"风扇：{duty:.1f}% / {fan_rpm} RPM，{control}{tach}"
@@ -7423,6 +7458,8 @@ class GraphWindow(QtWidgets.QWidget):
         firmware_text = ""
         if firmware_version is not None:
             version = int(firmware_version)
+            self.board_firmware_version = version
+            self.board_firmware_seen_monotonic = time.monotonic()
             firmware_text = (
                 f"固件 v{(version >> 16) & 0xFF}."
                 f"{(version >> 8) & 0xFF}.{version & 0xFF} · "
@@ -8244,6 +8281,7 @@ class extraWindow(QtWidgets.QWidget):
         self.feedback_selection_dirty = False
         self.fullband_points = ()
         self.fullband_table_error = None
+        self._fullband_machine_id = get_runtime_machine_id()
         try:
             self.fullband_points = load_fullband_accuracy_table()
         except (OSError, ValueError, csv.Error) as exc:
@@ -8307,6 +8345,7 @@ class extraWindow(QtWidgets.QWidget):
         self.auto_wavelength_match_label.setWordWrap(True)
         self.auto_wavelength_note = QtWidgets.QLabel(
             "输入完成后会自动填入最接近的波长计实测单模点；"
+            "自动匹配按原标定码写入（GAIN/SOA ≤145 mA），手动输入仍限135 mA。"
             "不对五路DAC码做线性插值，避免跨调谐分支或双峰。"
         )
         self.auto_wavelength_note.setWordWrap(True)
@@ -8448,7 +8487,8 @@ class extraWindow(QtWidgets.QWidget):
             "GAIN(DAC码)", PI11210_GAIN_MAX_CODE
         ),0
         self.soa_mode_combo = QtWidgets.QComboBox()
-        self.soa_mode_combo.addItem("正向出光（0～135 mA）", PI11210_SOA_SOURCE_MODE)
+        self.soa_mode_combo.addItem(
+            "正向出光（手动≤135 mA；自动匹配≤145 mA）", PI11210_SOA_SOURCE_MODE)
         self.soa_mode_combo.addItem(
             "负值语义：关光（安全零电流）", PI11210_SOA_SHUTTER_MODE
         )
@@ -8579,6 +8619,7 @@ class extraWindow(QtWidgets.QWidget):
                 )
             raise
         self.fullband_points = tuple(points)
+        self._fullband_machine_id = get_runtime_machine_id()
         self.fullband_dac_rows = tuple(
             tuple(point.codes) for point in self.fullband_points
         )
@@ -8748,6 +8789,9 @@ class extraWindow(QtWidgets.QWidget):
         self.auto_wavelength_point = point
         self.soa_mode_combo.setCurrentIndex(0)
         self.excel_text.setText("\t".join(str(code) for code in point.codes))
+        # Previewing a calibrated row must preserve its five exact codes.  The
+        # manual Write button still revalidates against the legacy 135 mA limit.
+        self._refresh_direct_dac_inputs(fullband_2001=True)
         self.auto_wavelength_match_label.setText(
             self._wavelength_match_text(point)
         )
@@ -8761,23 +8805,20 @@ class extraWindow(QtWidgets.QWidget):
             QMessageBox.warning(
                 self, "波长自动输出", "没有可用的2001点单模标定数据。"
             )
-            return
+            return False
         self._auto_output_fullband_index = int(point.index)
         try:
-            self.write_data_MCU()
+            written = self.write_data_MCU()
         finally:
             self._auto_output_fullband_index = None
-        states = (
-            self.gain_state,
-            self.soa_state,
-            self.phase_state,
-            self.wavelena_state,
-            self.wavelenb_state,
-        )
-        if all("已写入" in state.text() for state in states):
+        # SOA only echoes the accepted command, not an independent current
+        # measurement.  Do not infer success from translated label text.
+        if written:
             self.auto_wavelength_match_label.setText(
-                self._wavelength_match_text(point, " · 已输出")
+                self._wavelength_match_text(
+                    point, " · 已输出（指令已确认，未做光学复测）")
             )
+        return bool(written)
 
     def _update_body_orientation(self):
         if not hasattr(self, "body_splitter"):
@@ -8994,8 +9035,29 @@ class extraWindow(QtWidgets.QWidget):
 
         self.serial_close()
 
+    def _validated_auto_fullband_index(self):
+        """Authorize 145 mA only for an unchanged row owned by this machine."""
+        index = self._auto_output_fullband_index
+        if (index is None or self._fullband_machine_id != get_runtime_machine_id()
+                or self._selected_soa_mode() != PI11210_SOA_SOURCE_MODE
+                or not 0 <= int(index) < len(self.fullband_dac_rows)):
+            return None
+        edits = (self.gain_text, self.soa_text, self.phase_text,
+                 self.wavelena_text, self.wavelenb_text)
+        try:
+            codes = tuple(parse_pi11210_dac_code(edit.text(), limit)
+                          for edit, limit in zip(edits, _fullband_accuracy_code_limits()))
+        except ValueError:
+            return None
+        return int(index) if codes == self.fullband_dac_rows[int(index)] else None
+
     def write_data_MCU(self):
-        invalid_fields = self._refresh_direct_dac_inputs()
+        fullband_table_index = self._validated_auto_fullband_index()
+        if self._auto_output_fullband_index is not None and fullband_table_index is None:
+            QMessageBox.warning(self, "波长自动输出", "机号或匹配码已变化，请重新匹配后输出。")
+            return False
+        fullband_2001 = fullband_table_index is not None
+        invalid_fields = self._refresh_direct_dac_inputs(fullband_2001=fullband_2001)
         if invalid_fields:
             QMessageBox.warning(
                 self,
@@ -9004,9 +9066,9 @@ class extraWindow(QtWidgets.QWidget):
                 + "、".join(invalid_fields)
                 + "\n请直接复制标定表中的五个‘码’列，不要复制mA列。",
             )
-            return
+            return False
         if not self._start_single_value_monitor():
-            return
+            return False
         if (
             self.feedback_selection_dirty
             and self.confirmed_feedback_selectors
@@ -9015,7 +9077,7 @@ class extraWindow(QtWidgets.QWidget):
                 ensure_monitor=False, show_error=True
             )
         ):
-            return
+            return False
         soa_mode = self._selected_soa_mode()
         target_codes = (
             self.gain, self.soa, self.phase, self.wavelena, self.wavelenb
@@ -9025,14 +9087,6 @@ class extraWindow(QtWidgets.QWidget):
                 self.res_queue.get_nowait()
             except Empty:
                 break
-        fullband_table_index = self._auto_output_fullband_index
-        if (
-            soa_mode != PI11210_SOA_SOURCE_MODE
-            or fullband_table_index is None
-            or not 0 <= int(fullband_table_index) < len(self.fullband_dac_rows)
-            or self.fullband_dac_rows[int(fullband_table_index)] != target_codes
-        ):
-            fullband_table_index = None
         stress_table_index = (
             self.stress_dac_row_index.get(target_codes)
             if soa_mode == PI11210_SOA_SOURCE_MODE else None
@@ -9043,7 +9097,7 @@ class extraWindow(QtWidgets.QWidget):
                     fullband_table_index - 1
                 ) % len(self.fullband_dac_rows)
                 self._write_direct_dac_codes(
-                    self.fullband_dac_rows[predecessor_index]
+                    self.fullband_dac_rows[predecessor_index], fullband_2001=True
                 )
                 time.sleep(SINGLE_VALUE_TABLE_PRECONDITION_S)
                 self.dac_label.setText(
@@ -9064,14 +9118,18 @@ class extraWindow(QtWidgets.QWidget):
                 )
             else:
                 self.dac_label.setText("DAC: PI11210（自定义原始码直接写入）")
-            response = self._write_direct_dac_codes(target_codes, soa_mode=soa_mode)
+            if fullband_2001:
+                response = self._write_direct_dac_codes(
+                    target_codes, soa_mode=soa_mode, fullband_2001=True)
+            else:
+                response = self._write_direct_dac_codes(target_codes, soa_mode=soa_mode)
             if soa_mode == PI11210_SOA_SHUTTER_MODE:
                 self.dac_label.setText(
-                    "DAC: PI11210（SOA关光：CLR安全零电流）"
+                    "DAC: PI11210（SOA关光：CLR门控＋源DAC清零）"
                 )
-        except (Empty, RuntimeError, ValueError) as exc:
+        except (Empty, OSError, RuntimeError, ValueError) as exc:
             self.error_signal.emit(f"DAC写入失败：{exc}")
-            return
+            return False
 
         res_gain = (response[4]<<8)+response[5]
         res_soa = (response[6]<<8)+response[7]
@@ -9085,31 +9143,31 @@ class extraWindow(QtWidgets.QWidget):
 
         for i in range(len(res_list)):
             if res_list[i]==self_list[i]:
-                state_list[i].setText("● 已写入")
-                state_list[i].setStyleSheet("color:#16a34a;")
+                if i == 1:
+                    state_list[i].setText("● 指令已应答（非电流回读）")
+                    state_list[i].setStyleSheet("color:#d97706;")
+                else:
+                    state_list[i].setText("● 已写入")
+                    state_list[i].setStyleSheet("color:#16a34a;")
             else:
                 state_list[i].setText("● 回读不一致")
                 state_list[i].setStyleSheet("color:#dc2626;")
+        return res_list == self_list
 
     def _write_direct_dac_codes(
-        self, codes, soa_mode=PI11210_SOA_SOURCE_MODE
+        self, codes, soa_mode=PI11210_SOA_SOURCE_MODE, *, fullband_2001=False
     ):
         raw_codes = tuple(codes)
         if len(raw_codes) != 5:
             raise ValueError("single-value DAC command requires five codes")
-        expected = list(
-            normalize_pi11210_calibration_code(code, maximum)
-            for code, maximum in zip(raw_codes, _pi11210_table_code_limits())
-        )
         requested_mode = parse_pi11210_dac_code(
             soa_mode, PI11210_SOA_SHUTTER_MODE
         )
-        if requested_mode == PI11210_SOA_SHUTTER_MODE:
-            expected[1] = PI11210_SOA_SHUTTER_CODE
-        expected = tuple(expected)
-        serial_write(
-            build_single_value_dac_command(expected, soa_mode=requested_mode)
-        )
+        command = build_single_value_dac_command(
+            raw_codes, soa_mode=requested_mode, fullband_2001=fullband_2001)
+        expected = tuple((command[4 + channel * 2] << 8) | command[5 + channel * 2]
+                         for channel in range(5))
+        serial_write(command)
         try:
             response = self.res_queue.get(timeout=2.0)
         except Empty:
@@ -9156,15 +9214,21 @@ class extraWindow(QtWidgets.QWidget):
         for i in range(len(self_text_list)):
             self_text_list[i].setText(cell_list[i])
 
-    def _refresh_direct_dac_inputs(self):
+    def _refresh_direct_dac_inputs(self, *, fullband_2001=None):
+        if fullband_2001 is None:
+            fullband_2001 = self._validated_auto_fullband_index() is not None
+        limits = (_fullband_accuracy_code_limits() if fullband_2001
+                  else _pi11210_table_code_limits())
+        normalizer = (parse_pi11210_dac_code if fullband_2001
+                      else normalize_pi11210_calibration_code)
         soa_maximum = (
             PI11210_SOA_SHUTTER_CODE
             if self._selected_soa_mode() == PI11210_SOA_SHUTTER_MODE
-            else PI11210_SOA_SOURCE_MAX_CODE
+            else limits[1]
         )
         fields = (
             ("GAIN", self.gain_text, self.gain_dac_text, self.gain_state,
-             "gain", PI11210_GAIN_MAX_CODE),
+             "gain", limits[0]),
             ("SOA", self.soa_text, self.soa_dac_text, self.soa_state,
              "soa", soa_maximum),
             ("PHASE", self.phase_text, self.phase_dac_text, self.phase_state,
@@ -9177,7 +9241,7 @@ class extraWindow(QtWidgets.QWidget):
         invalid_fields = []
         for name, edit, code_label, state_label, attribute, maximum in fields:
             try:
-                code = normalize_pi11210_calibration_code(edit.text(), maximum)
+                code = normalizer(edit.text(), maximum)
             except ValueError:
                 invalid_fields.append(name)
                 code_label.setText("--")

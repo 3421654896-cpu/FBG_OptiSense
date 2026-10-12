@@ -16,6 +16,7 @@
     },
     "machine_2": {
       "machine_label": "二号机",
+      "usb_serials": ["395736523033"],
       "fullband": {
         "label": "2号解调仪第一次校准",
         "source_format": "calibration_json",
@@ -25,6 +26,26 @@
         "validation_failed": 285,
         "certified": false
       }
+    },
+    "machine_3": {
+      "machine_label": "三号机",
+      "usb_serials": ["207933893232"],
+      "fullband": {
+        "label": "三号机临时2001点（2026-09-27，未认证）",
+        "source_format": "calibration_json",
+        "source_path": "machine_defaults/machine_3/machine_3_provisional_2001_20260927.json",
+        "guard_path": null,
+        "validation_tested": 725,
+        "validation_passed": 703,
+        "validation_failed": 22,
+        "validation_pending": 1276,
+        "certified": false
+      }
+    },
+    "machine_4": {
+      "machine_label": "四号机",
+      "usb_serials": ["207A33813232"],
+      "calibration_pending": true
     }
   }
 }

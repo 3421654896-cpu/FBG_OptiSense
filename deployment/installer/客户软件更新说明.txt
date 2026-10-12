@@ -1,0 +1,12 @@
+FBG OptiSense Studio 客户软件更新说明
+
+1. 后续每次发布都使用同一个 AppId 和安装目录。客户无需卸载旧版，直接运行较新版本的 Setup.exe 即可原位更新。
+2. 更新前安装程序会要求关闭正在运行的软件；如果临时模式有未保存谱线，软件会先询问“保存 / 不保存 / 取消”。
+3. 机号选择、加密 OTA 参数、临时模式谱线、手指记录和采集输出保存在：
+   %LOCALAPPDATA%\FBGOptiSenseStudio
+   这些数据不在程序安装目录内，覆盖更新和卸载旧程序文件时不会被删除。
+4. 程序文件安装在：
+   %LOCALAPPDATA%\Programs\FBG OptiSense Studio
+5. 开发端修改代码后，递增 Python\app_version.py、Inno Setup 和版本信息中的版本号，再运行：
+   powershell -ExecutionPolicy Bypass -File deployment\build_machine2_update.ps1 -Version 1.0.3
+6. 将生成的单个 Setup.exe 发给客户即可。旁边的 .sha256.txt 用于核验传输文件完整性。

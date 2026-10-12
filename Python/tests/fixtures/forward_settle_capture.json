@@ -1,0 +1,7 @@
+{
+  "schema": "synthetic_forward_settle_test_fixture",
+  "dac_rows": [
+    {"order": 1, "fullband_index": 333},
+    {"order": 0, "fullband_index": 178}
+  ]
+}

@@ -1,0 +1,41 @@
+# 复制本文件为 fbg_remote_config.yaml，再填写自己的设备和 MQTT 服务。
+# 不要把包含真实账号、密码或私钥的 fbg_remote_config.yaml 提交到版本库。
+
+device_id: "fbg-jdsu001"
+topic_prefix: "fbg/v1"
+
+broker:
+  host: "mqtt.example.com"
+  port: 8883
+  keepalive_s: 30
+  client_id_prefix: "fbg-viewer"
+
+tls:
+  enabled: true
+  # 留空时使用操作系统/Python的可信根证书库。
+  # 私有CA时填写相对于本配置文件的路径，例如 certificates/ca.pem。
+  ca_file: ""
+  # 使用双向TLS时同时填写以下两项；普通服务器证书校验可留空。
+  client_cert: ""
+  client_key: ""
+
+credentials:
+  # 远端查看器账号需要：订阅 telemetry/ack/status/metadata，发布平面主题 fbgcmdjdsu001。
+  # 板卡账号则需要：发布 telemetry/ack/status/metadata，订阅 fbgcmdjdsu001。
+  # 两类账号都只授权本 device_id，不能访问其他板卡。
+  # 推荐在Windows环境变量中保存，不在此文件中写明文密码：
+  #   setx FBG_MQTT_USERNAME "远端查看与控制账号"
+  #   setx FBG_MQTT_PASSWORD "远端查看与控制密码"
+  username_env: "FBG_MQTT_USERNAME"
+  password_env: "FBG_MQTT_PASSWORD"
+  # 也允许仅在本机未提交的 fbg_remote_config.yaml 中填写：
+  # username: ""
+  # password: ""
+
+# 固定主题（由程序根据device_id生成）：
+# fbg/v1/{device_id}/telemetry
+# fbgcmd{device_id去掉fbg-前缀和标点}       （BW20兼容的扁平命令主题）
+# fbg/v1/{device_id}/ack
+# fbg/v1/{device_id}/status
+# fbg/v1/{device_id}/metadata/stress       （保留消息）
+# fbg/v1/{device_id}/metadata/temperature  （保留消息）

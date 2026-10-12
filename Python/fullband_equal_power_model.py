@@ -24,6 +24,7 @@ Entering EXTRA mode also forces the board fan to full speed in current firmware.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import statistics
@@ -76,13 +77,10 @@ MIN_SMSR_DB = 20.0
 # using WAVELENGTH_TOLERANCE_PM and the operator-selected power tolerance.
 REPAIR_WAVELENGTH_TARGET_PM = 1.0
 REPAIR_POWER_TARGET_RELATIVE = 0.01
-# The second full forward sweep showed that every newly failed ordinary row
-# had been inside the former 1.5 pm guard on the prior sweep (maximum 1.48 pm),
-# while rows proactively re-centred by the repair had zero repeat failures.
-# Select rows outside +/-0.5 pm for inner-band reclosure; the public release
-# gate remains unchanged at +/-2 pm.
-CERTIFICATION_REWORK_WAVELENGTH_GUARD_PM = 0.5
-CERTIFICATION_REWORK_POWER_GUARD_RELATIVE = 0.02
+# Select only formal release failures for rework.  Passing wavelength rows
+# inside +/-2 pm are left untouched, even when outside the old 0.5 pm guard.
+CERTIFICATION_REWORK_WAVELENGTH_GUARD_PM = WAVELENGTH_TOLERANCE_PM
+CERTIFICATION_REWORK_POWER_GUARD_RELATIVE = 0.05
 # Errors this large are not ordinary picometre drift.  They mean that the
 # exact DAC row is valid in isolation but enters a different longitudinal mode
 # when reached from the preceding forward-scan row.  Such rows need an actual
@@ -96,6 +94,11 @@ MAX_GAIN_SOA_MA = 145.0
 AQ_AVERAGE_COUNT = 3
 CALIBRATION_CONFIRMATION_SAMPLES = 3
 CALIBRATION_CONFIRM_SETTLE_S = 0.02
+# A forward certification is one thermal/optical session.  A partial sweep
+# left idle overnight must not be combined with a later power-up and reported
+# as one independent 2001-point scan.  Finished rounds remain historical
+# evidence; only a partial round needs a fresh output file after this limit.
+MAX_PARTIAL_VALIDATION_RESUME_AGE_S = 6 * 60 * 60
 
 
 def current_to_code(current_ma: float, channel: int) -> int:
@@ -3531,13 +3534,10 @@ def expand_certification_guard_band_rows(
     validation_path: Path,
     release_power_relative_tolerance: float,
 ) -> dict[str, int]:
-    """Invalidate near-boundary rows so a repair subprocess recenters them.
+    """Invalidate formal release failures only; retain all passing rows.
 
-    The long-running parent process may predate the guard-band selection code.
-    Performing the same expansion in the freshly spawned repair subprocess
-    makes the improvement effective without interrupting an active 2001-point
-    certification sweep.  Expansion is recorded once and therefore remains
-    resume-safe.
+    Expansion is recorded once and remains resume-safe.  Successful rows
+    inside +/-2 pm must never be proactively adjusted by this subprocess.
     """
 
     existing = payload.get("certification_guard_band_expansion")
@@ -3587,11 +3587,7 @@ def expand_certification_guard_band_rows(
             signed_wavelength_error_pm = math.inf
             wavelength_error_pm = math.inf
             power_relative_error = math.inf
-        near_boundary = (
-            wavelength_error_pm > CERTIFICATION_REWORK_WAVELENGTH_GUARD_PM
-            or power_relative_error > power_guard
-        )
-        if not release_failure and not near_boundary:
+        if not release_failure:
             continue
         current = rows.get(str(key))
         if not isinstance(current, dict):
@@ -3656,12 +3652,10 @@ def expand_certification_guard_band_rows(
             sequence_deferred_predictions += 1
             sequence_deferred_targets.append(str(key))
             continue
-        if not release_failure and current.get("success"):
-            guard_band_added += 1
         current["success"] = False
         current["certification_guard_band_rework_required"] = True
         current.setdefault("certification_rework", []).append({
-            "strategy": "proactive_inner_guard_band_reclosure_v1",
+            "strategy": "release_failure_only_reclosure_v1",
             "validation_source": validation_path.name,
             "wavelength_error_pm": checked.get("wavelength_error_pm"),
             "power_relative_error": checked.get("power_relative_error"),
@@ -4533,6 +4527,14 @@ def aggregate_repeatability_readings(
     return aggregate, sum(1 for row in readings if mode_ok(row))
 
 
+def _sha256_path(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(256 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def run_validate_equal_power(args: argparse.Namespace) -> dict[str, Any]:
     table = json.loads(args.input.read_text(encoding="utf-8"))
     if args.target_power_mw is None:
@@ -4556,6 +4558,23 @@ def run_validate_equal_power(args: argparse.Namespace) -> dict[str, Any]:
             abs_tol=1e-9,
         ):
             raise ValueError("resume output belongs to a different common power target")
+        source_digest = payload.get("source_table_sha256")
+        if source_digest is not None:
+            if _sha256_path(args.input) != source_digest:
+                raise ValueError("resume source table changed; start a fresh validation")
+        elif args.input.stat().st_mtime > args.output.stat().st_mtime + 1.0:
+            raise ValueError("resume source table changed; start a fresh validation")
+        rows_done = payload.get("rows", {})
+        partial = len(rows_done) < len(ordered) or any(
+            len(row.get("samples", [])) < args.samples_per_point
+            for row in rows_done.values()
+        )
+        if (partial and time.time() - args.output.stat().st_mtime
+                > MAX_PARTIAL_VALIDATION_RESUME_AGE_S):
+            raise ValueError(
+                "partial validation is from an older session; preserve it "
+                "and start a fresh full forward validation output"
+            )
 
         previous_tolerance = float(
             payload.get("power_relative_tolerance", POWER_REL_TOLERANCE)
@@ -4624,6 +4643,7 @@ def run_validate_equal_power(args: argparse.Namespace) -> dict[str, Any]:
             "created": utc_now(),
             "method": "independent_exact_code_robust_median_repeatability_pass",
             "source_table": args.input.name, "direction": args.direction,
+            "source_table_sha256": _sha256_path(args.input),
             "target_power_mw": args.target_power_mw,
             "limits_ma": dict(zip(CONTROL_NAMES, LASER_MAX_MA)),
             "power_relative_tolerance": args.power_relative_tolerance,

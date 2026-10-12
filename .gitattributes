@@ -1,0 +1,3 @@
+# Keep the source manifest and pinned calibration SHA-256 valid on Windows
+# even when a developer has core.autocrlf=true. Do not transform payload bytes.
+* -text

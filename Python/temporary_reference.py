@@ -1,6 +1,7 @@
 """Finite USB dense reference acquisition for the standalone temporary mode."""
 from pathlib import Path
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 
 REFERENCE_RETRY_PLAN = (
@@ -13,6 +14,7 @@ REFERENCE_RETRY_PLAN = (
 REFERENCE_RECOVERY_HOLD_S = .2
 REFERENCE_MAX_SAMPLES = 150
 REFERENCE_POINT_TIMEOUT_S = 3.25
+SELECTED_REFERENCE_DWELL_S = .010
 SIGNAL_CHANNELS = ('CH0', 'CH1', 'CH2', 'CH3')
 
 
@@ -212,7 +214,8 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
                       require_stable=True, continue_on_unstable=False,
                       allow_partial_stop=False, table_base_dir=None,
                       signal_channel=1, dense_indices=None,
-                      acquisition_method='stable_window', settle_s=.2):
+                      acquisition_method='stable_window', settle_s=.2,
+                      prefer_board_batch=True):
     import app_JDSU as app
     if type(feedback_selector) is not int or feedback_selector not in range(4):
         raise ValueError('Invalid analog feedback selector')
@@ -250,7 +253,7 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
             raise ValueError('Dense indices must be 5～2001 unique increasing table indices')
         points = [points[i] for i in dense_indices]
     if indices is not None:
-        if (len(indices) not in range(5, 46, 5)
+        if (len(indices) not in (set(range(5, 46, 5)) | set(range(7, 64, 7)))
                 or any(type(i) is not int or not 0 <= i <= 2000 for i in indices)
                 or len(set(indices)) != len(indices)):
             raise ValueError('Selected reference requires 5～45 unique physical indices in five-point groups')
@@ -272,9 +275,20 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
                   settle_s=float(settle_s), started_s=time.time(),
                   stability_filter_applied=(require_stable and acquisition_method == 'stable_window'))
     feedback_pair = feedback_selectors_for_channel(signal_channel, feedback_selector)
+    import dense_scan_transport as dense_transport
+    ordered_route = all(left.index < right.index for left, right in zip(points, points[1:]))
+    batch_eligible = bool(prefer_board_batch and ordered_route
+                          and acquisition_method == 'equal_interval_single'
+                          and dense_transport._wait_us(float(settle_s)) <= dense_transport.MAX_DWELL_US)
+    if batch_eligible:
+        # Validate all requested DAC tuples and guards before touching hardware.
+        dense_transport.operations(points, guards, dense_transport._wait_us(float(settle_s)))
     worker = app.EqualIntervalWorker(device, points, guards, settle_s=float(settle_s),
                                      feedback_selectors=feedback_pair)
     old_timeout = device.timeout
+    overall_start = time.monotonic()
+    checkpoint_writer = None
+    checkpoint_futures = []
     try:
         device.timeout = .1
         if not _safe_disarm(device) or not _close_shutter(device):
@@ -284,23 +298,51 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
         device.reset_input_buffer()
         if not worker._feedback_command_and_ack():
             raise RuntimeError('所选模拟反馈确认失败')
+        capability = dense_transport.probe(device, should_stop=should_stop) if batch_eligible and not should_stop() else None
+        board_batch = capability is not None
+        if board_batch:
+            checkpoint_writer = ThreadPoolExecutor(max_workers=1, thread_name_prefix='dense-checkpoint')
+        report['acquisition_backend'] = 'stm32_dense_batch_v1' if board_batch else 'host_single_monitor'
+        report['board_batch_supported'] = board_batch
+        if capability is not None:
+            report['dense_batch_firmware_version'] = capability['firmware_version']
+        batch_rows = iter(dense_transport.acquire(
+            device, points, guards, settle_s=float(settle_s),
+            selectors=feedback_pair, should_stop=should_stop,
+        )) if board_batch else None
+        acquisition_start = time.monotonic()
         if dense_scan and acquisition_method == 'stable_window':
             establish_forward_state(worker, points, 0)
         for scan_index, point in enumerate(points):
+            # Completed saves may fail (disk full/permissions). Never hide that
+            # error, but do not pause wavelength scanning to wait for disk I/O.
+            for future in checkpoint_futures:
+                if future.done():
+                    future.result()
             if should_stop():
                 if allow_partial_stop:
                     report['stopped_early'] = True
                     break
                 raise InterruptedError('参考采集已取消')
-            if scan_index and scan_index % app.EQUAL_INTERVAL_FEEDBACK_VERIFY_EVERY_POINTS == 0:
+            if not board_batch and scan_index and scan_index % app.EQUAL_INTERVAL_FEEDBACK_VERIFY_EVERY_POINTS == 0:
                 if not worker._feedback_command_and_ack():
                     raise RuntimeError('反馈复核失败')
             guard = guards.get(point.index)
-            if guard is not None and not worker._apply_guard(guard):
+            if not board_batch and guard is not None and not worker._apply_guard(guard):
                 raise RuntimeError('参考扫描过渡失败')
             if acquisition_method == 'equal_interval_single':
                 try:
-                    row = _equal_interval_row(worker, point, signal_channel, 1)
+                    if board_batch:
+                        row = next(batch_rows)
+                        code = float(row['adc_codes'][signal_channel])
+                        row.update(signal_channel=signal_channel,
+                                   signal_channel_name=SIGNAL_CHANNELS[signal_channel],
+                                   signal_adc_code=code,
+                                   signal_voltage_v=code * app.PD_ADC_REFERENCE_V / app.PD_ADC_CODE_COUNT,
+                                   signal_sigma_codes=float('nan'), signal_drift_codes=float('nan'),
+                                   signal_saturated=code >= 4080.)
+                    else:
+                        row = _equal_interval_row(worker, point, signal_channel, 1)
                 except InterruptedError:
                     if allow_partial_stop:
                         report['stopped_early'] = True
@@ -319,8 +361,10 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
                 row = acquire_settled_ch1(worker,point,.2,retain_monitor_samples=True)
                 row = _select_monitor_channel(row, signal_channel)
                 row['attempts'] = []
+            raw_single = acquisition_method == 'equal_interval_single' and not require_stable
+            row['stability_not_evaluated'] = bool(raw_single or row.get('stability_not_evaluated'))
             passed = bool(
-                not row.get('signal_saturated')
+                (raw_single or not row.get('signal_saturated'))
                 and (acquisition_method == 'equal_interval_single' or row.get('stable'))
             )
             row['point_passed'] = passed
@@ -337,8 +381,26 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
                 reason = row['failure_reason']
                 raise RuntimeError(f"参考点 {point.index} {reason}；已尝试{len(row['attempts'])}次，未跳过该点；原始六路读数已保存")
             on_progress(len(report['rows']), len(points))
-            if len(report['rows']) % 25 == 0:
-                save_checkpoint(output, report)
+            if len(report['rows']) % (240 if board_batch else 25) == 0:
+                if checkpoint_writer is not None:
+                    # Once appended, rows are not changed by acquisition.
+                    # Freeze the row list so later points cannot appear in an
+                    # earlier checkpoint; one writer preserves save order.
+                    snapshot = dict(report, rows=list(report['rows']))
+                    checkpoint_futures.append(checkpoint_writer.submit(save_checkpoint, output, snapshot))
+                else:
+                    save_checkpoint(output, report)
+        report['acquisition_elapsed_s'] = time.monotonic() - acquisition_start
+        report['requested_point_dwell_s'] = len(points) * float(settle_s)
+        if board_batch:
+            report['board_acquisition_elapsed_s'] = sum({
+                row['board_block_sequence']: row['board_block_elapsed_us']
+                for row in report['rows']
+            }.values()) / 1_000_000
+            report['transition_guard_dwell_s'] = sum(
+                len(guards[p.index].precondition_codes) * guards[p.index].hold_s_per_stage
+                for p in points if p.index in guards
+            )
         report['complete'] = len(report['rows']) == len(points)
         report['partial'] = not report['complete']
         report['failed_point_count'] = sum(
@@ -360,10 +422,39 @@ def acquire_reference(device, output, *, on_progress=lambda n, total: None,
                 errors.append(str(exc))
         device.timeout = old_timeout
         report['cleanup_errors'] = errors
+        checkpoint_error = None
+        if checkpoint_writer is not None:
+            # Safety shutdown above ALWAYS precedes waiting for the disk.
+            checkpoint_writer.shutdown(wait=True)
+            for future in checkpoint_futures:
+                try:
+                    future.result()
+                except Exception as exc:
+                    checkpoint_error = exc
+            if checkpoint_error is not None:
+                report['checkpoint_error'] = str(checkpoint_error)
+        report['total_elapsed_s'] = time.monotonic() - overall_start
         save_checkpoint(output, report)
         if not report.get('disarm_ack') or not report.get('shutter_ack'):
             raise RuntimeError('参考采集后停光未确认，请检查板卡')
+        if checkpoint_error is not None:
+            raise RuntimeError('密集采集检查点保存失败，已确认停光：' + str(checkpoint_error))
     return report
+
+
+def acquire_selected_reference(device, output, *, selected_rows, **kwargs):
+    """Fixed 10 ms dwell, one fresh ADC per selected point; no optical gate.
+
+    Prefer the existing STM32 batch interface, preserving DAC/CRC/device and
+    shutter checks. Unordered routes or old firmware use the single-frame
+    fallback without changing route order or reintroducing stability retries.
+    """
+    return acquire_reference(
+        device, output, selected_rows=selected_rows,
+        acquisition_method='equal_interval_single',
+        settle_s=SELECTED_REFERENCE_DWELL_S, require_stable=False,
+        continue_on_unstable=True, allow_partial_stop=True, **kwargs,
+    )
 
 
 if __name__ == '__main__':

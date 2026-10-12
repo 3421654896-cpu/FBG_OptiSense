@@ -83,24 +83,26 @@ def main() -> int:
     diagnostics: list[str] = []
     with serial.Serial(args.port, args.baud, timeout=0.05) as device:
         device.dtr = True
-        time.sleep(0.2)
-        device.reset_input_buffer()
-        device.write(mode_command(3))
-        device.flush()
-        deadline = time.monotonic() + args.timeout
-        while time.monotonic() < deadline and extension is None:
-            buffer.extend(device.read(4096))
-            for frame in extract_frames(buffer):
-                diagnostics.append(
-                    f"len={len(frame)} points={int.from_bytes(frame[2:4], 'big')} "
-                    f"tail={frame[-40:].hex()}"
-                )
-                extension = board_extension(frame)
-                if extension is not None:
-                    break
-        device.write(mode_command(2))  # EXTRA/idle: close the optical source.
-        device.flush()
-        time.sleep(0.15)
+        try:
+            time.sleep(0.2)
+            device.reset_input_buffer()
+            device.write(mode_command(3))
+            device.flush()
+            deadline = time.monotonic() + args.timeout
+            while time.monotonic() < deadline and extension is None:
+                buffer.extend(device.read(4096))
+                for frame in extract_frames(buffer):
+                    diagnostics.append(
+                        f"len={len(frame)} points={int.from_bytes(frame[2:4], 'big')} "
+                        f"tail={frame[-40:].hex()}"
+                    )
+                    extension = board_extension(frame)
+                    if extension is not None:
+                        break
+        finally:
+            device.write(mode_command(2))  # EXTRA/idle: close the optical source.
+            device.flush()
+            time.sleep(0.15)
 
     if extension is None or len(extension) < 28:
         detail = diagnostics[-1] if diagnostics else "no complete EE/FFEF frame"

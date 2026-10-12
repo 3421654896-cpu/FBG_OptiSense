@@ -31,6 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "firmware_features.h"
 #include "stm32f2xx.h"
 #include "datastruct.h"
 #include "ms5614t.h"
@@ -133,7 +134,9 @@ extern DMA_HandleTypeDef hdma_usart6_rx;
 extern const uint16_t Wave_DAC[Number][5];
 extern const uint16_t Wave_DATA[Number][2];
 extern const uint16_t Pwr_DATA[Number][2];
+#if FBG_FEATURE_LEGACY_PEAK_MODES
 extern int8_t unstableFlags[Number][4];
+#endif
 
 extern uint8_t txBuffer[PACK_SIZE];
 extern uint8_t aTxBuffer[USART_TX_SIZE];

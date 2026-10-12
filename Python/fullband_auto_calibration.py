@@ -48,11 +48,11 @@ MAX_CERTIFICATION_ROUNDS = 10
 PRECONDITION_ROUNDS = 4
 STAGE_COUNT = 17
 DEFAULT_SINGLE_POINT_POWER_REL_TOLERANCE = 0.03
-# Re-centre rows before they approach the public +/-2 pm release boundary.
-# Machine-2 forward-sweep evidence showed that the old 1.5 pm selector missed
-# the entire next set of failures; repaired rows themselves had no repeats.
-CERTIFICATION_REPAIR_WAVELENGTH_GUARD_PM = 0.5
-CERTIFICATION_REPAIR_POWER_GUARD_RELATIVE = 0.02
+# Only failed release rows may be reworked.  A successful wavelength row
+# inside +/-2 pm must not be moved merely to gain extra guard-band margin.
+CERTIFICATION_REPAIR_WAVELENGTH_GUARD_PM = 2.0
+CERTIFICATION_REPAIR_POWER_GUARD_RELATIVE = 0.05
+CERTIFICATION_REWORK_POLICY = "failed_only_v1"
 SCRATCH_MAP_WAVE_STEP_MA = 1.0
 SCRATCH_PHASE_STEP_MA = 1.0
 
@@ -161,6 +161,13 @@ def run_command(
     print(f"\n> {printable}", flush=True)
     if dry_run:
         return
+    child_env = os.environ.copy()
+    # Windows may launch the child with the active GBK console code page even
+    # though this pipe is decoded as UTF-8.  Force one deterministic encoding
+    # so a serial-device exception containing Chinese text cannot be decoded
+    # to U+FFFD and then crash the orchestrator while it is reporting the real
+    # hardware error.
+    child_env["PYTHONIOENCODING"] = "utf-8:backslashreplace"
     with log_path.open("a", encoding="utf-8") as log:
         log.write(f"\n[{utc_now()}] > {printable}\n")
         log.flush()
@@ -173,11 +180,12 @@ def run_command(
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            env=child_env,
         )
         assert process.stdout is not None
         try:
             for line in process.stdout:
-                print(line, end="", flush=True)
+                _write_console_text(line)
                 log.write(line)
                 log.flush()
         except KeyboardInterrupt:
@@ -193,6 +201,19 @@ def run_command(
         code = process.wait()
         if code not in accepted_exit_codes:
             raise RuntimeError(f"校准子任务退出码为{code}：{printable}")
+
+
+def _write_console_text(text: str) -> None:
+    """Write progress without allowing the Windows code page to abort a run."""
+
+    try:
+        sys.stdout.write(text)
+        sys.stdout.flush()
+    except UnicodeEncodeError:
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        escaped = text.encode(encoding, errors="backslashreplace").decode(encoding)
+        sys.stdout.write(escaped)
+        sys.stdout.flush()
 
 
 def _read_single_value_ack(device: serial.Serial, timeout_s: float = 3.0) -> bytes:
@@ -477,6 +498,112 @@ def require_complete_rows(path: Path, *, label: str) -> dict[str, Any]:
     return payload
 
 
+def require_retestable_repair_rows(
+    path: Path, *, label: str, certification_round: int, target_power_mw: float,
+) -> dict[str, Any]:
+    """Allow a completed repair with misses into *another independent test* only.
+
+    A repair's tighter inner guard can leave a few rows marked unsuccessful even
+    though they still have usable, bounded DAC candidates.  This does not
+    certify those rows: the next full path validation must pass all release
+    gates before anything is exported or promoted.
+    """
+
+    payload = read_json(path)
+    limits = payload.get("limits_ma", {})
+    if (
+        float(limits.get("gain_ma", -1.0)) != CURRENT_LIMIT_MA
+        or float(limits.get("soa_ma", -1.0)) != CURRENT_LIMIT_MA
+    ):
+        raise RuntimeError(f"{label}没有声明145 mA专用配置")
+    if payload.get("certification_rework_round") != certification_round:
+        raise RuntimeError(f"{label}不属于第{certification_round}轮修复")
+    if not math.isclose(
+        float(payload.get("target_power_mw", float("nan"))), target_power_mw,
+        rel_tol=0.0, abs_tol=1e-9,
+    ):
+        raise RuntimeError(f"{label}的共同目标功率不一致")
+    rows = payload.get("rows")
+    summary = payload.get("neighbor_repair_summary", {})
+    if (
+        not isinstance(rows, dict)
+        or len(rows) != TARGET_COUNT
+        or summary.get("tested") != TARGET_COUNT
+    ):
+        raise RuntimeError(f"{label}不是已结束的完整2001点修复表")
+    for index in range(TARGET_COUNT):
+        target = 1525.0 + index * 0.02
+        key = f"{target:.6f}"
+        row = rows.get(key)
+        if not isinstance(row, dict) or not math.isclose(
+            float(row.get("target_nm", float("nan"))), target,
+            rel_tol=0.0, abs_tol=1e-7,
+        ):
+            raise RuntimeError(f"{label}在{key} nm缺少有效候选点")
+        codes = row.get("codes")
+        if (
+            not isinstance(codes, list)
+            or len(codes) != len(FULLBAND_2001_CODE_LIMITS)
+            or any(
+                not isinstance(code, int) or isinstance(code, bool)
+                or code < 0 or code > maximum
+                for code, maximum in zip(codes, FULLBAND_2001_CODE_LIMITS)
+            )
+            or not isinstance(row.get("reading"), dict)
+            or not isinstance(row.get("currents_ma"), list)
+            or len(row["currents_ma"]) != len(FULLBAND_2001_CODE_LIMITS)
+            or any(
+                not isinstance(current, (int, float))
+                or not math.isfinite(current)
+                or current < 0.0 or current > limit
+                for current, limit in zip(
+                    row["currents_ma"], (145.0, 145.0, 10.0, 30.0, 30.0)
+                )
+            )
+        ):
+            raise RuntimeError(f"{label}在{key} nm的DAC候选值无效")
+    return payload
+
+
+def completed_precondition_source(
+    output: Path, *, target_power_mw: float, power_relative_tolerance: float,
+) -> Path | None:
+    """Resume formal certification without re-running finished preconditioning.
+
+    The first forward validation is only created after preconditioning ends.
+    It records the exact input table, which must still be complete and match
+    this run before any preconditioning work can be skipped.
+    """
+
+    first_forward = output / "validation_forward_round1_avg3_postcondition.json"
+    if not first_forward.exists():
+        return None
+    validation = read_json(first_forward)
+    if (
+        validation.get("direction") != "forward"
+        or not math.isclose(
+            float(validation.get("target_power_mw", float("nan"))),
+            target_power_mw, rel_tol=0.0, abs_tol=1e-9,
+        )
+        or not math.isclose(
+            float(validation.get("power_relative_tolerance", float("nan"))),
+            power_relative_tolerance, rel_tol=0.0, abs_tol=1e-12,
+        )
+    ):
+        raise RuntimeError("首次正式正向复测与当前目标功率或容差不一致")
+    allowed = {"equal_power_repaired_145_2001.json"}
+    allowed.update(
+        f"precondition_repaired_round{index}_avg3s1.json"
+        for index in range(1, PRECONDITION_ROUNDS + 1)
+    )
+    source_name = validation.get("source_table")
+    if source_name not in allowed:
+        raise RuntimeError("首次正式正向复测的预调理源表不受信任")
+    source = output / source_name
+    require_complete_rows(source, label="首次正式复测所用预调理源表")
+    return source
+
+
 def validate_warm_start_table(path: Path) -> dict[str, Any]:
     """Validate a complete older live table before using it only as a seed.
 
@@ -555,39 +682,36 @@ def validation_failures(path: Path) -> set[str]:
 def validation_rework_targets(
     path: Path, release_power_relative_tolerance: float,
 ) -> set[str]:
-    """Include release failures and successful rows too near a drift boundary.
+    """Repair only rows rejected by the independent release validation.
 
-    A 2001-point certification sweep lasts long enough that a row measured at
-    1.9 pm or 2.9% can cross the public 2 pm / 3% gate on the next sweep even
-    though its DAC branch is valid.  Proactively re-centering the guard-band
-    rows lets the following full sweep test useful margin instead of repeatedly
-    discovering a different set of edge points.  This only broadens the repair
-    set; it never changes the final release thresholds.
+    A passing wavelength row is retained even when its error is above the
+    former 0.5 pm proactive threshold.  A row that fails power or SMSR still
+    needs repair, even if its wavelength is already within +/-2 pm.
     """
+    _ = release_power_relative_tolerance  # The validator has already applied it.
+    return validation_failures(path)
 
-    payload = read_json(path)
-    rows = payload.get("rows", {})
-    power_guard = min(
-        float(release_power_relative_tolerance),
-        CERTIFICATION_REPAIR_POWER_GUARD_RELATIVE,
+
+def forward_rework_paths(output: Path, certification_round: int) -> tuple[Path, Path]:
+    """Keep completed legacy rounds, but never resume a broad-target new round."""
+    legacy_seed = output / (
+        f"certification_rework_seed_forward_round{certification_round}_avg3_postcondition.json"
     )
-    targets: set[str] = set()
-    for key, row in rows.items():
-        if not row.get("success"):
-            targets.add(str(key))
-            continue
-        try:
-            wavelength_error_pm = abs(float(row["wavelength_error_pm"]))
-            power_relative_error = abs(float(row["power_relative_error"]))
-        except (KeyError, TypeError, ValueError):
-            targets.add(str(key))
-            continue
-        if (
-            wavelength_error_pm > CERTIFICATION_REPAIR_WAVELENGTH_GUARD_PM
-            or power_relative_error > power_guard
-        ):
-            targets.add(str(key))
-    return targets
+    legacy_result = output / (
+        f"certification_repaired_forward_round{certification_round}_avg3_postcondition.json"
+    )
+    if certification_round <= 2 and legacy_seed.exists() and legacy_result.exists():
+        return legacy_seed, legacy_result
+    return (
+        output / (
+            f"certification_rework_seed_forward_round{certification_round}_avg3_postcondition_"
+            f"{CERTIFICATION_REWORK_POLICY}.json"
+        ),
+        output / (
+            f"certification_repaired_forward_round{certification_round}_avg3_postcondition_"
+            f"{CERTIFICATION_REWORK_POLICY}.json"
+        ),
+    )
 
 
 def write_rework_seed(
@@ -613,6 +737,32 @@ def write_rework_seed(
     output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def retain_formally_passing_rows(
+    payload: dict[str, Any], failed: set[str], validations: list[dict[str, Any]],
+) -> int:
+    """Clear stale inner-repair failures after a complete formal scan passed."""
+    rows = payload.get("rows", {})
+    if not validations or any(
+        len(validation.get("rows", {})) != len(rows) for validation in validations
+    ):
+        return 0
+    retained = 0
+    for key, row in rows.items():
+        if key in failed or not all(
+            validation["rows"].get(key, {}).get("success") for validation in validations
+        ):
+            continue
+        if not row.get("success"):
+            retained += 1
+        row["success"] = True
+        row.pop("certification_guard_band_rework_required", None)
+        row.pop("certification_power_prediction_unverified", None)
+        row.pop("certification_sequence_context_validation_pending", None)
+        row.pop("certification_forward_transition_confirmation_required", None)
+        row.pop("certification_forward_transition_failure", None)
+    return retained
+
+
 def write_recentered_rework_seed(
     source: Path,
     output: Path,
@@ -631,6 +781,9 @@ def write_recentered_rework_seed(
     write_rework_seed(source, output, failed, certification_round)
     payload = read_json(output)
     validation_payloads = [read_json(path) for path in validations if path.exists()]
+    retained_formal_passes = retain_formally_passing_rows(
+        payload, failed, validation_payloads,
+    )
     high_rows = read_json(high_power)["rows"]
     ratios = read_json(soa_pilot)["summary"]["normalized_power_ratio_median_by_soa"]
     curve = sorted((float(current), float(ratio)) for current, ratio in ratios.items())
@@ -745,6 +898,7 @@ def write_recentered_rework_seed(
     payload["certification_predicted_power_recentering"] = {
         "predicted_rows": predicted,
         "live_reclosure_rows": live_required,
+        "retained_formal_passes": retained_formal_passes,
         "validation_sources": [path.name for path in validations],
     }
     temporary = output.with_suffix(output.suffix + ".tmp")
@@ -1203,7 +1357,21 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
         # reading is already a three-sweep AQ6150B average.  Power-only updates
         # remain provisional until the next full sweep; wavelength/mode faults
         # are still repaired live.  Nothing from this loop is publishable.
-        for precondition_round in range(1, PRECONDITION_ROUNDS + 1):
+        resumed_precondition = completed_precondition_source(
+            output, target_power_mw=target_power,
+            power_relative_tolerance=args.power_relative_tolerance,
+        )
+        if resumed_precondition is not None:
+            current_table = resumed_precondition
+            emit_event(
+                "preconditioning_resume_skipped",
+                source_table=str(current_table),
+                reason="首次正式正向复测检查点证明预调理已经结束",
+            )
+        for precondition_round in (
+            () if resumed_precondition is not None
+            else range(1, PRECONDITION_ROUNDS + 1)
+        ):
             precheck = output / (
                 f"precondition_forward_round{precondition_round}_avg3s1.json"
             )
@@ -1288,11 +1456,8 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
                         f"{MAX_CERTIFICATION_ROUNDS}轮自动修复后正向仍有"
                         f"{len(forward_failed)}个复测失败点，未发布正式点表"
                     )
-                rework_seed = output / (
-                    f"certification_rework_seed_forward_round{certification_round}_avg3_postcondition.json"
-                )
-                rework_output = output / (
-                    f"certification_repaired_forward_round{certification_round}_avg3_postcondition.json"
+                rework_seed, rework_output = forward_rework_paths(
+                    output, certification_round,
                 )
                 rework_targets = validation_rework_targets(
                     forward, args.power_relative_tolerance,
@@ -1302,6 +1467,7 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
                     round=certification_round,
                     release_failed=len(forward_failed),
                     rework_targets=len(rework_targets),
+                    policy=CERTIFICATION_REWORK_POLICY,
                     wavelength_guard_pm=CERTIFICATION_REPAIR_WAVELENGTH_GUARD_PM,
                     power_guard_relative=min(
                         args.power_relative_tolerance,
@@ -1330,11 +1496,20 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
                         "--power-relative-tolerance", certification_power_tolerance,
                         *repair_target_arguments,
                         "--max-rounds", "7", "--max-tune-measurements", "24", "--resume",
-                    ), log_path,
+                    ), log_path, accepted_exit_codes=(0, 2),
                 )
-                require_complete_rows(
-                    rework_output, label="正向独立复测失败点同点自动修复",
+                repair_payload = require_retestable_repair_rows(
+                    rework_output, label="正向独立复测候选点修复",
+                    certification_round=certification_round,
+                    target_power_mw=target_power,
                 )
+                repair_failed = int(repair_payload["neighbor_repair_summary"]["failed"])
+                if repair_failed:
+                    emit_event(
+                        "certification_repair_requires_retest",
+                        round=certification_round, repair_failed=repair_failed,
+                        message="修复内圈未全过；完整候选表仅供下一轮正向独立复测，未认证发布",
+                    )
                 current_table = rework_output
                 continue
             if args.certification_direction == "forward":
@@ -1391,9 +1566,13 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
                     "--power-relative-tolerance", certification_power_tolerance,
                     *repair_target_arguments,
                     "--max-rounds", "7", "--max-tune-measurements", "24", "--resume",
-                ), log_path,
+                ), log_path, accepted_exit_codes=(0, 2),
             )
-            require_complete_rows(rework_output, label="独立复测失败点自动修复")
+            require_retestable_repair_rows(
+                rework_output, label="独立复测候选点修复",
+                certification_round=certification_round,
+                target_power_mw=target_power,
+            )
             current_table = rework_output
     if final_forward is None or (
         args.certification_direction == "bidirectional" and final_reverse is None

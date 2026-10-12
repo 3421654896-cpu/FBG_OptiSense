@@ -53,6 +53,8 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 #define WIFI_LAN_HELLO                 "FBGL1|HELLO"
 #define WIFI_LAN_RAW_HELLO             "FBGL1|RAW"
 #define WIFI_LAN_RAW_COMPACT_CAP       "FBGL1|CAPS|CS1"
+#define WIFI_LAN_RAW_TEMPORARY_CAP     "FBGL1|CAPS|TB4"
+#define WIFI_LAN_RAW_TEMPORARY_COMPACT_CAP "FBGL1|CAPS|TC4"
 #define WIFI_LAN_RAW_COMMAND_PREFIX     "FUSB1|"
 #define WIFI_LAN_RAW_MAX_PAYLOAD        2048U
 #define WIFI_LAN_RAW_PACKET_OVERHEAD      16U
@@ -62,17 +64,21 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 #define WIFI_LAN_RAW_KIND_COMPACT_SCAN      3U
 #define WIFI_LAN_RAW_KIND_COMPACT_F45       4U
 #define WIFI_LAN_RAW_KIND_COMPACT_F45_BATCH 5U
+#define WIFI_LAN_RAW_KIND_TEMPORARY_BATCH   6U
+#define WIFI_LAN_RAW_KIND_TEMPORARY_CAP_ACK 7U
+#define WIFI_LAN_RAW_KIND_COMPACT_TEMPORARY_BATCH 8U
+#define WIFI_LAN_RAW_KIND_TEMPORARY_COMPACT_CAP_ACK 9U
 #define WIFI_LAN_RAW_COMPACT_VERSION        1U
 #define WIFI_LAN_RAW_COMPACT_HEADER_SIZE    6U
 #define WIFI_LAN_RAW_COMPACT_F45_SIZE     128U
 #define WIFI_LAN_RAW_NATIVE_F45_SIZE       453U
 #define WIFI_LAN_RAW_NATIVE_F45_ROWS        45U
 #define WIFI_LAN_RAW_F45_BATCH_MAX           4U
+#define WIFI_LAN_RAW_TEMPORARY_BATCH_MAX     4U
 #define WIFI_LAN_RAW_PACKET_MAX_SIZE    \
     (WIFI_LAN_RAW_MAX_PAYLOAD + WIFI_LAN_RAW_PACKET_OVERHEAD)
 #define WIFI_LAN_RAW_SMALL_PACKET_SIZE    36U
 #define WIFI_LAN_RAW_PRIORITY_DEPTH        8U
-#define WIFI_OTA_RESPONSE_DRAIN_MS      1000U
 
 #define WIFI_LAN_DELETE_SERVER             0U
 #define WIFI_LAN_DELETE_OWNER              1U
@@ -96,6 +102,7 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 #define WIFI_CONFIG_FLAG_ENABLE         0x01U
 #define WIFI_CONFIG_FLAG_PERSIST        0x02U
+#define WIFI_CONFIG_FLAG_LAN_ONLY       0x04U
 
 #define WIFI_PACKET_TYPE_TELEMETRY      1U
 #define WIFI_SAMPLE_FORMAT_U16_BE       1U
@@ -173,7 +180,6 @@ typedef enum
     WIFI_PUBLISH_METADATA_STRESS,
     WIFI_PUBLISH_METADATA_TEMPERATURE,
     WIFI_PUBLISH_ACK,
-    WIFI_PUBLISH_OTA,
     WIFI_PUBLISH_LAN_RAW,
     WIFI_PUBLISH_TELEMETRY
 } WifiPublishKind;
@@ -233,6 +239,17 @@ typedef struct
 
 static WifiConfig wifiConfig;
 static WifiConfig pendingConfig;
+
+static uint8_t WifiLanOnly(void)
+{
+#if FBG_FEATURE_MQTT
+    return (wifiConfig.flags & WIFI_CONFIG_FLAG_LAN_ONLY) ? 1U : 0U;
+#else
+    /* Keep persisted/provisioning layouts compatible without rewriting the
+     * customer's credentials. Production never starts a cloud connection. */
+    return 1U;
+#endif
+}
 static uint32_t wifiConfigCrc = 0U;
 static uint32_t pendingConfigCrc = 0U;
 static uint8_t wifiConfigValid = 0U;
@@ -330,6 +347,15 @@ static uint8_t lanServerDeleteVerifyAttempts = 0U;
 static uint8_t lanServerDeleteVerifyStartup = 0U;
 static uint8_t lanListenerCreateVerifyAttempts = 0U;
 static uint8_t lanListenerCreateStartup = 0U;
+/* Non-secret RAM diagnostics for a BW20 listener that is absent after OTA.
+ * These counters are read over SWD, not transmitted or saved in user data. */
+static volatile uint16_t lanCreateAttempts = 0U;
+static volatile uint16_t lanCreateErrors = 0U;
+static volatile uint8_t lanCreateLastResult = 0U;
+static volatile int16_t lanCreateLastErrorCode = -1;
+static volatile uint8_t lanQueryRows = 0U;
+static volatile uint8_t lanQuerySeeds = 0U;
+static volatile uint8_t lanQueryParents = 0U;
 static uint8_t lanMetadataPendingMask = 0U;
 static uint32_t lanClientDeadlineMs = 0U;
 static uint32_t nextLanRetryMs = 0U;
@@ -349,6 +375,14 @@ static uint8_t lanRawScanReady = 0U;
 static uint8_t lanRawF45Batch[WIFI_LAN_RAW_COMPACT_F45_SIZE *
                               WIFI_LAN_RAW_F45_BATCH_MAX];
 static uint8_t lanRawF45BatchCount = 0U;
+static uint8_t lanRawTemporaryBatchEnabled = 0U;
+static uint8_t lanRawTemporaryCompactEnabled = 0U;
+static uint8_t lanRawTemporaryBatch[WIFI_LAN_RAW_MAX_PAYLOAD];
+static uint16_t lanRawTemporaryBatchLength = 0U;
+static uint16_t lanRawTemporaryFrameLength = 0U;
+static uint16_t lanRawTemporaryCompactFrameLength = 0U;
+static uint8_t lanRawTemporaryBatchCount = 0U;
+static uint8_t lanRawTemporaryBatchCompact = 0U;
 static uint8_t lanRawPublish[WIFI_LAN_RAW_PACKET_MAX_SIZE];
 static uint8_t lanRawActivePriority = 0U;
 static uint32_t lanRawSequence = 0U;
@@ -365,11 +399,7 @@ static uint8_t publishRetained = 0U;
 static uint8_t publishOverLan = 0U;
 static uint8_t publishSmallPayload[WIFI_SMALL_PAYLOAD_SIZE];
 static char publishTopic[WIFI_TOPIC_SIZE];
-static uint8_t otaResponse[WIFI_SMALL_PAYLOAD_SIZE];
-static uint16_t otaResponseLength = 0U;
-static uint8_t otaResponseReady = 0U;
-static uint8_t otaRebootAfterResponse = 0U;
-static uint8_t otaResetAfterLanDelete = 0U;
+
 
 static uint8_t pendingModeValid = 0U;
 static uint8_t pendingMode = 0U;
@@ -480,6 +510,13 @@ static void ResetLanRawState(void)
     lanRawScanReady = 0U;
     lanRawScanLength = 0U;
     lanRawF45BatchCount = 0U;
+    lanRawTemporaryBatchEnabled = 0U;
+    lanRawTemporaryCompactEnabled = 0U;
+    lanRawTemporaryBatchLength = 0U;
+    lanRawTemporaryFrameLength = 0U;
+    lanRawTemporaryCompactFrameLength = 0U;
+    lanRawTemporaryBatchCount = 0U;
+    lanRawTemporaryBatchCompact = 0U;
     lanRawActivePriority = 0U;
     lanRawCommandId = 0U;
     lanRawCommandExpected = 0U;
@@ -708,7 +745,8 @@ static uint8_t DeviceIdIsCanonical(const char *value)
 static uint8_t ConfigIsValid(const WifiConfig *config)
 {
     if(config->port == 0U || (config->scheme != 1U && config->scheme != 2U)) return 0U;
-    if(config->ssid[0] == '\0' || config->host[0] == '\0' ||
+    if(config->ssid[0] == '\0' ||
+       (!(config->flags & WIFI_CONFIG_FLAG_LAN_ONLY) && config->host[0] == '\0') ||
        config->topic_prefix[0] == '\0' || config->device_id[0] == '\0') return 0U;
     /* Combo-AT uses comma-separated, unquoted values for these commands. */
     if(!ConfigStringSafe(config->ssid, WIFI_SSID_MAX, 1U) ||
@@ -1070,7 +1108,6 @@ static void RestartBackoff(uint16_t errorCode)
     lanClientDeadlineMs = 0U;
     nextLanRetryMs = 0U;
     publishOverLan = 0U;
-    otaResetAfterLanDelete = 0U;
     responseOk = responseError = responsePrompt = responsePublishBusy = 0U;
 
     if(publishKind == WIFI_PUBLISH_STATUS) statusPending = 1U;
@@ -1119,8 +1156,20 @@ static void RestartBackoff(uint16_t errorCode)
         return;
     }
 
-    delayMs = 1000UL << (retryExponent > 5U ? 5U : retryExponent);
-    if(retryExponent < 5U) retryExponent++;
+    if(errorCode == WIFI_ERROR_LAN_SOCKET &&
+       WifiLanOnly())
+    {
+        /* A retained BW20 TCPServer may need a quiet interval after an OTA
+         * MCU-only reset.  Repeated exponential AP backoff adds up to minutes
+         * even though Wi-Fi itself stayed associated throughout. */
+        delayMs = 5000U;
+        retryExponent = 0U;
+    }
+    else
+    {
+        delayMs = 1000UL << (retryExponent > 5U ? 5U : retryExponent);
+        if(retryExponent < 5U) retryExponent++;
+    }
     wifiState = WIFI_STATE_BACKOFF;
     stateDeadlineMs = now + delayMs;
 }
@@ -1207,7 +1256,6 @@ static void SetLanClientActive(uint8_t active)
         if(rawSessionWasActive)
             (void)PI11210_SetSOAShutter(1U);
         ResetLanRawState();
-        OtaUpdate_OnClientDisconnected();
         lanClientDeadlineMs = 0U;
         lanMetadataPendingMask = 0U;
         if(!localControlActive) metadataPendingMask = 0x03U;
@@ -1289,7 +1337,7 @@ static void ParseModeCommandPayload(const char *payload,
     uint32_t requestId;
     uint8_t requestedMode;
 
-    if(localControlActive) return;
+    if(localControlActive || OtaUpdate_IsActive()) return;
     if(declaredLength < 26U || strncmp(payload, "FCMD1|", 6U) != 0 ||
        payload[14] != '|' || strncmp(&payload[15], "MODE|", 5U) != 0) return;
     if(!ParseHexRequestId(&payload[6], &requestId)) return;
@@ -1300,6 +1348,11 @@ static void ParseModeCommandPayload(const char *payload,
             strncmp(&payload[20], "TEMPERATURE", 11U) == 0)
         requestedMode = PRECISION_TABLE_STATE;
     else return;
+
+#if !FBG_FEATURE_LEGACY_PEAK_MODES
+    QueueModeAck(requestId, "REJECTED", requestedMode, 0U);
+    return;
+#endif
 
     /* A socket connection or malformed look-alike command must not steal
      * ownership from MQTT.  Claim LAN only after the complete command has
@@ -1355,6 +1408,7 @@ static void ParseModeCommandPayload(const char *payload,
     }
 }
 
+#if FBG_FEATURE_MQTT
 static void ParseRemoteCommand(const char *line)
 {
     const char prefix[] = "+EVENT:MQTT_SUB,";
@@ -1385,8 +1439,14 @@ static void ParseRemoteCommand(const char *line)
     }
     payload = lengthEnd + 1;
     if(strlen(payload) != declaredLength) return;
+    if(declaredLength >= 6U && strncmp(payload, "FOTA1|", 6U) == 0)
+    {
+        return;
+    }
     ParseModeCommandPayload(payload, declaredLength, 0U);
 }
+
+#endif /* FBG_FEATURE_MQTT */
 
 static uint8_t IsLanSessionHello(const char *payload, uint32_t length)
 {
@@ -1496,7 +1556,6 @@ static void ParseLanPayload(const char *payload, uint32_t declaredLength)
     const char *command;
     uint32_t commandLength;
 
-    uint8_t rebootAfterResponse = 0U;
 
     if(strlen(payload) != declaredLength) return;
     if(declaredLength == (sizeof(WIFI_LAN_HELLO) - 1U) &&
@@ -1567,6 +1626,38 @@ static void ParseLanPayload(const char *payload, uint32_t declaredLength)
         return;
     }
 
+    if(declaredLength == (sizeof(WIFI_LAN_RAW_TEMPORARY_CAP) - 1U) &&
+       memcmp(payload, WIFI_LAN_RAW_TEMPORARY_CAP,
+              sizeof(WIFI_LAN_RAW_TEMPORARY_CAP) - 1U) == 0)
+    {
+        if(!localControlActive && lanRawMode && lanRawCompactScan)
+        {
+            SetLanClientActive(1U);
+            lanRawTemporaryBatchEnabled = 1U;
+            (void)QueueLanRawPriority(WIFI_LAN_RAW_KIND_TEMPORARY_CAP_ACK,
+                                      bootId, NULL, 0U);
+            nextPublishMs = WifiNowMs();
+        }
+        return;
+    }
+
+    if(declaredLength == (sizeof(WIFI_LAN_RAW_TEMPORARY_COMPACT_CAP) - 1U) &&
+       memcmp(payload, WIFI_LAN_RAW_TEMPORARY_COMPACT_CAP,
+              sizeof(WIFI_LAN_RAW_TEMPORARY_COMPACT_CAP) - 1U) == 0)
+    {
+        if(!localControlActive && lanRawMode &&
+           lanRawTemporaryBatchEnabled)
+        {
+            SetLanClientActive(1U);
+            lanRawTemporaryCompactEnabled = 1U;
+            (void)QueueLanRawPriority(
+                    WIFI_LAN_RAW_KIND_TEMPORARY_COMPACT_CAP_ACK,
+                    bootId, NULL, 0U);
+            nextPublishMs = WifiNowMs();
+        }
+        return;
+    }
+
     if(!localControlActive && lanRawMode &&
        declaredLength >= 25U &&
        strncmp(payload, WIFI_LAN_RAW_COMMAND_PREFIX, 6U) == 0)
@@ -1576,21 +1667,6 @@ static void ParseLanPayload(const char *payload, uint32_t declaredLength)
         return;
     }
 
-    if(!localControlActive &&
-       OtaUpdate_HandleCommand(payload, declaredLength,
-                               wifiConfig.wifi_password,
-                               (char *)otaResponse,
-                               sizeof(otaResponse),
-                               &rebootAfterResponse))
-    {
-        SetLanClientActive(1U);
-        DiscardQueuedTelemetry();
-        otaResponseLength = (uint16_t)strlen((const char *)otaResponse);
-        otaResponseReady = (otaResponseLength > 0U) ? 1U : 0U;
-        otaRebootAfterResponse = rebootAfterResponse;
-        nextPublishMs = WifiNowMs();
-        return;
-    }
 
     command = strstr(payload, "FCMD1|");
     if(command == NULL) return;
@@ -1614,12 +1690,18 @@ static void ParseLanSocketTableRow(const char *line)
        wifiState != WIFI_STATE_WAIT_LAN_VERIFY_SERVER_GONE &&
        wifiState != WIFI_STATE_WAIT_LAN_VERIFY_CREATED) return;
     if(sscanf(line, "%d,%d,%d,%n", &connectionId, &type, &status,
-              &remoteHostOffset) != 3 || remoteHostOffset <= 0) return;
+               &remoteHostOffset) != 3 || remoteHostOffset <= 0) return;
     remoteHostEnd = strchr(line + remoteHostOffset, ',');
     if(remoteHostEnd == NULL ||
        sscanf(remoteHostEnd + 1, "%d,%d,%d", &remotePort, &localPort,
               &serverConnectionId) != 3) return;
     (void)remotePort;
+
+    if(lanQueryRows < UINT8_MAX) lanQueryRows++;
+    if(type == 5 && serverConnectionId == WIFI_LAN_SOCKET_ID &&
+       lanQuerySeeds < UINT8_MAX) lanQuerySeeds++;
+    if(type == 3 && localPort == (int)WIFI_LAN_SERVER_PORT &&
+       lanQueryParents < UINT8_MAX) lanQueryParents++;
 
     if(connectionId == WIFI_LAN_SOCKET_ID && type == 3 &&
        localPort == (int)WIFI_LAN_SERVER_PORT)
@@ -1826,6 +1908,28 @@ static void ParseLanSocketLine(const char *line)
 
 static void ParseAtLine(const char *line)
 {
+    if(wifiState == WIFI_STATE_WAIT_LAN_CREATE ||
+       wifiState == WIFI_STATE_LAN_RECREATE)
+    {
+        if(strcmp(line, "OK") == 0 || strcmp(line, "+OK") == 0)
+            lanCreateLastResult = 1U;
+        else if(strncmp(line, "ERROR", 5U) == 0 ||
+                strncmp(line, "+ERROR", 6U) == 0 ||
+                strcmp(line, "FAIL") == 0)
+        {
+            const char *number = strchr(line, ':');
+            char *numberEnd = NULL;
+            lanCreateLastResult = 2U;
+            if(lanCreateErrors < UINT16_MAX) lanCreateErrors++;
+            lanCreateLastErrorCode = -1;
+            if(number != NULL)
+            {
+                long code = strtol(number + 1, &numberEnd, 10);
+                if(numberEnd != number + 1 && code >= 0 &&
+                   code <= INT16_MAX) lanCreateLastErrorCode = (int16_t)code;
+            }
+        }
+    }
     if(strcmp(line, "ready") == 0)
     {
         /* The module rebooted independently (for example after a brownout or
@@ -1851,12 +1955,14 @@ static void ParseAtLine(const char *line)
         mqttConnected = 0U;
         warmWifiMatchesConfig = 0U;
     }
+#if FBG_FEATURE_MQTT
     if(strstr(line, "+EVENT:MQTT_CONNECT") != NULL ||
        strstr(line, "+MQTT:3,") != NULL) mqttConnected = 1U;
     if(strstr(line, "+EVENT:MQTT_DISCONNECT") != NULL ||
        strstr(line, "+EVENT:MQTT_MALLOC_ERROR") != NULL) mqttConnected = 0U;
-    ParseLanSocketLine(line);
     ParseRemoteCommand(line);
+#endif
+    ParseLanSocketLine(line);
 }
 
 static void DrainRx(void)
@@ -1920,6 +2026,7 @@ static void StartLanStartupSocketQuery(void)
 {
     lanStartupStaleChildId = -1;
     lanStartupServerStatus = -1;
+    lanQueryRows = lanQuerySeeds = lanQueryParents = 0U;
     (void)SendAtCommand(WIFI_STATE_WAIT_LAN_QUERY_STALE, 1500U,
                         "AT+SOCKET?\r\n");
 }
@@ -1939,6 +2046,20 @@ static void ContinueAfterLanListenerReady(void)
     lanServerDeleteVerifyAttempts = 0U;
     lanServerDeleteVerifyStartup = 0U;
     lanListenerCreateVerifyAttempts = 0U;
+    lanSocketResetPending = 0U;
+    lanCleanupOverflow = 0U;
+    if(WifiLanOnly())
+    {
+        /* OTA/RAW over the local TCP listener must not depend on an MQTT
+         * broker.  Keep the same ONLINE/LAN overlay state machine, but never
+         * queue a cloud publication while this configuration is selected. */
+        mqttConnected = 0U;
+        ClearResponseEvents();
+        MarkOnline();
+        statusPending = 0U;
+        metadataPendingMask = 0U;
+        return;
+    }
     (void)SendAtCommand(WIFI_STATE_WAIT_MQTT_HOST, 1500U,
                         "AT+MQTT=1,%s\r\n", wifiConfig.host);
 }
@@ -1948,6 +2069,9 @@ static void StartLanListenerCreate(uint8_t startup)
     WifiState createState = startup ? WIFI_STATE_WAIT_LAN_CREATE :
                                       WIFI_STATE_LAN_RECREATE;
     lanCreatedSocketId = WIFI_LAN_SOCKET_ID;
+    if(lanCreateAttempts < UINT16_MAX) lanCreateAttempts++;
+    lanCreateLastResult = 0U;
+    lanCreateLastErrorCode = -1;
     if(!SendAtCommand(createState, 2500U,
                       "AT+SOCKET=3,%u,0,%d\r\n",
                       WIFI_LAN_SERVER_PORT, WIFI_LAN_SOCKET_ID))
@@ -1968,6 +2092,7 @@ static void ScheduleLanListenerCreate(uint8_t startup)
 static void VerifyCreatedLanListener(void)
 {
     lanStartupServerStatus = -1;
+    lanQueryRows = lanQuerySeeds = lanQueryParents = 0U;
     if(!SendAtCommand(WIFI_STATE_WAIT_LAN_VERIFY_CREATED, 1500U,
                       "AT+SOCKET?\r\n"))
         RestartBackoff(WIFI_ERROR_UART);
@@ -1977,7 +2102,22 @@ static void ContinueCreatedLanListenerVerification(void)
 {
     if(lanStartupServerStatus >= 0)
     {
-        ContinueAfterLanListenerReady();
+        if(lanListenerCreateStartup)
+            ContinueAfterLanListenerReady();
+        else
+        {
+            /* A recycled parent may acknowledge creation late (or only via
+             * SOCKET?).  Once its table row is verified, clear the pending
+             * reset.  Leaving it set deletes this good listener again on
+             * the very next ONLINE iteration. */
+            lanSocketResetPending = 0U;
+            lanCleanupOverflow = 0U;
+            lanListenerCreateVerifyAttempts = 0U;
+            wifiLastError = WIFI_ERROR_NONE;
+            ClearResponseEvents();
+            wifiState = lanResumeState;
+            stateDeadlineMs = lanResumeDeadlineMs;
+        }
         return;
     }
     if(lanListenerCreateVerifyAttempts >=
@@ -1987,7 +2127,9 @@ static void ContinueCreatedLanListenerVerification(void)
         return;
     }
     lanListenerCreateVerifyAttempts++;
-    StartLanListenerCreate(1U);
+    /* An immediate retry can keep the BW20 seed allocator busy.  Give its
+     * asynchronous child AutoDel and parent teardown time to finish. */
+    ScheduleLanListenerCreate(lanListenerCreateStartup);
 }
 
 static void StartLanServerGoneVerification(uint8_t startup)
@@ -2059,39 +2201,26 @@ static void ContinueLanStartupSocketCleanup(void)
         return;
     }
 
-    /* BW20 P1.0.22 can report a retained TCPServer as healthy status 3 while
-     * every accepted child is immediately reset.  Child cleanup and the
-     * status value cannot prove the parent reusable, so every MCU generation
-     * deletes the retained listener, verifies that it is absent, and creates
-     * a new server.  This deliberately favours deterministic recovery over
-     * the faster but unsafe retained-listener optimisation. */
+    if(lanStartupCleanupAttempts == 0U && lanQuerySeeds == 0U)
+    {
+        /* The old parent is still listening and no child survived the MCU
+         * reset.  Rebinding the same port after deleting this parent can make
+         * BW20 P1.0.22 reject every create for about two minutes.  Reuse it
+         * only in this clean case; a stale child retains the verified recycle
+         * path below.  Runtime owner disconnects also recycle the parent. */
+        ContinueAfterLanListenerReady();
+        return;
+    }
+
+    /* Any seed inherited from the previous MCU generation makes this parent
+     * suspect even after its child is deleted.  Verify parent deletion before
+     * creating a replacement rather than accepting reset-only clients. */
     lanDeleteTargetId = WIFI_LAN_SOCKET_ID;
     (void)SendAtCommand(WIFI_STATE_WAIT_LAN_DELETE_STALE, 1500U,
                         "AT+SOCKETDEL=%d\r\n", WIFI_LAN_SOCKET_ID);
 }
 
-static void DrainBw20RxFor(uint32_t durationMs)
-{
-    uint32_t deadline = WifiNowMs() + durationMs;
-    do
-    {
-        DrainRx();
-        HAL_Delay(1U);
-    } while(!TimeReached(WifiNowMs(), deadline));
-    DrainRx();
-    ClearResponseEvents();
-}
 
-static void ResetMcuAfterUsbDetach(void)
-{
-    /* SYSRESETREQ does not guarantee a host-visible USB disconnect interval
-     * on this board.  Explicitly remove the FS pull-up first so Windows drops
-     * the old CDC instance instead of retaining an unusable Code-31 device
-     * while the bootloader installs and starts the new application. */
-    (void)HAL_PCD_DevDisconnect(&hpcd_USB_OTG_FS);
-    HAL_Delay(100U);
-    NVIC_SystemReset();
-}
 
 static void PublishSuccess(void)
 {
@@ -2111,39 +2240,6 @@ static void PublishSuccess(void)
     {
         ackQueueHead = (uint8_t)((ackQueueHead + 1U) % WIFI_ACK_QUEUE_DEPTH);
         ackQueueCount--;
-    }
-    else if(publishKind == WIFI_PUBLISH_OTA)
-    {
-        uint8_t reboot = otaRebootAfterResponse;
-        otaResponseReady = 0U;
-        otaResponseLength = 0U;
-        otaRebootAfterResponse = 0U;
-        if(reboot)
-        {
-            /* The authenticated image is already CRC-checked and committed.
-             * Give the accepted REBOOT payload and the client's TCP FIN time
-             * to leave the module.  Combo-AT does not automatically free a
-             * TCPServer seed, so delete the exact OTA child before resetting
-             * the STM32; otherwise the independently powered BW20 can retain
-             * a seed which resets every client accepted by the recreated
-             * listener.  Do not issue AT+RST here: this PCB connects BW20
-             * PB21/SWD_DAT to STM32 NRST, and two real cycles left both the
-             * radio silent and the MCU at its reset entry. */
-            DrainBw20RxFor(WIFI_OTA_RESPONSE_DRAIN_MS);
-            if(lanSocketId >= 0)
-            {
-                otaResetAfterLanDelete = 1U;
-                lanDeleteKind = WIFI_LAN_DELETE_OWNER;
-                lanDeleteTargetId = lanSocketId;
-                lanResumeState = WIFI_STATE_ONLINE;
-                lanResumeDeadlineMs = 0U;
-                if(SendAtCommand(WIFI_STATE_LAN_DELETE, 1500U,
-                                 "AT+SOCKETDEL=%d\r\n",
-                                 (int)lanDeleteTargetId)) return;
-                otaResetAfterLanDelete = 0U;
-            }
-            ResetMcuAfterUsbDetach();
-        }
     }
     else if(publishKind == WIFI_PUBLISH_LAN_RAW && lanRawActivePriority &&
             lanRawPriorityCount > 0U)
@@ -2295,12 +2391,6 @@ static uint8_t StartNextLanTransfer(WifiState resumeState)
         publishKind = WIFI_PUBLISH_LAN_RAW;
     }
 
-    else if(otaResponseReady)
-    {
-        payload = otaResponse;
-        length = otaResponseLength;
-        publishKind = WIFI_PUBLISH_OTA;
-    }
     else if(ackQueueCount > 0U)
     {
         memcpy(publishSmallPayload, ackQueue[ackQueueHead].payload,
@@ -2350,6 +2440,7 @@ static uint8_t StartNextLanTransfer(WifiState resumeState)
     return 1U;
 }
 
+#if FBG_FEATURE_MQTT
 static uint8_t StartNextPublish(void)
 {
     const uint8_t *payload = NULL;
@@ -2363,8 +2454,7 @@ static uint8_t StartNextPublish(void)
      * socket may remain established internally and is revalidated on resume. */
     if(localControlActive) return 0U;
 
-    if(otaResponseReady && lanClientActive)
-        return StartNextLanTransfer(WIFI_STATE_ONLINE);
+    if(OtaUpdate_IsActive()) return 0U;
 
     /* LAN control suppresses public raw spectra.  MQTT remains connected and
      * publishes only a retained LAN ownership status. */
@@ -2468,6 +2558,8 @@ static uint8_t StartNextPublish(void)
     }
     return 1U;
 }
+
+#endif /* FBG_FEATURE_MQTT */
 
 static uint8_t LanOverlayAllowed(WifiState state)
 {
@@ -2578,13 +2670,6 @@ static void CompleteLanChildDelete(void)
     lanDeleteKind = WIFI_LAN_DELETE_SERVER;
     lanDeleteTargetId = -1;
     ClearResponseEvents();
-    if(otaResetAfterLanDelete)
-    {
-        otaResetAfterLanDelete = 0U;
-        DrainBw20RxFor(50U);
-        ResetMcuAfterUsbDetach();
-        return;
-    }
     wifiState = lanResumeState;
     stateDeadlineMs = lanResumeDeadlineMs;
 }
@@ -2738,7 +2823,8 @@ uint8_t WifiTransport_HandleUsbConfig(const uint8_t *frame, uint16_t length)
         return 1U;
     }
     if((frame[5] & (uint8_t)~(WIFI_CONFIG_FLAG_ENABLE |
-                              WIFI_CONFIG_FLAG_PERSIST)) != 0U)
+                              WIFI_CONFIG_FLAG_PERSIST |
+                              WIFI_CONFIG_FLAG_LAN_ONLY)) != 0U)
     {
         wifiLastError = WIFI_ERROR_CONFIG_HEADER;
         SendUsbConfigAck(1U);
@@ -2754,7 +2840,9 @@ uint8_t WifiTransport_HandleUsbConfig(const uint8_t *frame, uint16_t length)
     }
 
     memset(&pendingConfig, 0, sizeof(pendingConfig));
-    pendingConfig.flags = frame[5] & (WIFI_CONFIG_FLAG_ENABLE | WIFI_CONFIG_FLAG_PERSIST);
+    pendingConfig.flags = frame[5] & (WIFI_CONFIG_FLAG_ENABLE |
+                                     WIFI_CONFIG_FLAG_PERSIST |
+                                     WIFI_CONFIG_FLAG_LAN_ONLY);
     pendingConfig.port = ((uint16_t)frame[14] << 8) | frame[15];
     pendingConfig.scheme = frame[16];
     destinations[0] = pendingConfig.ssid;
@@ -2873,7 +2961,172 @@ uint8_t WifiTransport_IsLanRawQueueIdle(void)
 {
     return (lanRawPriorityCount == 0U && !lanRawScanReady &&
             lanRawF45BatchCount == 0U &&
+            lanRawTemporaryBatchCount == 0U &&
             publishKind != WIFI_PUBLISH_LAN_RAW) ? 1U : 0U;
+}
+
+static uint8_t CommitLanRawTemporaryBatch(void)
+{
+    uint16_t packetLength;
+    if(lanRawTemporaryBatchCount == 0U) return 1U;
+    if(lanRawScanReady || !WifiTransport_IsLanRawClientActive()) return 0U;
+    lanRawTemporaryBatch[0] = 1U;
+    lanRawTemporaryBatch[1] = lanRawTemporaryBatchCount;
+    PutU16Be(&lanRawTemporaryBatch[2], lanRawTemporaryFrameLength);
+    if(lanRawTemporaryBatchCompact)
+        PutU16Be(&lanRawTemporaryBatch[4],
+                 lanRawTemporaryCompactFrameLength);
+    packetLength = BuildLanRawPacket(lanRawScan, sizeof(lanRawScan),
+            lanRawTemporaryBatchCompact
+                ? WIFI_LAN_RAW_KIND_COMPACT_TEMPORARY_BATCH
+                : WIFI_LAN_RAW_KIND_TEMPORARY_BATCH,
+            lanRawSequence,
+            lanRawTemporaryBatch, lanRawTemporaryBatchLength);
+    if(packetLength == 0U) return 0U;
+    lanRawSequence++;
+    lanRawScanLength = packetLength;
+    lanRawScanReady = 1U;
+    lanRawTemporaryBatchLength = 0U;
+    lanRawTemporaryFrameLength = 0U;
+    lanRawTemporaryCompactFrameLength = 0U;
+    lanRawTemporaryBatchCount = 0U;
+    lanRawTemporaryBatchCompact = 0U;
+    nextPublishMs = WifiNowMs();
+    return 1U;
+}
+
+uint8_t WifiTransport_FlushTemporaryFrames(void)
+{
+    return CommitLanRawTemporaryBatch();
+}
+
+static uint16_t LanCompactTemporaryLength(const uint8_t *data,
+                                          uint16_t length)
+{
+    uint8_t count = data[29];
+    uint8_t wide = (data[3] & 2U) ? 1U : 0U;
+    uint8_t recordLength = wide ? 12U : 8U;
+    if(count < 15U || count > 45U || count % 5U != 0U ||
+       length != (uint16_t)(46U + (uint16_t)count *
+                                      (wide ? 13U : 9U))) return 0U;
+    for(uint8_t point = 0U; point < count; point++)
+    {
+        uint16_t source = (uint16_t)(40U + count +
+                                      (uint16_t)point * recordLength);
+        uint16_t first = ((uint16_t)data[source] << 8) | data[source + 1U];
+        uint16_t second = ((uint16_t)data[source + 2U] << 8) |
+                          data[source + 3U];
+        /* A future non-identity route, out-of-range ADC code, or >24-bit
+         * timestamp must stay byte-exact by falling back to native RAW. */
+        if(data[40U + point] != point || first > 4095U || second > 4095U ||
+           (wide && (data[source + 4U] != 0U ||
+                     data[source + 8U] != 0U))) return 0U;
+    }
+    return (uint16_t)(44U + (uint16_t)count * (wide ? 9U : 7U));
+}
+
+static void EncodeLanCompactTemporary(uint8_t *target,
+                                      const uint8_t *data)
+{
+    uint8_t count = data[29];
+    uint8_t wide = (data[3] & 2U) ? 1U : 0U;
+    uint8_t recordLength = wide ? 12U : 8U;
+    uint16_t position = 40U;
+    memcpy(target, data, 40U);
+    for(uint8_t point = 0U; point < count; point++)
+    {
+        uint16_t source = (uint16_t)(40U + count +
+                                      (uint16_t)point * recordLength);
+        uint16_t first = ((uint16_t)data[source] << 8) | data[source + 1U];
+        uint16_t second = ((uint16_t)data[source + 2U] << 8) |
+                          data[source + 3U];
+        target[position++] = (uint8_t)(first >> 4);
+        target[position++] = (uint8_t)((first << 4) | (second >> 8));
+        target[position++] = (uint8_t)second;
+        if(wide)
+        {
+            memcpy(&target[position], &data[source + 5U], 3U);
+            position += 3U;
+            memcpy(&target[position], &data[source + 9U], 3U);
+            position += 3U;
+        }
+        else
+        {
+            memcpy(&target[position], &data[source + 4U], 4U);
+            position += 4U;
+        }
+    }
+    memcpy(&target[position], &data[40U + count +
+           (uint16_t)count * recordLength], 4U);
+}
+
+uint8_t WifiTransport_QueueTemporaryFrame(const uint8_t *data,
+                                          uint16_t length)
+{
+    uint16_t nextLength;
+    uint16_t encodedLength;
+    uint8_t compact = 0U;
+    if(data == NULL || length < 46U || length > WIFI_LAN_RAW_MAX_PAYLOAD ||
+       !WifiTransport_IsLanRawClientActive()) return 0U;
+    if(!lanRawTemporaryBatchEnabled)
+        return WifiTransport_QueueRawFrame(data, length);
+    if(data[0] != 0xD9U || data[1] != 0x9DU || data[2] != 0x0EU ||
+       data[length - 2U] != 0x9DU || data[length - 1U] != 0xD9U ||
+       data[29] < 15U || data[29] > 45U || data[29] % 5U != 0U ||
+       length != (uint16_t)(46U + (uint16_t)data[29] *
+                         ((data[3] & 2U) ? 13U : 9U)))
+    {
+        /* A protocol fallback must not pass a pending earlier batch. */
+        if(!CommitLanRawTemporaryBatch()) return 0U;
+        return WifiTransport_QueueRawFrame(data, length);
+    }
+
+    encodedLength = length;
+    if(lanRawTemporaryCompactEnabled)
+    {
+        encodedLength = LanCompactTemporaryLength(data, length);
+        if(encodedLength == 0U)
+        {
+            if(!CommitLanRawTemporaryBatch()) return 0U;
+            return WifiTransport_QueueRawFrame(data, length);
+        }
+        compact = 1U;
+    }
+
+    if(lanRawTemporaryBatchCount > 0U &&
+       (lanRawTemporaryBatchCount >= WIFI_LAN_RAW_TEMPORARY_BATCH_MAX ||
+        lanRawTemporaryFrameLength != length ||
+        lanRawTemporaryBatchCompact != compact ||
+        (uint32_t)lanRawTemporaryBatchLength + encodedLength >
+            WIFI_LAN_RAW_MAX_PAYLOAD))
+        if(!CommitLanRawTemporaryBatch()) return 0U;
+
+    if(lanRawTemporaryBatchCount == 0U)
+    {
+        lanRawTemporaryFrameLength = length;
+        lanRawTemporaryCompactFrameLength = compact ? encodedLength : 0U;
+        lanRawTemporaryBatchCompact = compact;
+        lanRawTemporaryBatchLength = compact ? 6U : 4U;
+    }
+    nextLength = (uint16_t)(lanRawTemporaryBatchLength + encodedLength);
+    if(nextLength > WIFI_LAN_RAW_MAX_PAYLOAD) return 0U;
+    if(compact)
+        EncodeLanCompactTemporary(
+                &lanRawTemporaryBatch[lanRawTemporaryBatchLength], data);
+    else
+        memcpy(&lanRawTemporaryBatch[lanRawTemporaryBatchLength], data, length);
+    lanRawTemporaryBatchLength = nextLength;
+    lanRawTemporaryBatchCount++;
+    /* TC4 fits one frame inside the 115200-baud link budget.  Publish it
+     * immediately for live temporary mode; if the previous packet is still
+     * in flight, the pending buffer naturally coalesces subsequent frames. */
+    if(compact ||
+       lanRawTemporaryBatchCount == WIFI_LAN_RAW_TEMPORARY_BATCH_MAX ||
+       (uint32_t)nextLength + encodedLength > WIFI_LAN_RAW_MAX_PAYLOAD)
+        (void)CommitLanRawTemporaryBatch();
+    nextPublishMs = WifiNowMs();
+    lanClientDeadlineMs = nextPublishMs + WIFI_LAN_CLIENT_TIMEOUT_MS;
+    return 1U;
 }
 
 static uint8_t CommitLanRawF45Batch(void)
@@ -3371,7 +3624,14 @@ void WifiTransport_Process(void)
         RestartBackoff(WIFI_ERROR_WIFI_TIMEOUT);
         return;
     }
-    if(wifiState == WIFI_STATE_ONLINE && !mqttConnected)
+    if(wifiState == WIFI_STATE_ONLINE &&
+       WifiLanOnly() && !wifiConnected)
+    {
+        RestartBackoff(WIFI_ERROR_WIFI_TIMEOUT);
+        return;
+    }
+    if(wifiState == WIFI_STATE_ONLINE &&
+       !WifiLanOnly() && !mqttConnected)
     {
         /* Combo-AT V4.18 has its own MQTT reconnect and subscription restore.
          * Preserve a healthy Wi-Fi association and give that path time to
@@ -3450,6 +3710,11 @@ void WifiTransport_Process(void)
         if(wifiState == WIFI_STATE_WAIT_LAN_CREATE && !uartTxBusy)
         {
             responseError = 0U;
+            if(WifiLanOnly())
+            {
+                VerifyCreatedLanListener();
+                return;
+            }
             lanSocketId = -1;
             lanCleanupSocketId = -1;
             lanCleanupCanPromote = 0U;
@@ -3491,16 +3756,7 @@ void WifiTransport_Process(void)
         if(wifiState == WIFI_STATE_LAN_RECREATE && !uartTxBusy)
         {
             responseError = 0U;
-            lanSocketId = -1;
-            lanCleanupSocketId = -1;
-            lanCleanupCanPromote = 0U;
-            lanDeleteTargetId = -1;
-            lanDeleteKind = WIFI_LAN_DELETE_SERVER;
-            lanReadPending = 0U;
-            lanSocketResetPending = 1U;
-            nextLanRetryMs = now + WIFI_LAN_RETRY_MS;
-            wifiState = lanResumeState;
-            stateDeadlineMs = lanResumeDeadlineMs;
+            VerifyCreatedLanListener();
             return;
         }
         if(wifiState == WIFI_STATE_LAN_SEND_WAIT_PROMPT ||
@@ -3699,6 +3955,11 @@ void WifiTransport_Process(void)
             }
             else if(timedOut)
             {
+                if(WifiLanOnly())
+                {
+                    VerifyCreatedLanListener();
+                    break;
+                }
                 lanSocketId = -1;
                 lanCleanupSocketId = -1;
                 lanCleanupCanPromote = 0U;
@@ -3725,6 +3986,7 @@ void WifiTransport_Process(void)
                 StartLanListenerCreate(lanListenerCreateStartup);
             break;
 
+#if FBG_FEATURE_MQTT
         case WIFI_STATE_WAIT_MQTT_HOST:
             if(responseOk && !uartTxBusy)
                 SendAtCommand(WIFI_STATE_WAIT_MQTT_PORT, 1500U,
@@ -3835,7 +4097,7 @@ void WifiTransport_Process(void)
                 if(stateDeadlineMs == 0U) stateDeadlineMs = now + 2000U;
                 else if(timedOut)
                     SendAtCommand(WIFI_STATE_WAIT_SUBSCRIBE, 10000U,
-                                  "AT+MQTTSUB=%s,0\r\n", commandTopic);
+                                  "AT+MQTTSUB=%s,1\r\n", commandTopic);
             }
             else if(TimeReached(now, connectDeadlineMs))
             {
@@ -3896,7 +4158,17 @@ void WifiTransport_Process(void)
             }
             break;
 
+#endif /* FBG_FEATURE_MQTT */
+
         case WIFI_STATE_ONLINE:
+            if(WifiLanOnly())
+            {
+                if(lanClientActive && !uartTxBusy &&
+                   TimeReached(now, nextPublishMs))
+                    (void)StartNextLanTransfer(WIFI_STATE_ONLINE);
+                break;
+            }
+#if FBG_FEATURE_MQTT
             if(lanClientActive && !lanRawMode &&
                nextLocalHeartbeatMs != 0U &&
                TimeReached(now, nextLocalHeartbeatMs))
@@ -3910,8 +4182,10 @@ void WifiTransport_Process(void)
                 nextPublishMs = now;
             }
             if(!uartTxBusy && TimeReached(now, nextPublishMs)) StartNextPublish();
+#endif
             break;
 
+#if FBG_FEATURE_MQTT
         case WIFI_STATE_PUBLISH_WAIT_PROMPT:
             if(responsePrompt && !uartTxBusy)
             {
@@ -3929,6 +4203,8 @@ void WifiTransport_Process(void)
             if(responseOk && !uartTxBusy) PublishSuccess();
             else if(timedOut) RestartBackoff(WIFI_ERROR_PUBLISH_TIMEOUT);
             break;
+
+#endif /* FBG_FEATURE_MQTT */
 
         case WIFI_STATE_LAN_READ:
             if(responseOk && !uartTxBusy)
@@ -3966,35 +4242,8 @@ void WifiTransport_Process(void)
             break;
 
         case WIFI_STATE_LAN_RECREATE:
-            if(responseOk && !uartTxBusy)
-            {
-                lanSocketId = -1;
-                lanCleanupSocketId = -1;
-                lanCleanupCanPromote = 0U;
-                lanCleanupOverflow = 0U;
-                lanDeleteTargetId = -1;
-                lanDeleteKind = WIFI_LAN_DELETE_SERVER;
-                lanReadPending = 0U;
-                lanSocketResetPending = 0U;
-                wifiLastError = WIFI_ERROR_NONE;
-                ClearResponseEvents();
-                wifiState = lanResumeState;
-                stateDeadlineMs = lanResumeDeadlineMs;
-            }
-            else if(timedOut)
-            {
-                lanSocketId = -1;
-                lanCleanupSocketId = -1;
-                lanCleanupCanPromote = 0U;
-                lanDeleteTargetId = -1;
-                lanDeleteKind = WIFI_LAN_DELETE_SERVER;
-                lanReadPending = 0U;
-                lanSocketResetPending = 1U;
-                nextLanRetryMs = now + WIFI_LAN_RETRY_MS;
-                ClearResponseEvents();
-                wifiState = lanResumeState;
-                stateDeadlineMs = lanResumeDeadlineMs;
-            }
+            if((responseOk || timedOut) && !uartTxBusy)
+                VerifyCreatedLanListener();
             break;
 
         case WIFI_STATE_LAN_SEND_WAIT_PROMPT:

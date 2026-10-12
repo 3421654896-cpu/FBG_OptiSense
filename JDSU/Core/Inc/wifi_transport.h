@@ -72,6 +72,13 @@ uint8_t WifiTransport_IsLanRawClientActive(void);
 uint8_t WifiTransport_QueueFastFullMapFrame(const uint8_t *data,
                                             uint16_t length);
 
+/* Losslessly batch consecutive temporary 15/45-point frames for the
+ * negotiated LAN RAW client. Each original frame, including both ADC samples,
+ * per-point timestamps and CRC, is restored unchanged by the desktop. */
+uint8_t WifiTransport_QueueTemporaryFrame(const uint8_t *data,
+                                          uint16_t length);
+uint8_t WifiTransport_FlushTemporaryFrames(void);
+
 /* Commit a final partial compact-F45 batch before terminal status. */
 uint8_t WifiTransport_FlushFastFullMapFrames(void);
 
